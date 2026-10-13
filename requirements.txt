@@ -1,0 +1,6 @@
+langchain-openai==1.7.0
+langgraph>=1.2,<2
+pydantic>=2.7,<3
+python-dotenv>=1,<2
+numpy
+matplotlib

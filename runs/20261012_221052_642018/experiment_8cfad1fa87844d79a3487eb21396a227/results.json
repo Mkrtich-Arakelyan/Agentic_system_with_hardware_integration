@@ -1,0 +1,94 @@
+{
+  "experiment_id": "experiment_8cfad1fa87844d79a3487eb21396a227",
+  "settings": {
+    "dmd_shape": [
+      16,
+      16
+    ],
+    "camera_shape": [
+      32,
+      32
+    ],
+    "target_position": [
+      16,
+      16
+    ],
+    "transmission_seed": 42,
+    "noise_seed": 43,
+    "noise_std": 0.01,
+    "macropixel_size": 8,
+    "focus_size": 3,
+    "background_size": 7,
+    "iterations": 8,
+    "search_seed": 12345,
+    "shots_per_measurement": 3,
+    "validation_shots": 5
+  },
+  "initial_enhancement": 0.8484112387985561,
+  "final_enhancement": 1.4709519734618783,
+  "focus_mean": 0.7397705389731895,
+  "background_means": {
+    "top_left": 0.5402222380266839,
+    "top_right": 0.4291126559380036,
+    "bottom_left": 0.5142504232727716,
+    "bottom_right": 0.5280929763295105
+  },
+  "background_reference": 0.5029195733917424,
+  "paths": {
+    "initial_camera": "C:\\Users\\User\\Desktop\\Homework\\task 6\\runs\\20261012_221052_642018\\experiment_8cfad1fa87844d79a3487eb21396a227\\initial_camera.png",
+    "final_camera": "C:\\Users\\User\\Desktop\\Homework\\task 6\\runs\\20261012_221052_642018\\experiment_8cfad1fa87844d79a3487eb21396a227\\final_camera.png",
+    "final_pattern": "C:\\Users\\User\\Desktop\\Homework\\task 6\\runs\\20261012_221052_642018\\experiment_8cfad1fa87844d79a3487eb21396a227\\final_pattern.npy",
+    "results_json": "C:\\Users\\User\\Desktop\\Homework\\task 6\\runs\\20261012_221052_642018\\experiment_8cfad1fa87844d79a3487eb21396a227\\results.json",
+    "experiments_csv": "C:\\Users\\User\\Desktop\\Homework\\task 6\\runs\\20261012_221052_642018\\experiments.csv"
+  },
+  "history": [
+    {
+      "iteration": 1,
+      "current_enhancement": 0.8491902387650828,
+      "candidate_enhancement": 1.049737635042063,
+      "accepted": true
+    },
+    {
+      "iteration": 2,
+      "current_enhancement": 1.0497109429248803,
+      "candidate_enhancement": 1.012244076828299,
+      "accepted": false
+    },
+    {
+      "iteration": 3,
+      "current_enhancement": 1.0446669829952049,
+      "candidate_enhancement": 1.47547539974548,
+      "accepted": true
+    },
+    {
+      "iteration": 4,
+      "current_enhancement": 1.4727648795496036,
+      "candidate_enhancement": 1.0016747476664853,
+      "accepted": false
+    },
+    {
+      "iteration": 5,
+      "current_enhancement": 1.4701788757017082,
+      "candidate_enhancement": 1.1432820487363602,
+      "accepted": false
+    },
+    {
+      "iteration": 6,
+      "current_enhancement": 1.4695210202643558,
+      "candidate_enhancement": 1.2937776528320974,
+      "accepted": false
+    },
+    {
+      "iteration": 7,
+      "current_enhancement": 1.4666085439489556,
+      "candidate_enhancement": 1.2819150443993437,
+      "accepted": false
+    },
+    {
+      "iteration": 8,
+      "current_enhancement": 1.4657744098622099,
+      "candidate_enhancement": 1.1327674180472618,
+      "accepted": false
+    }
+  ]
+}

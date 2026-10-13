@@ -1,0 +1,142 @@
+{
+  "experiment_id": "experiment_5d644a517ede4f64b802b9c1b5ffc555",
+  "settings": {
+    "dmd_shape": [
+      16,
+      16
+    ],
+    "camera_shape": [
+      32,
+      32
+    ],
+    "target_position": [
+      16,
+      16
+    ],
+    "transmission_seed": 42,
+    "noise_seed": 43,
+    "noise_std": 0.01,
+    "macropixel_size": 4,
+    "focus_size": 3,
+    "background_size": 7,
+    "iterations": 16,
+    "search_seed": 67890,
+    "shots_per_measurement": 3,
+    "validation_shots": 5
+  },
+  "initial_enhancement": 0.6863968911886278,
+  "final_enhancement": 1.2476095412269603,
+  "focus_mean": 0.8785313467290996,
+  "background_means": {
+    "top_left": 0.7486100996936567,
+    "top_right": 0.7164211791221491,
+    "bottom_left": 0.8276150816544112,
+    "bottom_right": 0.5240404880933456
+  },
+  "background_reference": 0.7041717121408906,
+  "paths": {
+    "initial_camera": "C:\\Users\\User\\Desktop\\Homework\\task 6\\runs\\20261012_221052_642018\\experiment_5d644a517ede4f64b802b9c1b5ffc555\\initial_camera.png",
+    "final_camera": "C:\\Users\\User\\Desktop\\Homework\\task 6\\runs\\20261012_221052_642018\\experiment_5d644a517ede4f64b802b9c1b5ffc555\\final_camera.png",
+    "final_pattern": "C:\\Users\\User\\Desktop\\Homework\\task 6\\runs\\20261012_221052_642018\\experiment_5d644a517ede4f64b802b9c1b5ffc555\\final_pattern.npy",
+    "results_json": "C:\\Users\\User\\Desktop\\Homework\\task 6\\runs\\20261012_221052_642018\\experiment_5d644a517ede4f64b802b9c1b5ffc555\\results.json",
+    "experiments_csv": "C:\\Users\\User\\Desktop\\Homework\\task 6\\runs\\20261012_221052_642018\\experiments.csv"
+  },
+  "history": [
+    {
+      "iteration": 1,
+      "current_enhancement": 0.689043460841435,
+      "candidate_enhancement": 0.7746727139613726,
+      "accepted": true
+    },
+    {
+      "iteration": 2,
+      "current_enhancement": 0.7815643374116751,
+      "candidate_enhancement": 0.7847728352439957,
+      "accepted": true
+    },
+    {
+      "iteration": 3,
+      "current_enhancement": 0.781913535425057,
+      "candidate_enhancement": 0.7787360235075718,
+      "accepted": false
+    },
+    {
+      "iteration": 4,
+      "current_enhancement": 0.7867770529267052,
+      "candidate_enhancement": 0.6799985907010715,
+      "accepted": false
+    },
+    {
+      "iteration": 5,
+      "current_enhancement": 0.7836824204517335,
+      "candidate_enhancement": 0.7021979816654416,
+      "accepted": false
+    },
+    {
+      "iteration": 6,
+      "current_enhancement": 0.7917736462534606,
+      "candidate_enhancement": 0.7010401262219218,
+      "accepted": false
+    },
+    {
+      "iteration": 7,
+      "current_enhancement": 0.7801208140982434,
+      "candidate_enhancement": 0.8280244802604784,
+      "accepted": true
+    },
+    {
+      "iteration": 8,
+      "current_enhancement": 0.8289764375739394,
+      "candidate_enhancement": 0.7034385986873725,
+      "accepted": false
+    },
+    {
+      "iteration": 9,
+      "current_enhancement": 0.8313781965698506,
+      "candidate_enhancement": 0.9934621168874108,
+      "accepted": true
+    },
+    {
+      "iteration": 10,
+      "current_enhancement": 0.9969395492314798,
+      "candidate_enhancement": 0.8954071223688417,
+      "accepted": false
+    },
+    {
+      "iteration": 11,
+      "current_enhancement": 0.9909846453283068,
+      "candidate_enhancement": 1.2415096774200913,
+      "accepted": true
+    },
+    {
+      "iteration": 12,
+      "current_enhancement": 1.2422823820898183,
+      "candidate_enhancement": 1.2024604878523757,
+      "accepted": false
+    },
+    {
+      "iteration": 13,
+      "current_enhancement": 1.237945833720295,
+      "candidate_enhancement": 1.1269515000487718,
+      "accepted": false
+    },
+    {
+      "iteration": 14,
+      "current_enhancement": 1.2425307900056983,
+      "candidate_enhancement": 1.123685197489828,
+      "accepted": false
+    },
+    {
+      "iteration": 15,
+      "current_enhancement": 1.2428673589984127,
+      "candidate_enhancement": 1.24858139931847,
+      "accepted": true
+    },
+    {
+      "iteration": 16,
+      "current_enhancement": 1.2502387832810307,
+      "candidate_enhancement": 1.0699261276933991,
+      "accepted": false
+    }
+  ]
+}

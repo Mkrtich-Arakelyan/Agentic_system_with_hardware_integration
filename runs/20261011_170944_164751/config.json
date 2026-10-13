@@ -1,0 +1,6 @@
+{
+  "model": "gemini-3.8-flash",
+  "dataset": "C:\\Users\\User\\Desktop\\Homework\\task 6\\SNLS80mV.mat",
+  "python": "3.13.1 (tags/v3.13.1:0671451, Dec  3 2024, 19:06:28) [MSC v.1942 64 bit (AMD64)]",
+  "script_timeout_seconds": 300
+}

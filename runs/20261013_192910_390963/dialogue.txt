@@ -1,0 +1,316 @@
+[system]
+Homework 2 Task 2: autonomous focusing through a simulated optical bench.
+Bench settings: {"dmd_shape": [16, 16], "camera_shape": [32, 32], "target_position": [16, 16], "transmission_seed": 42, "noise_seed": 43, "noise_std": 0.01}
+These dimensions and noise settings are simulation choices, not hardware specifications.
+The DMD controls binary amplitudes 0 or 1; an illuminated pattern cannot be all off.
+A fixed complex transmission matrix maps 256 DMD pixels to 1024 camera pixels.
+Camera intensity is I = abs(T @ pattern.ravel()) ** 2, followed by fresh additive Gaussian noise and clipping negative measurements to zero. Intensities are relative simulation units.
+One shared bench is used for the whole run: its matrix and target stay fixed, and its independent noise generator advances between captures.
+Use run_focusing_experiment for all optical experiments. Choose its parameters autonomously; do not recreate the bench or implement another search.
+Valid macropixel sizes are 1, 2, 4, and 8: each divides both DMD dimensions and leaves at least two controllable blocks. Each iteration flips one block.
+Focus and background sizes must be positive odd integers, with background larger than focus. Both centred squares must fit around the fixed target; the four background regions must be nonempty. Coordinates are (row, column).
+Background is the larger square outside the focus square, divided into top-left, top-right, bottom-left, and bottom-right regions. The target row belongs to bottom regions and the target column to right regions.
+Enhancement = focus mean / max(mean of the four background-region means, 1e-12). The four means have equal weight, regardless of region pixel counts.
+Average 3 fresh captures for each search measurement and 5 fresh captures for final validation. The returned final enhancement comes from validation, not the highest noisy search score.
+Use 1 to 1,000 iterations per tool call. Improvement is not guaranteed.
+Keeping focus and background regions fixed makes comparisons between macropixel sizes or iteration budgets easier to interpret. Changing the regions changes the metric; acknowledge that when comparing results.
+There are at most 10 orchestrator decisions, including finish. Complete at least 2 successful focusing experiments with different settings. Plan useful comparisons early enough to leave a decision for finishing.
+Output directory: C:\Users\User\Desktop\Homework\task 6\runs\20261013_192910_390963
+The focusing tool saves initial/final camera images, the final pattern, results.json, and an experiments.csv table. Do not duplicate these outputs.
+Use write_and_run only for explicitly needed supporting code tasks. Such scripts must finish within 300 seconds.
+Base all conclusions on recorded tool results, never proposals or invented measurements. Finish only with successful focusing-tool evidence; identify the best observed experiment, settings, final enhancement, and saved paths.
+
+[user]
+Improve focusing at the fixed camera target. Autonomously choose and justify valid experiment settings, compare actual measured results, and report the best observed experiment with its enhancement, settings, and saved initial and final camera images.
+
+[orchestrator]
+{"next_role":"scientist","instruction":"Propose a concrete plan to compare macropixel_size values with all other settings fixed: focus_size=3, background_size=9, search_seed=12345. Do two sequential experiments: A) macropixel_size=2, B) macropixel_size=4. For each experiment: perform 3 search measurements (each averaging 3 fresh captures), followed by a final validation (5 captures). Use iterations_per_call=600 for each tool call, and keep all other parameters identical between experiments (including search_seed, focus_size, background_size). Save outputs in the specified directory and report the final enhancement from final validation. Compare the two experiments by their reported enhancements, and identify the best experiment (experiment ID, settings, enhancement, and saved initial/final camera images).","reason":"Enable a fair, single-parameter comparison between two macropixel sizes to identify the best focusing configuration while preserving fixed conditions."}
+
+[scientist]
+Plan to compare macropixel_size values (keeping all other parameters fixed)
+
+Rationale
+- Goal: isolate the effect of grid resolution on focusing performance by varying macropixel_size while holding focus_size, background_size, and seed fixed.
+- Shared settings (both experiments): focus_size = 3, background_size = 9, search_seed = 12345, iterations_per_call = 600, search_measurements = 3 (each averaging 3 fresh captures), final_validation_captures = 5, output directory as provided.
+- Changed setting per experiment: macropixel_size.
+- After running, enhancements from final validation will be compared to identify the best experiment. Save initial and final camera images for each.
+
+Experiment A
+- ID: A
+- macropixel_size = 2
+- focus_size = 3, background_size = 9 (unchanged)
+- search_seed = 12345 (unchanged)
+- iterations_per_call = 600
+- Procedure: 3 search measurements (each with 3 captures), followed by a final validation (5 captures)
+- Reason: finer macropixel grid (8x8 macropixels on a 16x16 DMD) to explore more granular control while keeping other factors fixed; expected to reveal potential gains in focusing precision, at the cost of potentially longer optimization per macropixel.
+
+Experiment B
+- ID: B
+- macropixel_size = 4
+- focus_size = 3, background_size = 9 (unchanged)
+- search_seed = 12345 (unchanged)
+- iterations_per_call = 600
+- Procedure: 3 search measurements (each with 3 captures), followed by a final validation (5 captures)
+- Reason: coarser macropixel grid (4x4 blocks on a 16x16 DMD) to test whether fewer, larger blocks yield robust focusing with potentially fewer degrees of freedom and faster convergence.
+
+Shared settings for both experiments
+- focus_size: 3
+- background_size: 9
+- search_seed: 12345
+- iterations_per_call: 600
+- search_measurements: 3 (each averaging 3 fresh captures)
+- final_validation_captures: 5
+- Output directory: C:\Users\User\Desktop\Homework\task 6\runs\20261013_192910_390963
+- Note: All other bench conditions (matrix, target, noise model) remain as described in the task. The focus/background regions are kept fixed within each experiment to enable a fair macropixel-size comparison. The final enhancement is taken from the final validation results, not the best noisy search score.
+
+Ready-to-run settings (to be provided to the executor)
+- Experiment A (macropixel_size=2)
+  - macropixel_size: 2
+  - focus_size: 3
+  - background_size: 9
+  - search_seed: 12345
+  - iterations_per_call: 600
+  - search_measurements: 3
+  - final_validation_captures: 5
+  - Output directory: C:\Users\User\Desktop\Homework\task 6\runs\20261013_192910_390963
+- Experiment B (macropixel_size=4)
+  - macropixel_size: 4
+  - focus_size: 3
+  - background_size: 9
+  - search_seed: 12345
+  - iterations_per_call: 600
+  - search_measurements: 3
+  - final_validation_captures: 5
+  - Output directory: C:\Users\User\Desktop\Homework\task 6\runs\20261013_192910_390963
+
+Next step
+- Please run Experiment A first (macropixel_size=2) with the settings above.
+- After its final validation, run Experiment B (macropixel_size=4) with the same shared settings.
+- I will compare the final enhancements from the two experiments and report:
+  - which experiment is better (ID, settings, final enhancement)
+  - the saved initial and final camera images for the better result
+  - any notable observations about the behavior with different macropixel sizes
+
+Note: I will rely on the tool outputs (final_enhancement from final validation) to determine the best experiment and report it along with the corresponding image paths.
+
+[orchestrator]
+{"next_role":"executor","instruction":"Run Experiment A (macropixel_size=2) with all shared settings fixed: focus_size=3, background_size=9, search_seed=12345, iterations_per_call=600, search_measurements=3 (each averaging 3 fresh captures), final_validation_captures=5. Output directory: C:\\Users\\User\\Desktop\\Homework\\task 6\\runs\\20261013_192910_390963. After completion, report the final_enhancement and save paths for the initial and final camera images, then proceed to Experiment B as planned.","reason":"Begin the planned single-parameter comparison by executing the first experiment to obtain fair, comparable results."}
+
+[executor]
+Experiment A completed.
+
+Summary of results
+- Experiment ID: experiment_71d3f56e890243d4b5d19c8da2e2238b
+- macropixel_size: 2
+- Fixed shared settings:
+  - focus_size: 3
+  - background_size: 9
+  - search_seed: 12345
+  - iterations_per_call: 600
+  - search_measurements: 3 (each averaging 3 fresh captures)
+  - final_validation_captures: 5
+  - Output directory: C:\Users\User\Desktop\Homework\task 6\runs\20261013_192910_390963
+- Final validated enhancement: 6.581559105879688
+  - Focus mean: 1.2440216764515664
+  - Background means: top_left=0.17803525480041435, top_right=0.18839086000929994, bottom_left=0.17324228221941174, bottom_right=0.2163966364613183
+  - Background reference: 0.1890162583726111
+- Initial camera image path: C:\Users\User\Desktop\Homework\task 6\runs\20261013_192910_390963\experiment_71d3f56e890243d4b5d19c8da2e2238b\initial_camera.png
+- Final camera image path: C:\Users\User\Desktop\Homework\task 6\runs\20261013_192910_390963\experiment_71d3f56e890243d4b5d19c8da2e2238b\final_camera.png
+- Final pattern path: C:\Users\User\Desktop\Homework\task 6\runs\20261013_192910_390963\experiment_71d3f56e890243d4b5d19c8da2e2238b\final_pattern.npy
+- Results log: C:\Users\User\Desktop\Homework\task 6\runs\20261013_192910_390963\experiment_71d3f56e890243d4b5d19c8da2e2238b\results.json
+- Experiments CSV: C:\Users\User\Desktop\Homework\task 6\runs\20261013_192910_390963\experiments.csv
+- Summary figure: C:\Users\User\Desktop\Homework\task 6\runs\20261013_192910_390963\experiment_71d3f56e890243d4b5d19c8da2e2238b\summary.png
+
+Notes
+- This result represents the final validation outcome for Experiment A under the planned settings. The reported enhancement is the final validated value, not the best noisy search score.
+- All other bench conditions (matrix, target position, noise seeds) were kept fixed as specified.
+
+Next step
+- Proceed to Experiment B with the same shared settings, but macropixel_size = 4, to complete the planned two-experiment comparison. I will run Experiment B in the next step and report its final enhancement and saved image/pattern paths, then identify which experiment is better.
+
+Would you like me to proceed with Experiment B now?
+
+Tool: run_focusing_experiment
+Raw tool result:
+{"ok": true, "experiment_id": "experiment_71d3f56e890243d4b5d19c8da2e2238b", "settings": {"dmd_shape": [16, 16], "camera_shape": [32, 32], "target_position": [16, 16], "transmission_seed": 42, "noise_seed": 43, "noise_std": 0.01, "macropixel_size": 2, "focus_size": 3, "background_size": 9, "iterations": 600, "search_seed": 12345, "shots_per_measurement": 3, "validation_shots": 5}, "initial_enhancement": 0.7574394636286748, "final_enhancement": 6.581559105879688, "focus_mean": 1.2440216764515664, "background_means": {"top_left": 0.17803525480041435, "top_right": 0.18839086000929994, "bottom_left": 0.17324228221941174, "bottom_right": 0.2163966364613183}, "background_reference": 0.1890162583726111, "paths": {"initial_camera": "C:\\Users\\User\\Desktop\\Homework\\task 6\\runs\\20261013_192910_390963\\experiment_71d3f56e890243d4b5d19c8da2e2238b\\initial_camera.png", "final_camera": "C:\\Users\\User\\Desktop\\Homework\\task 6\\runs\\20261013_192910_390963\\experiment_71d3f56e890243d4b5d19c8da2e2238b\\final_camera.png", "final_pattern": "C:\\Users\\User\\Desktop\\Homework\\task 6\\runs\\20261013_192910_390963\\experiment_71d3f56e890243d4b5d19c8da2e2238b\\final_pattern.npy", "results_json": "C:\\Users\\User\\Desktop\\Homework\\task 6\\runs\\20261013_192910_390963\\experiment_71d3f56e890243d4b5d19c8da2e2238b\\results.json", "experiments_csv": "C:\\Users\\User\\Desktop\\Homework\\task 6\\runs\\20261013_192910_390963\\experiments.csv", "summary_figure": "C:\\Users\\User\\Desktop\\Homework\\task 6\\runs\\20261013_192910_390963\\experiment_71d3f56e890243d4b5d19c8da2e2238b\\summary.png"}}
+
+[orchestrator]
+{"next_role":"executor","instruction":"Run Experiment B with macropixel_size=4 using the same shared settings as Experiment A: focus_size=3, background_size=9, search_seed=12345, iterations_per_call=600, shots_per_measurement=3, validation_shots=5. Output directory: C:\\Users\\User\\Desktop\\Homework\\task 6\\runs\\20261013_192910_390963. After completion, report the final_enhancement and the saved initial/final camera images and associated output paths.","reason":"Complete the planned two-experiment comparison by testing a coarser macropixel_size to contrast with Experiment A and enable selection of the best result."}
+
+[executor]
+Here is the autonomous comparison results and the best-observed experiment based on the two planned runs.
+
+What was done
+- Experiment A (macropixel_size = 2)
+  - Settings: macropixel_size=2, focus_size=3, background_size=9, search_seed=12345, iterations=600, shots_per_measurement=3, validation_shots=5
+  - Experiment ID: experiment_71d3f56e890243d4b5d19c8da2e2238b
+  - Final validated enhancement: 6.581559105879688
+  - Focus mean: 1.2440216764515664
+  - Background means: top_left 0.17803525480041435, top_right 0.18839086000929994, bottom_left 0.17324228221941174, bottom_right 0.2163966364613183
+  - Background reference: 0.1890162583726111
+  - Saved outputs:
+    - Initial camera image: C:\Users\User\Desktop\Homework\task 6\runs\20261013_192910_390963\experiment_71d3f56e890243d4b5d19c8da2e2238b\initial_camera.png
+    - Final camera image: C:\Users\User\Desktop\Homework\task 6\runs\20261013_192910_390963\experiment_71d3f56e890243d4b5d19c8da2e2238b\final_camera.png
+    - Final pattern: C:\Users\User\Desktop\Homework\task 6\runs\20261013_192910_390963\experiment_71d3f56e890243d4b5d19c8da2e2238b\final_pattern.npy
+    - Results JSON: C:\Users\User\Desktop\Homework\task 6\runs\20261013_192910_390963\experiment_71d3f56e890243d4b5d19c8da2e2238b\results.json
+    - Experiments CSV: C:\Users\User\Desktop\Homework\task 6\runs\20261013_192910_390963\experiments.csv
+    - Summary figure: C:\Users\User\Desktop\Homework\task 6\runs\20261013_192910_390963\experiment_71d3f56e890243d4b5d19c8da2e2238b\summary.png
+
+- Experiment B (macropixel_size = 4)
+  - Settings: macropixel_size=4, focus_size=3, background_size=9, search_seed=12345, iterations=600, shots_per_measurement=3, validation_shots=5
+  - Experiment ID: experiment_ebeb281dd84f49589528d35e26b2bd00
+  - Final validated enhancement: 2.8693193430446913
+  - Focus mean: 0.8369201058655995
+  - Background means: top_left 0.29768800940066226, top_right 0.30317183609562653, bottom_left 0.24561343745366995, bottom_right 0.3202425904773985
+  - Background reference: 0.2916789683568393
+  - Saved outputs:
+    - Initial camera image: C:\Users\User\Desktop\Homework\task 6\runs\20261013_192910_390963\experiment_ebeb281dd84f49589528d35e26b2bd00\initial_camera.png
+    - Final camera image: C:\Users\User\Desktop\Homework\task 6\runs\20261013_192910_390963\experiment_ebeb281dd84f49589528d35e26b2bd00\final_camera.png
+    - Final pattern: C:\Users\User\Desktop\Homework\task 6\runs\20261013_192910_390963\experiment_ebeb281dd84f49589528d35e26b2bd00\final_pattern.npy
+    - Results JSON: C:\Users\User\Desktop\Homework\task 6\runs\20261013_192910_390963\experiment_ebeb281dd84f49589528d35e26b2bd00\results.json
+    - Experiments CSV: C:\Users\User\Desktop\Homework\task 6\runs\20261013_192910_390963\experiments.csv
+    - Summary figure: C:\Users\User\Desktop\Homework\task 6\runs\20261013_192910_390963\experiment_ebeb281dd84f49589528d35e26b2bd00\summary.png
+
+Comparison and conclusion
+- Which experiment performed better?
+  - Experiment A (macropixel_size=2) with final enhancement of 6.5816 vastly outperformed Experiment B (macropixel_size=4) with final enhancement of 2.8693.
+- Best observed experiment
+  - ID: experiment_71d3f56e890243d4b5d19c8da2e2238b
+  - Settings: macropixel_size=2, focus_size=3, background_size=9, iterations=600, search_seed=12345, shots_per_measurement=3, validation_shots=5
+  - Final enhancement: 6.581559105879688
+  - Saved images and outputs:
+    - Initial camera: C:\Users\User\Desktop\Homework\task 6\runs\20261013_192910_390963\experiment_71d3f56e890243d4b5d19c8da2e2238b\initial_camera.png
+    - Final camera: C:\Users\User\Desktop\Homework\task 6\runs\20261013_192910_390963\experiment_71d3f56e890243d4b5d19c8da2e2238b\final_camera.png
+    - Final pattern: C:\Users\User\Desktop\Homework\task 6\runs\20261013_192910_390963\experiment_71d3f56e890243d4b5d19c8da2e2238b\final_pattern.npy
+    - Results JSON: C:\Users\User\Desktop\Homework\task 6\runs\20261013_192910_390963\experiment_71d3f56e890243d4b5d19c8da2e2238b\results.json
+    - Experiments CSV: C:\Users\User\Desktop\Homework\task 6\runs\20261013_192910_390963\experiments.csv
+    - Summary figure: C:\Users\User\Desktop\Homework\task 6\runs\20261013_192910_390963\experiment_71d3f56e890243d4b5d19c8da2e2238b\summary.png
+
+Notes
+- The results come from the final validation phase of each experiment, per the protocol. The final_enhancement values are the validated metrics, not the best noisy search scores.
+- If you want, I can add a brief qualitative comparison commentary (e.g., how macropixel resolution affected the optimization trajectory, or how background means shifted between the two runs) and propose a next-step plan (e.g., exploring a finer-grained macropixel_size around 2 or testing a seed variation) for another decision round.
+
+Would you like me to proceed with any further analysis or plan another comparison run?
+
+Tool: run_focusing_experiment
+Raw tool result:
+{"ok": true, "experiment_id": "experiment_ebeb281dd84f49589528d35e26b2bd00", "settings": {"dmd_shape": [16, 16], "camera_shape": [32, 32], "target_position": [16, 16], "transmission_seed": 42, "noise_seed": 43, "noise_std": 0.01, "macropixel_size": 4, "focus_size": 3, "background_size": 9, "iterations": 600, "search_seed": 12345, "shots_per_measurement": 3, "validation_shots": 5}, "initial_enhancement": 0.9130600174067989, "final_enhancement": 2.8693193430446913, "focus_mean": 0.8369201058655995, "background_means": {"top_left": 0.29768800940066226, "top_right": 0.30317183609562653, "bottom_left": 0.24561343745366995, "bottom_right": 0.3202425904773985}, "background_reference": 0.2916789683568393, "paths": {"initial_camera": "C:\\Users\\User\\Desktop\\Homework\\task 6\\runs\\20261013_192910_390963\\experiment_ebeb281dd84f49589528d35e26b2bd00\\initial_camera.png", "final_camera": "C:\\Users\\User\\Desktop\\Homework\\task 6\\runs\\20261013_192910_390963\\experiment_ebeb281dd84f49589528d35e26b2bd00\\final_camera.png", "final_pattern": "C:\\Users\\User\\Desktop\\Homework\\task 6\\runs\\20261013_192910_390963\\experiment_ebeb281dd84f49589528d35e26b2bd00\\final_pattern.npy", "results_json": "C:\\Users\\User\\Desktop\\Homework\\task 6\\runs\\20261013_192910_390963\\experiment_ebeb281dd84f49589528d35e26b2bd00\\results.json", "experiments_csv": "C:\\Users\\User\\Desktop\\Homework\\task 6\\runs\\20261013_192910_390963\\experiments.csv", "summary_figure": "C:\\Users\\User\\Desktop\\Homework\\task 6\\runs\\20261013_192910_390963\\experiment_ebeb281dd84f49589528d35e26b2bd00\\summary.png"}}
+
+[orchestrator]
+{"next_role":"finish","instruction":"Finish by summarizing the two focusing experiments and declaring the best result. Provide: \n- Best experiment: ID experiment_71d3f56e890243d4b5d19c8da2e2238b\n- Settings: macropixel_size=2, focus_size=3, background_size=9, iterations=600, search_seed=12345, shots_per_measurement=3, validation_shots=5\n- Final validated enhancement: 6.581559105879688\n- Focus_mean: 1.2440216764515664\n- Background means: top_left=0.17803525480041435, top_right=0.18839086000929994, bottom_left=0.17324228221941174, bottom_right=0.2163966364613183\n- Background reference: 0.1890162583726111\n- Output artifacts saved (with exact paths):\n  - initial_camera.png: C:\\Users\\User\\Desktop\\Homework\\task 6\\runs\\20261013_192910_390963\\experiment_71d3f56e890243d4b5d19c8da2e2238b\\initial_camera.png\n  - final_camera.png: C:\\Users\\User\\Desktop\\Homework\\task 6\\runs\\20261013_192910_390963\\experiment_71d3f56e890243d4b5d19c8da2e2238b\\final_camera.png\n  - final_pattern.npy: C:\\Users\\User\\Desktop\\Qualifications\\task 6\\runs\\20261013_192910_390963\\experiment_71d3f56e890243d4b5d19c8da2e2238b\\final_pattern.npy\n  - results.json: C:\\Users\\User\\Desktop\\Homework\\task 6\\runs\\20261013_192910_390963\\experiment_71d3f56e890243d4b5d19c8da2e2238b\\results.json\n  - experiments.csv: C:\\Users\\User\\Desktop\\Homework\\task 6\\runs\\20261013_192910_390963\\experiments.csv\n  - summary.png: C:\\Users\\User\\Desktop\\Homework\\task 6\\runs\\20261013_192910_390963\\experiment_71d3f56e890243d4b5d19c8da2e2238b\\summary.png\n- Second experiment (for context):\n  - ID experiment_ebeb281dd84f49589528d35e26b2bd00\n  - macropixel_size=4, final_enhancement=2.8693193430446913\n  - Initial/final camera images and outputs: corresponding paths under the experiment_ebeb281dd84f49589528d35e26b2bd00 directory.\n\nSummary conclusion: Experiment A with macropixel_size=2 vastly outperformed Experiment B with macropixel_size=4, making it the recommended result. No further experiments are required unless you want to explore nearby macropixel configurations or seed variations.","reason":"Two successful, differently-configured experiments exist; A (macropixel_size=2) is clearly superior and should be highlighted as the best result with full output paths for verification."}
+
+[tool executions]
+[
+  {
+    "tool_name": "run_focusing_experiment",
+    "tool_args": {
+      "macropixel_size": 2,
+      "focus_size": 3,
+      "background_size": 9,
+      "iterations": 600,
+      "search_seed": 12345
+    },
+    "result": {
+      "ok": true,
+      "experiment_id": "experiment_71d3f56e890243d4b5d19c8da2e2238b",
+      "settings": {
+        "dmd_shape": [
+          16,
+          16
+        ],
+        "camera_shape": [
+          32,
+          32
+        ],
+        "target_position": [
+          16,
+          16
+        ],
+        "transmission_seed": 42,
+        "noise_seed": 43,
+        "noise_std": 0.01,
+        "macropixel_size": 2,
+        "focus_size": 3,
+        "background_size": 9,
+        "iterations": 600,
+        "search_seed": 12345,
+        "shots_per_measurement": 3,
+        "validation_shots": 5
+      },
+      "initial_enhancement": 0.7574394636286748,
+      "final_enhancement": 6.581559105879688,
+      "focus_mean": 1.2440216764515664,
+      "background_means": {
+        "top_left": 0.17803525480041435,
+        "top_right": 0.18839086000929994,
+        "bottom_left": 0.17324228221941174,
+        "bottom_right": 0.2163966364613183
+      },
+      "background_reference": 0.1890162583726111,
+      "paths": {
+        "initial_camera": "C:\\Users\\User\\Desktop\\Homework\\task 6\\runs\\20261013_192910_390963\\experiment_71d3f56e890243d4b5d19c8da2e2238b\\initial_camera.png",
+        "final_camera": "C:\\Users\\User\\Desktop\\Homework\\task 6\\runs\\20261013_192910_390963\\experiment_71d3f56e890243d4b5d19c8da2e2238b\\final_camera.png",
+        "final_pattern": "C:\\Users\\User\\Desktop\\Homework\\task 6\\runs\\20261013_192910_390963\\experiment_71d3f56e890243d4b5d19c8da2e2238b\\final_pattern.npy",
+        "results_json": "C:\\Users\\User\\Desktop\\Homework\\task 6\\runs\\20261013_192910_390963\\experiment_71d3f56e890243d4b5d19c8da2e2238b\\results.json",
+        "experiments_csv": "C:\\Users\\User\\Desktop\\Homework\\task 6\\runs\\20261013_192910_390963\\experiments.csv",
+        "summary_figure": "C:\\Users\\User\\Desktop\\Homework\\task 6\\runs\\20261013_192910_390963\\experiment_71d3f56e890243d4b5d19c8da2e2238b\\summary.png"
+      }
+    }
+  },
+  {
+    "tool_name": "run_focusing_experiment",
+    "tool_args": {
+      "macropixel_size": 4,
+      "focus_size": 3,
+      "background_size": 9,
+      "iterations": 600,
+      "search_seed": 12345
+    },
+    "result": {
+      "ok": true,
+      "experiment_id": "experiment_ebeb281dd84f49589528d35e26b2bd00",
+      "settings": {
+        "dmd_shape": [
+          16,
+          16
+        ],
+        "camera_shape": [
+          32,
+          32
+        ],
+        "target_position": [
+          16,
+          16
+        ],
+        "transmission_seed": 42,
+        "noise_seed": 43,
+        "noise_std": 0.01,
+        "macropixel_size": 4,
+        "focus_size": 3,
+        "background_size": 9,
+        "iterations": 600,
+        "search_seed": 12345,
+        "shots_per_measurement": 3,
+        "validation_shots": 5
+      },
+      "initial_enhancement": 0.9130600174067989,
+      "final_enhancement": 2.8693193430446913,
+      "focus_mean": 0.8369201058655995,
+      "background_means": {
+        "top_left": 0.29768800940066226,
+        "top_right": 0.30317183609562653,
+        "bottom_left": 0.24561343745366995,
+        "bottom_right": 0.3202425904773985
+      },
+      "background_reference": 0.2916789683568393,
+      "paths": {
+        "initial_camera": "C:\\Users\\User\\Desktop\\Homework\\task 6\\runs\\20261013_192910_390963\\experiment_ebeb281dd84f49589528d35e26b2bd00\\initial_camera.png",
+        "final_camera": "C:\\Users\\User\\Desktop\\Homework\\task 6\\runs\\20261013_192910_390963\\experiment_ebeb281dd84f49589528d35e26b2bd00\\final_camera.png",
+        "final_pattern": "C:\\Users\\User\\Desktop\\Homework\\task 6\\runs\\20261013_192910_390963\\experiment_ebeb281dd84f49589528d35e26b2bd00\\final_pattern.npy",
+        "results_json": "C:\\Users\\User\\Desktop\\Homework\\task 6\\runs\\20261013_192910_390963\\experiment_ebeb281dd84f49589528d35e26b2bd00\\results.json",
+        "experiments_csv": "C:\\Users\\User\\Desktop\\Homework\\task 6\\runs\\20261013_192910_390963\\experiments.csv",
+        "summary_figure": "C:\\Users\\User\\Desktop\\Homework\\task 6\\runs\\20261013_192910_390963\\experiment_ebeb281dd84f49589528d35e26b2bd00\\summary.png"
+      }
+    }
+  }
+]

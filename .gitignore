@@ -1,0 +1,10 @@
+﻿# Local credentials and generated Python files.
+.env
+.env.*
+!.env.example
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+.idea/
+.vscode/

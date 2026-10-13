@@ -1,0 +1,1846 @@
+{
+  "experiment_id": "experiment_e6bed3f9536d4e68b4e9189f6380d631",
+  "settings": {
+    "dmd_shape": [
+      16,
+      16
+    ],
+    "camera_shape": [
+      32,
+      32
+    ],
+    "target_position": [
+      16,
+      16
+    ],
+    "transmission_seed": 42,
+    "noise_seed": 43,
+    "noise_std": 0.01,
+    "macropixel_size": 1,
+    "focus_size": 3,
+    "background_size": 5,
+    "iterations": 300,
+    "search_seed": 303,
+    "shots_per_measurement": 3,
+    "validation_shots": 5
+  },
+  "initial_enhancement": 0.8214816796128607,
+  "final_enhancement": 25.441704242955517,
+  "focus_mean": 1.1824481613447917,
+  "background_means": {
+    "top_left": 0.04250572875841006,
+    "top_right": 0.024436280240231194,
+    "bottom_left": 0.047565090019370065,
+    "bottom_right": 0.07139996916468663
+  },
+  "background_reference": 0.04647676704567449,
+  "paths": {
+    "initial_camera": "C:\\Users\\User\\Desktop\\Homework\\task 6\\runs\\20261012_221544_974743\\experiment_e6bed3f9536d4e68b4e9189f6380d631\\initial_camera.png",
+    "final_camera": "C:\\Users\\User\\Desktop\\Homework\\task 6\\runs\\20261012_221544_974743\\experiment_e6bed3f9536d4e68b4e9189f6380d631\\final_camera.png",
+    "final_pattern": "C:\\Users\\User\\Desktop\\Homework\\task 6\\runs\\20261012_221544_974743\\experiment_e6bed3f9536d4e68b4e9189f6380d631\\final_pattern.npy",
+    "results_json": "C:\\Users\\User\\Desktop\\Homework\\task 6\\runs\\20261012_221544_974743\\experiment_e6bed3f9536d4e68b4e9189f6380d631\\results.json",
+    "experiments_csv": "C:\\Users\\User\\Desktop\\Homework\\task 6\\runs\\20261012_221544_974743\\experiments.csv"
+  },
+  "history": [
+    {
+      "iteration": 1,
+      "current_enhancement": 0.8317456473229777,
+      "candidate_enhancement": 0.76850016799181,
+      "accepted": false
+    },
+    {
+      "iteration": 2,
+      "current_enhancement": 0.8244470962223016,
+      "candidate_enhancement": 0.8666097307164562,
+      "accepted": true
+    },
+    {
+      "iteration": 3,
+      "current_enhancement": 0.8615956061678272,
+      "candidate_enhancement": 0.9416278438896478,
+      "accepted": true
+    },
+    {
+      "iteration": 4,
+      "current_enhancement": 0.9422080188492509,
+      "candidate_enhancement": 1.0284953317432064,
+      "accepted": true
+    },
+    {
+      "iteration": 5,
+      "current_enhancement": 1.0367207595135814,
+      "candidate_enhancement": 0.9839067971300804,
+      "accepted": false
+    },
+    {
+      "iteration": 6,
+      "current_enhancement": 1.0453894670433186,
+      "candidate_enhancement": 1.0393104972953602,
+      "accepted": false
+    },
+    {
+      "iteration": 7,
+      "current_enhancement": 1.0401086611595651,
+      "candidate_enhancement": 1.1411967967915488,
+      "accepted": true
+    },
+    {
+      "iteration": 8,
+      "current_enhancement": 1.1535793046876859,
+      "candidate_enhancement": 1.1591129894519656,
+      "accepted": true
+    },
+    {
+      "iteration": 9,
+      "current_enhancement": 1.153060433613354,
+      "candidate_enhancement": 1.273600740107552,
+      "accepted": true
+    },
+    {
+      "iteration": 10,
+      "current_enhancement": 1.2808163970203144,
+      "candidate_enhancement": 1.212770628224185,
+      "accepted": false
+    },
+    {
+      "iteration": 11,
+      "current_enhancement": 1.2872984825450835,
+      "candidate_enhancement": 1.2303657616637393,
+      "accepted": false
+    },
+    {
+      "iteration": 12,
+      "current_enhancement": 1.2686545403191702,
+      "candidate_enhancement": 1.3412151051496959,
+      "accepted": true
+    },
+    {
+      "iteration": 13,
+      "current_enhancement": 1.341236990046798,
+      "candidate_enhancement": 1.2810468111047688,
+      "accepted": false
+    },
+    {
+      "iteration": 14,
+      "current_enhancement": 1.360734568553628,
+      "candidate_enhancement": 1.4641782363172395,
+      "accepted": true
+    },
+    {
+      "iteration": 15,
+      "current_enhancement": 1.4851643124554068,
+      "candidate_enhancement": 1.3538079551816327,
+      "accepted": false
+    },
+    {
+      "iteration": 16,
+      "current_enhancement": 1.4709252783577214,
+      "candidate_enhancement": 1.434021941665221,
+      "accepted": false
+    },
+    {
+      "iteration": 17,
+      "current_enhancement": 1.4813051539193993,
+      "candidate_enhancement": 1.7335410203076753,
+      "accepted": true
+    },
+    {
+      "iteration": 18,
+      "current_enhancement": 1.7369806677571054,
+      "candidate_enhancement": 1.6009218339646878,
+      "accepted": false
+    },
+    {
+      "iteration": 19,
+      "current_enhancement": 1.7348663641427933,
+      "candidate_enhancement": 1.701385275568964,
+      "accepted": false
+    },
+    {
+      "iteration": 20,
+      "current_enhancement": 1.7489865561069782,
+      "candidate_enhancement": 1.7958946049938398,
+      "accepted": true
+    },
+    {
+      "iteration": 21,
+      "current_enhancement": 1.791910922835659,
+      "candidate_enhancement": 1.5230396597565985,
+      "accepted": false
+    },
+    {
+      "iteration": 22,
+      "current_enhancement": 1.7956349144392851,
+      "candidate_enhancement": 1.7587699233428997,
+      "accepted": false
+    },
+    {
+      "iteration": 23,
+      "current_enhancement": 1.8055085569440628,
+      "candidate_enhancement": 1.8708401167057676,
+      "accepted": true
+    },
+    {
+      "iteration": 24,
+      "current_enhancement": 1.8710846769129477,
+      "candidate_enhancement": 1.8682175935773722,
+      "accepted": false
+    },
+    {
+      "iteration": 25,
+      "current_enhancement": 1.8686276604171954,
+      "candidate_enhancement": 1.748834255152515,
+      "accepted": false
+    },
+    {
+      "iteration": 26,
+      "current_enhancement": 1.8836129025582309,
+      "candidate_enhancement": 2.0006181083081964,
+      "accepted": true
+    },
+    {
+      "iteration": 27,
+      "current_enhancement": 1.991060369926706,
+      "candidate_enhancement": 1.9652561975339347,
+      "accepted": false
+    },
+    {
+      "iteration": 28,
+      "current_enhancement": 2.003983691879599,
+      "candidate_enhancement": 2.1459592863136563,
+      "accepted": true
+    },
+    {
+      "iteration": 29,
+      "current_enhancement": 2.134157194213474,
+      "candidate_enhancement": 2.109317314194344,
+      "accepted": false
+    },
+    {
+      "iteration": 30,
+      "current_enhancement": 2.136478617792756,
+      "candidate_enhancement": 2.0773347379921616,
+      "accepted": false
+    },
+    {
+      "iteration": 31,
+      "current_enhancement": 2.1200824850116544,
+      "candidate_enhancement": 2.1643750593751023,
+      "accepted": true
+    },
+    {
+      "iteration": 32,
+      "current_enhancement": 2.1733784643288985,
+      "candidate_enhancement": 2.1480046298357864,
+      "accepted": false
+    },
+    {
+      "iteration": 33,
+      "current_enhancement": 2.16766503491188,
+      "candidate_enhancement": 2.3800210302177995,
+      "accepted": true
+    },
+    {
+      "iteration": 34,
+      "current_enhancement": 2.400765892578578,
+      "candidate_enhancement": 2.258442007332253,
+      "accepted": false
+    },
+    {
+      "iteration": 35,
+      "current_enhancement": 2.3926292002236957,
+      "candidate_enhancement": 2.1667441611587295,
+      "accepted": false
+    },
+    {
+      "iteration": 36,
+      "current_enhancement": 2.362229890096711,
+      "candidate_enhancement": 2.492965174908582,
+      "accepted": true
+    },
+    {
+      "iteration": 37,
+      "current_enhancement": 2.4975594520011484,
+      "candidate_enhancement": 2.6076183616796276,
+      "accepted": true
+    },
+    {
+      "iteration": 38,
+      "current_enhancement": 2.6522537268154456,
+      "candidate_enhancement": 2.55362371981464,
+      "accepted": false
+    },
+    {
+      "iteration": 39,
+      "current_enhancement": 2.58258591469728,
+      "candidate_enhancement": 2.6296843887825174,
+      "accepted": true
+    },
+    {
+      "iteration": 40,
+      "current_enhancement": 2.6311296844982435,
+      "candidate_enhancement": 2.654961196657501,
+      "accepted": true
+    },
+    {
+      "iteration": 41,
+      "current_enhancement": 2.6727082181322253,
+      "candidate_enhancement": 2.3539015208347434,
+      "accepted": false
+    },
+    {
+      "iteration": 42,
+      "current_enhancement": 2.6523844780687935,
+      "candidate_enhancement": 2.5391381222923304,
+      "accepted": false
+    },
+    {
+      "iteration": 43,
+      "current_enhancement": 2.651762031698734,
+      "candidate_enhancement": 2.7145058952220142,
+      "accepted": true
+    },
+    {
+      "iteration": 44,
+      "current_enhancement": 2.6729610798223766,
+      "candidate_enhancement": 2.4171302989076042,
+      "accepted": false
+    },
+    {
+      "iteration": 45,
+      "current_enhancement": 2.731534733360839,
+      "candidate_enhancement": 2.676469186075002,
+      "accepted": false
+    },
+    {
+      "iteration": 46,
+      "current_enhancement": 2.6701056291861303,
+      "candidate_enhancement": 2.404999558046917,
+      "accepted": false
+    },
+    {
+      "iteration": 47,
+      "current_enhancement": 2.705195492384311,
+      "candidate_enhancement": 2.669667484125749,
+      "accepted": false
+    },
+    {
+      "iteration": 48,
+      "current_enhancement": 2.6825822868677243,
+      "candidate_enhancement": 2.6556792433479055,
+      "accepted": false
+    },
+    {
+      "iteration": 49,
+      "current_enhancement": 2.710768235541349,
+      "candidate_enhancement": 2.688911848352476,
+      "accepted": false
+    },
+    {
+      "iteration": 50,
+      "current_enhancement": 2.67847708616191,
+      "candidate_enhancement": 2.7264603795456477,
+      "accepted": true
+    },
+    {
+      "iteration": 51,
+      "current_enhancement": 2.732309018464572,
+      "candidate_enhancement": 2.6683698861672016,
+      "accepted": false
+    },
+    {
+      "iteration": 52,
+      "current_enhancement": 2.705231156198195,
+      "candidate_enhancement": 2.9611472140252872,
+      "accepted": true
+    },
+    {
+      "iteration": 53,
+      "current_enhancement": 2.934982732395019,
+      "candidate_enhancement": 2.9370215539650557,
+      "accepted": true
+    },
+    {
+      "iteration": 54,
+      "current_enhancement": 2.9653309889695634,
+      "candidate_enhancement": 2.748513704151856,
+      "accepted": false
+    },
+    {
+      "iteration": 55,
+      "current_enhancement": 2.9759415194315113,
+      "candidate_enhancement": 2.7585682147043937,
+      "accepted": false
+    },
+    {
+      "iteration": 56,
+      "current_enhancement": 2.9998669662729234,
+      "candidate_enhancement": 2.680540878780631,
+      "accepted": false
+    },
+    {
+      "iteration": 57,
+      "current_enhancement": 2.9541701187473532,
+      "candidate_enhancement": 2.805258853618472,
+      "accepted": false
+    },
+    {
+      "iteration": 58,
+      "current_enhancement": 2.952128972847859,
+      "candidate_enhancement": 2.895483860827186,
+      "accepted": false
+    },
+    {
+      "iteration": 59,
+      "current_enhancement": 2.949286325398642,
+      "candidate_enhancement": 2.9591754244642194,
+      "accepted": true
+    },
+    {
+      "iteration": 60,
+      "current_enhancement": 2.954861829485144,
+      "candidate_enhancement": 2.97321835771149,
+      "accepted": true
+    },
+    {
+      "iteration": 61,
+      "current_enhancement": 2.9507360125999167,
+      "candidate_enhancement": 2.9325636084526856,
+      "accepted": false
+    },
+    {
+      "iteration": 62,
+      "current_enhancement": 2.9642566332276075,
+      "candidate_enhancement": 2.9048878998047183,
+      "accepted": false
+    },
+    {
+      "iteration": 63,
+      "current_enhancement": 2.9708750425855244,
+      "candidate_enhancement": 2.6849408109742603,
+      "accepted": false
+    },
+    {
+      "iteration": 64,
+      "current_enhancement": 2.9750757541003874,
+      "candidate_enhancement": 2.7292409927521595,
+      "accepted": false
+    },
+    {
+      "iteration": 65,
+      "current_enhancement": 2.9394297213608898,
+      "candidate_enhancement": 2.972105499029827,
+      "accepted": true
+    },
+    {
+      "iteration": 66,
+      "current_enhancement": 2.964733462662874,
+      "candidate_enhancement": 2.8075679785211056,
+      "accepted": false
+    },
+    {
+      "iteration": 67,
+      "current_enhancement": 3.0081060043623684,
+      "candidate_enhancement": 3.092693110449126,
+      "accepted": true
+    },
+    {
+      "iteration": 68,
+      "current_enhancement": 3.0614446641617863,
+      "candidate_enhancement": 3.08090254760715,
+      "accepted": true
+    },
+    {
+      "iteration": 69,
+      "current_enhancement": 3.1137752323552585,
+      "candidate_enhancement": 3.1823996013282336,
+      "accepted": true
+    },
+    {
+      "iteration": 70,
+      "current_enhancement": 3.1573243988918036,
+      "candidate_enhancement": 3.1787078019133634,
+      "accepted": true
+    },
+    {
+      "iteration": 71,
+      "current_enhancement": 3.1867602351501723,
+      "candidate_enhancement": 3.067696500512733,
+      "accepted": false
+    },
+    {
+      "iteration": 72,
+      "current_enhancement": 3.1280221469853178,
+      "candidate_enhancement": 3.046602099668309,
+      "accepted": false
+    },
+    {
+      "iteration": 73,
+      "current_enhancement": 3.1714769959389897,
+      "candidate_enhancement": 3.345544003716386,
+      "accepted": true
+    },
+    {
+      "iteration": 74,
+      "current_enhancement": 3.2825545507490914,
+      "candidate_enhancement": 3.034630917385362,
+      "accepted": false
+    },
+    {
+      "iteration": 75,
+      "current_enhancement": 3.327404702015951,
+      "candidate_enhancement": 3.206647624342899,
+      "accepted": false
+    },
+    {
+      "iteration": 76,
+      "current_enhancement": 3.3272983130541673,
+      "candidate_enhancement": 3.3738741560702756,
+      "accepted": true
+    },
+    {
+      "iteration": 77,
+      "current_enhancement": 3.324560613538314,
+      "candidate_enhancement": 3.2869600544385875,
+      "accepted": false
+    },
+    {
+      "iteration": 78,
+      "current_enhancement": 3.3324141374408573,
+      "candidate_enhancement": 3.3087421366721674,
+      "accepted": false
+    },
+    {
+      "iteration": 79,
+      "current_enhancement": 3.417185564042976,
+      "candidate_enhancement": 3.2945005106488825,
+      "accepted": false
+    },
+    {
+      "iteration": 80,
+      "current_enhancement": 3.319004421234449,
+      "candidate_enhancement": 3.3784656336781254,
+      "accepted": true
+    },
+    {
+      "iteration": 81,
+      "current_enhancement": 3.426898441006375,
+      "candidate_enhancement": 3.738716280043389,
+      "accepted": true
+    },
+    {
+      "iteration": 82,
+      "current_enhancement": 3.700848271029854,
+      "candidate_enhancement": 3.649685487241977,
+      "accepted": false
+    },
+    {
+      "iteration": 83,
+      "current_enhancement": 3.680093261019038,
+      "candidate_enhancement": 3.5030144189754275,
+      "accepted": false
+    },
+    {
+      "iteration": 84,
+      "current_enhancement": 3.7363614553478595,
+      "candidate_enhancement": 4.188736711882066,
+      "accepted": true
+    },
+    {
+      "iteration": 85,
+      "current_enhancement": 4.171441896792156,
+      "candidate_enhancement": 4.019607311516547,
+      "accepted": false
+    },
+    {
+      "iteration": 86,
+      "current_enhancement": 4.168856613861945,
+      "candidate_enhancement": 4.100806084319491,
+      "accepted": false
+    },
+    {
+      "iteration": 87,
+      "current_enhancement": 4.1515634227090015,
+      "candidate_enhancement": 4.337208883320424,
+      "accepted": true
+    },
+    {
+      "iteration": 88,
+      "current_enhancement": 4.408922785376137,
+      "candidate_enhancement": 4.655608255509131,
+      "accepted": true
+    },
+    {
+      "iteration": 89,
+      "current_enhancement": 4.69550354911298,
+      "candidate_enhancement": 5.006056227574557,
+      "accepted": true
+    },
+    {
+      "iteration": 90,
+      "current_enhancement": 5.090077840773102,
+      "candidate_enhancement": 4.706540899344837,
+      "accepted": false
+    },
+    {
+      "iteration": 91,
+      "current_enhancement": 5.058451031354138,
+      "candidate_enhancement": 4.739946056060858,
+      "accepted": false
+    },
+    {
+      "iteration": 92,
+      "current_enhancement": 5.085791650714278,
+      "candidate_enhancement": 4.455865622566684,
+      "accepted": false
+    },
+    {
+      "iteration": 93,
+      "current_enhancement": 5.087801628069677,
+      "candidate_enhancement": 4.396520084924723,
+      "accepted": false
+    },
+    {
+      "iteration": 94,
+      "current_enhancement": 5.103388819544153,
+      "candidate_enhancement": 4.782044800663432,
+      "accepted": false
+    },
+    {
+      "iteration": 95,
+      "current_enhancement": 5.0849435529968146,
+      "candidate_enhancement": 4.6829591166577575,
+      "accepted": false
+    },
+    {
+      "iteration": 96,
+      "current_enhancement": 5.074455918858704,
+      "candidate_enhancement": 5.421250337880591,
+      "accepted": true
+    },
+    {
+      "iteration": 97,
+      "current_enhancement": 5.417300578293929,
+      "candidate_enhancement": 4.939875352357308,
+      "accepted": false
+    },
+    {
+      "iteration": 98,
+      "current_enhancement": 5.355606475637587,
+      "candidate_enhancement": 5.589824419699236,
+      "accepted": true
+    },
+    {
+      "iteration": 99,
+      "current_enhancement": 5.528947575997773,
+      "candidate_enhancement": 5.587466482145431,
+      "accepted": true
+    },
+    {
+      "iteration": 100,
+      "current_enhancement": 5.569651473633933,
+      "candidate_enhancement": 5.6883531076596485,
+      "accepted": true
+    },
+    {
+      "iteration": 101,
+      "current_enhancement": 5.682917921507052,
+      "candidate_enhancement": 5.810525458563709,
+      "accepted": true
+    },
+    {
+      "iteration": 102,
+      "current_enhancement": 5.760210943763407,
+      "candidate_enhancement": 5.500478594624016,
+      "accepted": false
+    },
+    {
+      "iteration": 103,
+      "current_enhancement": 5.735799136322124,
+      "candidate_enhancement": 6.263260550627973,
+      "accepted": true
+    },
+    {
+      "iteration": 104,
+      "current_enhancement": 6.217211170367024,
+      "candidate_enhancement": 6.069726165706367,
+      "accepted": false
+    },
+    {
+      "iteration": 105,
+      "current_enhancement": 6.194780113329658,
+      "candidate_enhancement": 5.945160164620417,
+      "accepted": false
+    },
+    {
+      "iteration": 106,
+      "current_enhancement": 6.129474278509277,
+      "candidate_enhancement": 5.578710621009951,
+      "accepted": false
+    },
+    {
+      "iteration": 107,
+      "current_enhancement": 6.185513000870199,
+      "candidate_enhancement": 5.523792504067221,
+      "accepted": false
+    },
+    {
+      "iteration": 108,
+      "current_enhancement": 6.165671018375058,
+      "candidate_enhancement": 6.4847760017609275,
+      "accepted": true
+    },
+    {
+      "iteration": 109,
+      "current_enhancement": 6.672955502595074,
+      "candidate_enhancement": 5.8183557415617555,
+      "accepted": false
+    },
+    {
+      "iteration": 110,
+      "current_enhancement": 6.669839693659116,
+      "candidate_enhancement": 6.511476517835465,
+      "accepted": false
+    },
+    {
+      "iteration": 111,
+      "current_enhancement": 6.586702482060608,
+      "candidate_enhancement": 6.168770631988069,
+      "accepted": false
+    },
+    {
+      "iteration": 112,
+      "current_enhancement": 6.679684884739206,
+      "candidate_enhancement": 5.871048749608172,
+      "accepted": false
+    },
+    {
+      "iteration": 113,
+      "current_enhancement": 6.642669228535028,
+      "candidate_enhancement": 6.629969775978702,
+      "accepted": false
+    },
+    {
+      "iteration": 114,
+      "current_enhancement": 6.5293724120723,
+      "candidate_enhancement": 7.200853781327272,
+      "accepted": true
+    },
+    {
+      "iteration": 115,
+      "current_enhancement": 7.184456443951919,
+      "candidate_enhancement": 7.162382889657391,
+      "accepted": false
+    },
+    {
+      "iteration": 116,
+      "current_enhancement": 7.149481748263286,
+      "candidate_enhancement": 6.673813259170078,
+      "accepted": false
+    },
+    {
+      "iteration": 117,
+      "current_enhancement": 7.143147975765367,
+      "candidate_enhancement": 8.752188590544879,
+      "accepted": true
+    },
+    {
+      "iteration": 118,
+      "current_enhancement": 8.549419758710897,
+      "candidate_enhancement": 7.846388851092409,
+      "accepted": false
+    },
+    {
+      "iteration": 119,
+      "current_enhancement": 8.974972441498341,
+      "candidate_enhancement": 8.147431039855158,
+      "accepted": false
+    },
+    {
+      "iteration": 120,
+      "current_enhancement": 8.668563511756545,
+      "candidate_enhancement": 8.306104933465942,
+      "accepted": false
+    },
+    {
+      "iteration": 121,
+      "current_enhancement": 8.676479067642349,
+      "candidate_enhancement": 8.572074936328596,
+      "accepted": false
+    },
+    {
+      "iteration": 122,
+      "current_enhancement": 8.773734937995243,
+      "candidate_enhancement": 9.633745716115131,
+      "accepted": true
+    },
+    {
+      "iteration": 123,
+      "current_enhancement": 9.723406774633348,
+      "candidate_enhancement": 8.548574051505108,
+      "accepted": false
+    },
+    {
+      "iteration": 124,
+      "current_enhancement": 9.6435451837363,
+      "candidate_enhancement": 8.772551972150497,
+      "accepted": false
+    },
+    {
+      "iteration": 125,
+      "current_enhancement": 9.651714259806676,
+      "candidate_enhancement": 9.605654550117416,
+      "accepted": false
+    },
+    {
+      "iteration": 126,
+      "current_enhancement": 9.658788411615824,
+      "candidate_enhancement": 10.565529387503771,
+      "accepted": true
+    },
+    {
+      "iteration": 127,
+      "current_enhancement": 10.781180582173178,
+      "candidate_enhancement": 10.375942529813344,
+      "accepted": false
+    },
+    {
+      "iteration": 128,
+      "current_enhancement": 10.455237668502944,
+      "candidate_enhancement": 9.323839409868562,
+      "accepted": false
+    },
+    {
+      "iteration": 129,
+      "current_enhancement": 10.30966004892097,
+      "candidate_enhancement": 9.671020809567924,
+      "accepted": false
+    },
+    {
+      "iteration": 130,
+      "current_enhancement": 10.60550948173809,
+      "candidate_enhancement": 9.464030975172504,
+      "accepted": false
+    },
+    {
+      "iteration": 131,
+      "current_enhancement": 10.727444235066763,
+      "candidate_enhancement": 10.435604412662187,
+      "accepted": false
+    },
+    {
+      "iteration": 132,
+      "current_enhancement": 10.386988940734092,
+      "candidate_enhancement": 9.749039884950506,
+      "accepted": false
+    },
+    {
+      "iteration": 133,
+      "current_enhancement": 10.562397772826845,
+      "candidate_enhancement": 10.595772460074189,
+      "accepted": true
+    },
+    {
+      "iteration": 134,
+      "current_enhancement": 10.752477664345186,
+      "candidate_enhancement": 9.48354221850712,
+      "accepted": false
+    },
+    {
+      "iteration": 135,
+      "current_enhancement": 10.652572952967317,
+      "candidate_enhancement": 10.989820695641559,
+      "accepted": true
+    },
+    {
+      "iteration": 136,
+      "current_enhancement": 11.229254877780624,
+      "candidate_enhancement": 10.745515235695525,
+      "accepted": false
+    },
+    {
+      "iteration": 137,
+      "current_enhancement": 10.982639620418103,
+      "candidate_enhancement": 11.375099624875146,
+      "accepted": true
+    },
+    {
+      "iteration": 138,
+      "current_enhancement": 11.323025228259887,
+      "candidate_enhancement": 13.545791467625705,
+      "accepted": true
+    },
+    {
+      "iteration": 139,
+      "current_enhancement": 13.105014693404467,
+      "candidate_enhancement": 12.051952993444761,
+      "accepted": false
+    },
+    {
+      "iteration": 140,
+      "current_enhancement": 13.455032516052011,
+      "candidate_enhancement": 12.269570800910586,
+      "accepted": false
+    },
+    {
+      "iteration": 141,
+      "current_enhancement": 13.879978373652156,
+      "candidate_enhancement": 11.449980965542222,
+      "accepted": false
+    },
+    {
+      "iteration": 142,
+      "current_enhancement": 13.531665034268975,
+      "candidate_enhancement": 12.714369148633422,
+      "accepted": false
+    },
+    {
+      "iteration": 143,
+      "current_enhancement": 13.711173632716422,
+      "candidate_enhancement": 12.968494107551058,
+      "accepted": false
+    },
+    {
+      "iteration": 144,
+      "current_enhancement": 13.600540239705841,
+      "candidate_enhancement": 12.089325985861342,
+      "accepted": false
+    },
+    {
+      "iteration": 145,
+      "current_enhancement": 13.598272258375587,
+      "candidate_enhancement": 11.799363607711115,
+      "accepted": false
+    },
+    {
+      "iteration": 146,
+      "current_enhancement": 13.801900793628437,
+      "candidate_enhancement": 12.831993327242724,
+      "accepted": false
+    },
+    {
+      "iteration": 147,
+      "current_enhancement": 13.330660281973495,
+      "candidate_enhancement": 12.583960389378893,
+      "accepted": false
+    },
+    {
+      "iteration": 148,
+      "current_enhancement": 13.532486052315884,
+      "candidate_enhancement": 13.878184184629687,
+      "accepted": true
+    },
+    {
+      "iteration": 149,
+      "current_enhancement": 14.161857077484669,
+      "candidate_enhancement": 14.209633525408323,
+      "accepted": true
+    },
+    {
+      "iteration": 150,
+      "current_enhancement": 14.220130716102686,
+      "candidate_enhancement": 12.485935754474838,
+      "accepted": false
+    },
+    {
+      "iteration": 151,
+      "current_enhancement": 14.645198338283409,
+      "candidate_enhancement": 13.267487529405175,
+      "accepted": false
+    },
+    {
+      "iteration": 152,
+      "current_enhancement": 14.166534587277507,
+      "candidate_enhancement": 12.415123228553554,
+      "accepted": false
+    },
+    {
+      "iteration": 153,
+      "current_enhancement": 14.622781471920797,
+      "candidate_enhancement": 13.079213156773816,
+      "accepted": false
+    },
+    {
+      "iteration": 154,
+      "current_enhancement": 14.273580703854899,
+      "candidate_enhancement": 14.08104619086744,
+      "accepted": false
+    },
+    {
+      "iteration": 155,
+      "current_enhancement": 14.262568932486356,
+      "candidate_enhancement": 13.789430332446758,
+      "accepted": false
+    },
+    {
+      "iteration": 156,
+      "current_enhancement": 14.502989587681355,
+      "candidate_enhancement": 12.58204960514067,
+      "accepted": false
+    },
+    {
+      "iteration": 157,
+      "current_enhancement": 14.129901383710939,
+      "candidate_enhancement": 13.863326912563725,
+      "accepted": false
+    },
+    {
+      "iteration": 158,
+      "current_enhancement": 14.067513193839305,
+      "candidate_enhancement": 13.162535600747809,
+      "accepted": false
+    },
+    {
+      "iteration": 159,
+      "current_enhancement": 14.884304315742575,
+      "candidate_enhancement": 14.162508550380823,
+      "accepted": false
+    },
+    {
+      "iteration": 160,
+      "current_enhancement": 14.136731500068963,
+      "candidate_enhancement": 13.84034723235881,
+      "accepted": false
+    },
+    {
+      "iteration": 161,
+      "current_enhancement": 14.152731089338259,
+      "candidate_enhancement": 11.100468863757898,
+      "accepted": false
+    },
+    {
+      "iteration": 162,
+      "current_enhancement": 14.226630688779082,
+      "candidate_enhancement": 14.314314391710488,
+      "accepted": true
+    },
+    {
+      "iteration": 163,
+      "current_enhancement": 14.25261133835541,
+      "candidate_enhancement": 13.347799851096303,
+      "accepted": false
+    },
+    {
+      "iteration": 164,
+      "current_enhancement": 14.373331712125674,
+      "candidate_enhancement": 11.43274806198921,
+      "accepted": false
+    },
+    {
+      "iteration": 165,
+      "current_enhancement": 14.640042864369862,
+      "candidate_enhancement": 13.740424006642893,
+      "accepted": false
+    },
+    {
+      "iteration": 166,
+      "current_enhancement": 14.444359044883035,
+      "candidate_enhancement": 12.073534387551037,
+      "accepted": false
+    },
+    {
+      "iteration": 167,
+      "current_enhancement": 14.41693256425806,
+      "candidate_enhancement": 13.395815329791189,
+      "accepted": false
+    },
+    {
+      "iteration": 168,
+      "current_enhancement": 14.555053412969448,
+      "candidate_enhancement": 13.060985392778463,
+      "accepted": false
+    },
+    {
+      "iteration": 169,
+      "current_enhancement": 14.632093182824063,
+      "candidate_enhancement": 13.373456283826156,
+      "accepted": false
+    },
+    {
+      "iteration": 170,
+      "current_enhancement": 14.590920664506932,
+      "candidate_enhancement": 12.463370874682342,
+      "accepted": false
+    },
+    {
+      "iteration": 171,
+      "current_enhancement": 14.71765836894832,
+      "candidate_enhancement": 13.702830950979685,
+      "accepted": false
+    },
+    {
+      "iteration": 172,
+      "current_enhancement": 14.613881514240225,
+      "candidate_enhancement": 12.368016195435786,
+      "accepted": false
+    },
+    {
+      "iteration": 173,
+      "current_enhancement": 14.634726699993188,
+      "candidate_enhancement": 14.566913653454373,
+      "accepted": false
+    },
+    {
+      "iteration": 174,
+      "current_enhancement": 14.688312024185093,
+      "candidate_enhancement": 13.642054344879549,
+      "accepted": false
+    },
+    {
+      "iteration": 175,
+      "current_enhancement": 14.51537881775586,
+      "candidate_enhancement": 14.603038375324246,
+      "accepted": true
+    },
+    {
+      "iteration": 176,
+      "current_enhancement": 14.090906931841937,
+      "candidate_enhancement": 13.082201327636696,
+      "accepted": false
+    },
+    {
+      "iteration": 177,
+      "current_enhancement": 14.125610419013444,
+      "candidate_enhancement": 13.39888684878878,
+      "accepted": false
+    },
+    {
+      "iteration": 178,
+      "current_enhancement": 14.4551337917876,
+      "candidate_enhancement": 14.91911263237384,
+      "accepted": true
+    },
+    {
+      "iteration": 179,
+      "current_enhancement": 14.788405355604372,
+      "candidate_enhancement": 13.694645344008899,
+      "accepted": false
+    },
+    {
+      "iteration": 180,
+      "current_enhancement": 15.082785017622651,
+      "candidate_enhancement": 15.872088297412668,
+      "accepted": true
+    },
+    {
+      "iteration": 181,
+      "current_enhancement": 15.983974098879061,
+      "candidate_enhancement": 15.133686846373767,
+      "accepted": false
+    },
+    {
+      "iteration": 182,
+      "current_enhancement": 15.875513519488127,
+      "candidate_enhancement": 15.466645445869563,
+      "accepted": false
+    },
+    {
+      "iteration": 183,
+      "current_enhancement": 16.807046318535726,
+      "candidate_enhancement": 14.78055930921541,
+      "accepted": false
+    },
+    {
+      "iteration": 184,
+      "current_enhancement": 16.351934853178513,
+      "candidate_enhancement": 14.197287704205708,
+      "accepted": false
+    },
+    {
+      "iteration": 185,
+      "current_enhancement": 16.87689445780651,
+      "candidate_enhancement": 13.09116772278295,
+      "accepted": false
+    },
+    {
+      "iteration": 186,
+      "current_enhancement": 16.296489580141973,
+      "candidate_enhancement": 16.404248832499604,
+      "accepted": true
+    },
+    {
+      "iteration": 187,
+      "current_enhancement": 16.792298911244078,
+      "candidate_enhancement": 16.57091359523383,
+      "accepted": false
+    },
+    {
+      "iteration": 188,
+      "current_enhancement": 16.778966090118203,
+      "candidate_enhancement": 18.82275053371784,
+      "accepted": true
+    },
+    {
+      "iteration": 189,
+      "current_enhancement": 17.736715166093703,
+      "candidate_enhancement": 14.913739815206837,
+      "accepted": false
+    },
+    {
+      "iteration": 190,
+      "current_enhancement": 18.9250551985865,
+      "candidate_enhancement": 17.2635698683724,
+      "accepted": false
+    },
+    {
+      "iteration": 191,
+      "current_enhancement": 18.522148554237454,
+      "candidate_enhancement": 15.642342867910372,
+      "accepted": false
+    },
+    {
+      "iteration": 192,
+      "current_enhancement": 18.47249289841879,
+      "candidate_enhancement": 17.786105786771564,
+      "accepted": false
+    },
+    {
+      "iteration": 193,
+      "current_enhancement": 18.87555980031418,
+      "candidate_enhancement": 19.934912223628697,
+      "accepted": true
+    },
+    {
+      "iteration": 194,
+      "current_enhancement": 18.657725636256515,
+      "candidate_enhancement": 18.459591623145172,
+      "accepted": false
+    },
+    {
+      "iteration": 195,
+      "current_enhancement": 18.875435929839522,
+      "candidate_enhancement": 18.504226253451566,
+      "accepted": false
+    },
+    {
+      "iteration": 196,
+      "current_enhancement": 18.477092959615202,
+      "candidate_enhancement": 18.149676663036907,
+      "accepted": false
+    },
+    {
+      "iteration": 197,
+      "current_enhancement": 18.650362631330093,
+      "candidate_enhancement": 16.768346700754925,
+      "accepted": false
+    },
+    {
+      "iteration": 198,
+      "current_enhancement": 18.106264896592087,
+      "candidate_enhancement": 18.416041700315404,
+      "accepted": true
+    },
+    {
+      "iteration": 199,
+      "current_enhancement": 18.865085690026746,
+      "candidate_enhancement": 19.355828873137323,
+      "accepted": true
+    },
+    {
+      "iteration": 200,
+      "current_enhancement": 18.82166653526422,
+      "candidate_enhancement": 18.119358012720678,
+      "accepted": false
+    },
+    {
+      "iteration": 201,
+      "current_enhancement": 18.077764524126373,
+      "candidate_enhancement": 16.564463241096625,
+      "accepted": false
+    },
+    {
+      "iteration": 202,
+      "current_enhancement": 18.60109084516952,
+      "candidate_enhancement": 18.61192577548633,
+      "accepted": true
+    },
+    {
+      "iteration": 203,
+      "current_enhancement": 19.327176852794242,
+      "candidate_enhancement": 15.816702979384484,
+      "accepted": false
+    },
+    {
+      "iteration": 204,
+      "current_enhancement": 19.21941287591783,
+      "candidate_enhancement": 14.14238357715737,
+      "accepted": false
+    },
+    {
+      "iteration": 205,
+      "current_enhancement": 18.392292402635736,
+      "candidate_enhancement": 15.724362401703557,
+      "accepted": false
+    },
+    {
+      "iteration": 206,
+      "current_enhancement": 18.57839205867158,
+      "candidate_enhancement": 15.96896952671162,
+      "accepted": false
+    },
+    {
+      "iteration": 207,
+      "current_enhancement": 19.00344864935471,
+      "candidate_enhancement": 16.704909813626966,
+      "accepted": false
+    },
+    {
+      "iteration": 208,
+      "current_enhancement": 18.77173404270271,
+      "candidate_enhancement": 18.562510437832643,
+      "accepted": false
+    },
+    {
+      "iteration": 209,
+      "current_enhancement": 18.86786872250079,
+      "candidate_enhancement": 18.913009630222227,
+      "accepted": true
+    },
+    {
+      "iteration": 210,
+      "current_enhancement": 18.745636103000272,
+      "candidate_enhancement": 18.149363776221097,
+      "accepted": false
+    },
+    {
+      "iteration": 211,
+      "current_enhancement": 19.197390576505892,
+      "candidate_enhancement": 17.403912806814308,
+      "accepted": false
+    },
+    {
+      "iteration": 212,
+      "current_enhancement": 19.358806261156598,
+      "candidate_enhancement": 16.27231853470924,
+      "accepted": false
+    },
+    {
+      "iteration": 213,
+      "current_enhancement": 19.150113500694705,
+      "candidate_enhancement": 16.929167395435208,
+      "accepted": false
+    },
+    {
+      "iteration": 214,
+      "current_enhancement": 19.33289633319595,
+      "candidate_enhancement": 15.948167672689113,
+      "accepted": false
+    },
+    {
+      "iteration": 215,
+      "current_enhancement": 20.384534721834463,
+      "candidate_enhancement": 17.93176675129888,
+      "accepted": false
+    },
+    {
+      "iteration": 216,
+      "current_enhancement": 19.650206202051884,
+      "candidate_enhancement": 16.840166183031503,
+      "accepted": false
+    },
+    {
+      "iteration": 217,
+      "current_enhancement": 19.47828819814463,
+      "candidate_enhancement": 16.52764018999804,
+      "accepted": false
+    },
+    {
+      "iteration": 218,
+      "current_enhancement": 19.12755369912153,
+      "candidate_enhancement": 18.187735521975164,
+      "accepted": false
+    },
+    {
+      "iteration": 219,
+      "current_enhancement": 19.222096983835886,
+      "candidate_enhancement": 22.223844721400727,
+      "accepted": true
+    },
+    {
+      "iteration": 220,
+      "current_enhancement": 21.10766327725785,
+      "candidate_enhancement": 18.112535680378258,
+      "accepted": false
+    },
+    {
+      "iteration": 221,
+      "current_enhancement": 20.903893964854635,
+      "candidate_enhancement": 19.420717770255045,
+      "accepted": false
+    },
+    {
+      "iteration": 222,
+      "current_enhancement": 21.048102046998576,
+      "candidate_enhancement": 17.177731848396316,
+      "accepted": false
+    },
+    {
+      "iteration": 223,
+      "current_enhancement": 21.657972828177954,
+      "candidate_enhancement": 16.56468433191737,
+      "accepted": false
+    },
+    {
+      "iteration": 224,
+      "current_enhancement": 21.548892406354163,
+      "candidate_enhancement": 18.550413735740086,
+      "accepted": false
+    },
+    {
+      "iteration": 225,
+      "current_enhancement": 20.776469857724962,
+      "candidate_enhancement": 24.57972783653399,
+      "accepted": true
+    },
+    {
+      "iteration": 226,
+      "current_enhancement": 24.31398664192023,
+      "candidate_enhancement": 22.47717310054527,
+      "accepted": false
+    },
+    {
+      "iteration": 227,
+      "current_enhancement": 25.438095076934836,
+      "candidate_enhancement": 24.538753868940674,
+      "accepted": false
+    },
+    {
+      "iteration": 228,
+      "current_enhancement": 23.33329198578699,
+      "candidate_enhancement": 25.17105381286728,
+      "accepted": true
+    },
+    {
+      "iteration": 229,
+      "current_enhancement": 25.04208576964696,
+      "candidate_enhancement": 22.840789447361125,
+      "accepted": false
+    },
+    {
+      "iteration": 230,
+      "current_enhancement": 26.073085512996997,
+      "candidate_enhancement": 24.338827193471737,
+      "accepted": false
+    },
+    {
+      "iteration": 231,
+      "current_enhancement": 25.153535670746255,
+      "candidate_enhancement": 20.943767772217598,
+      "accepted": false
+    },
+    {
+      "iteration": 232,
+      "current_enhancement": 24.386687754140652,
+      "candidate_enhancement": 23.486949934034662,
+      "accepted": false
+    },
+    {
+      "iteration": 233,
+      "current_enhancement": 24.732325523534815,
+      "candidate_enhancement": 25.020132208149533,
+      "accepted": true
+    },
+    {
+      "iteration": 234,
+      "current_enhancement": 23.92578903797856,
+      "candidate_enhancement": 24.57435849878459,
+      "accepted": true
+    },
+    {
+      "iteration": 235,
+      "current_enhancement": 25.13761183024014,
+      "candidate_enhancement": 24.742501506492598,
+      "accepted": false
+    },
+    {
+      "iteration": 236,
+      "current_enhancement": 25.414589173975482,
+      "candidate_enhancement": 21.5736395346629,
+      "accepted": false
+    },
+    {
+      "iteration": 237,
+      "current_enhancement": 24.316254900651003,
+      "candidate_enhancement": 20.426318244801717,
+      "accepted": false
+    },
+    {
+      "iteration": 238,
+      "current_enhancement": 25.569738391500394,
+      "candidate_enhancement": 21.84088942262284,
+      "accepted": false
+    },
+    {
+      "iteration": 239,
+      "current_enhancement": 26.709446344191658,
+      "candidate_enhancement": 26.615023001187183,
+      "accepted": false
+    },
+    {
+      "iteration": 240,
+      "current_enhancement": 25.662830434293408,
+      "candidate_enhancement": 24.635791644101616,
+      "accepted": false
+    },
+    {
+      "iteration": 241,
+      "current_enhancement": 25.866018291398028,
+      "candidate_enhancement": 21.70021437970669,
+      "accepted": false
+    },
+    {
+      "iteration": 242,
+      "current_enhancement": 25.852209666190376,
+      "candidate_enhancement": 25.28464291804427,
+      "accepted": false
+    },
+    {
+      "iteration": 243,
+      "current_enhancement": 25.03963793202258,
+      "candidate_enhancement": 24.871254096565917,
+      "accepted": false
+    },
+    {
+      "iteration": 244,
+      "current_enhancement": 26.800321579770365,
+      "candidate_enhancement": 24.742668699530284,
+      "accepted": false
+    },
+    {
+      "iteration": 245,
+      "current_enhancement": 24.08302665052048,
+      "candidate_enhancement": 24.931453267305788,
+      "accepted": true
+    },
+    {
+      "iteration": 246,
+      "current_enhancement": 23.093362773869604,
+      "candidate_enhancement": 23.711945984219312,
+      "accepted": true
+    },
+    {
+      "iteration": 247,
+      "current_enhancement": 24.821120099827763,
+      "candidate_enhancement": 20.225155708775404,
+      "accepted": false
+    },
+    {
+      "iteration": 248,
+      "current_enhancement": 25.199207314081377,
+      "candidate_enhancement": 19.94571063508249,
+      "accepted": false
+    },
+    {
+      "iteration": 249,
+      "current_enhancement": 25.127290849232455,
+      "candidate_enhancement": 20.01373647557526,
+      "accepted": false
+    },
+    {
+      "iteration": 250,
+      "current_enhancement": 23.79364977973826,
+      "candidate_enhancement": 21.5740576380811,
+      "accepted": false
+    },
+    {
+      "iteration": 251,
+      "current_enhancement": 25.109093673073275,
+      "candidate_enhancement": 19.799451091753358,
+      "accepted": false
+    },
+    {
+      "iteration": 252,
+      "current_enhancement": 24.327403283790144,
+      "candidate_enhancement": 23.35495419565249,
+      "accepted": false
+    },
+    {
+      "iteration": 253,
+      "current_enhancement": 23.528528622535877,
+      "candidate_enhancement": 24.11343662694835,
+      "accepted": true
+    },
+    {
+      "iteration": 254,
+      "current_enhancement": 23.48789642956787,
+      "candidate_enhancement": 19.581819082896764,
+      "accepted": false
+    },
+    {
+      "iteration": 255,
+      "current_enhancement": 23.065982393311387,
+      "candidate_enhancement": 21.040994621436486,
+      "accepted": false
+    },
+    {
+      "iteration": 256,
+      "current_enhancement": 23.74082065636187,
+      "candidate_enhancement": 19.005351773446186,
+      "accepted": false
+    },
+    {
+      "iteration": 257,
+      "current_enhancement": 24.568725059175126,
+      "candidate_enhancement": 21.68884008816133,
+      "accepted": false
+    },
+    {
+      "iteration": 258,
+      "current_enhancement": 23.458643758643696,
+      "candidate_enhancement": 21.659248525614615,
+      "accepted": false
+    },
+    {
+      "iteration": 259,
+      "current_enhancement": 21.9361205929377,
+      "candidate_enhancement": 21.50461328086335,
+      "accepted": false
+    },
+    {
+      "iteration": 260,
+      "current_enhancement": 24.075368629268503,
+      "candidate_enhancement": 19.914313864001496,
+      "accepted": false
+    },
+    {
+      "iteration": 261,
+      "current_enhancement": 24.26914185322545,
+      "candidate_enhancement": 22.56065082728868,
+      "accepted": false
+    },
+    {
+      "iteration": 262,
+      "current_enhancement": 22.15433073345422,
+      "candidate_enhancement": 20.338112994540158,
+      "accepted": false
+    },
+    {
+      "iteration": 263,
+      "current_enhancement": 23.878077714199865,
+      "candidate_enhancement": 17.661623932532443,
+      "accepted": false
+    },
+    {
+      "iteration": 264,
+      "current_enhancement": 24.273965122860094,
+      "candidate_enhancement": 19.928913771307894,
+      "accepted": false
+    },
+    {
+      "iteration": 265,
+      "current_enhancement": 23.093128366050983,
+      "candidate_enhancement": 20.685210513533377,
+      "accepted": false
+    },
+    {
+      "iteration": 266,
+      "current_enhancement": 23.23747903741397,
+      "candidate_enhancement": 21.201264805621,
+      "accepted": false
+    },
+    {
+      "iteration": 267,
+      "current_enhancement": 23.01854737908923,
+      "candidate_enhancement": 20.091382609798348,
+      "accepted": false
+    },
+    {
+      "iteration": 268,
+      "current_enhancement": 23.172001276498655,
+      "candidate_enhancement": 21.28560849294485,
+      "accepted": false
+    },
+    {
+      "iteration": 269,
+      "current_enhancement": 23.47679305303285,
+      "candidate_enhancement": 23.07663193772733,
+      "accepted": false
+    },
+    {
+      "iteration": 270,
+      "current_enhancement": 23.933505796754595,
+      "candidate_enhancement": 22.601859924863952,
+      "accepted": false
+    },
+    {
+      "iteration": 271,
+      "current_enhancement": 23.22979362475993,
+      "candidate_enhancement": 24.732132455372042,
+      "accepted": true
+    },
+    {
+      "iteration": 272,
+      "current_enhancement": 24.406675913707065,
+      "candidate_enhancement": 20.28320844460989,
+      "accepted": false
+    },
+    {
+      "iteration": 273,
+      "current_enhancement": 23.807960018542964,
+      "candidate_enhancement": 23.753857222291533,
+      "accepted": false
+    },
+    {
+      "iteration": 274,
+      "current_enhancement": 25.038255888785887,
+      "candidate_enhancement": 23.34878454787854,
+      "accepted": false
+    },
+    {
+      "iteration": 275,
+      "current_enhancement": 25.125347217894554,
+      "candidate_enhancement": 24.012403760645384,
+      "accepted": false
+    },
+    {
+      "iteration": 276,
+      "current_enhancement": 25.371724717414054,
+      "candidate_enhancement": 20.827592393874326,
+      "accepted": false
+    },
+    {
+      "iteration": 277,
+      "current_enhancement": 24.341832415252483,
+      "candidate_enhancement": 23.023592064865078,
+      "accepted": false
+    },
+    {
+      "iteration": 278,
+      "current_enhancement": 24.645139187763203,
+      "candidate_enhancement": 23.82172486385863,
+      "accepted": false
+    },
+    {
+      "iteration": 279,
+      "current_enhancement": 24.02994592850824,
+      "candidate_enhancement": 22.177716625246042,
+      "accepted": false
+    },
+    {
+      "iteration": 280,
+      "current_enhancement": 24.574521282038077,
+      "candidate_enhancement": 21.274286766738328,
+      "accepted": false
+    },
+    {
+      "iteration": 281,
+      "current_enhancement": 25.547042932704056,
+      "candidate_enhancement": 19.527867156370075,
+      "accepted": false
+    },
+    {
+      "iteration": 282,
+      "current_enhancement": 24.372858455128693,
+      "candidate_enhancement": 20.81839380393186,
+      "accepted": false
+    },
+    {
+      "iteration": 283,
+      "current_enhancement": 25.793163756410063,
+      "candidate_enhancement": 22.885008724249744,
+      "accepted": false
+    },
+    {
+      "iteration": 284,
+      "current_enhancement": 24.46003309714872,
+      "candidate_enhancement": 20.30438548955873,
+      "accepted": false
+    },
+    {
+      "iteration": 285,
+      "current_enhancement": 24.688322793391073,
+      "candidate_enhancement": 24.533188469470787,
+      "accepted": false
+    },
+    {
+      "iteration": 286,
+      "current_enhancement": 24.92090998639487,
+      "candidate_enhancement": 22.43583872766919,
+      "accepted": false
+    },
+    {
+      "iteration": 287,
+      "current_enhancement": 25.26451889738104,
+      "candidate_enhancement": 24.872220808828864,
+      "accepted": false
+    },
+    {
+      "iteration": 288,
+      "current_enhancement": 23.951325275029397,
+      "candidate_enhancement": 20.683238855454608,
+      "accepted": false
+    },
+    {
+      "iteration": 289,
+      "current_enhancement": 25.348687879452218,
+      "candidate_enhancement": 23.270146714372228,
+      "accepted": false
+    },
+    {
+      "iteration": 290,
+      "current_enhancement": 25.420326549062075,
+      "candidate_enhancement": 22.84993095531377,
+      "accepted": false
+    },
+    {
+      "iteration": 291,
+      "current_enhancement": 25.248566459277544,
+      "candidate_enhancement": 23.786005748026778,
+      "accepted": false
+    },
+    {
+      "iteration": 292,
+      "current_enhancement": 24.981554952427427,
+      "candidate_enhancement": 21.462032307706856,
+      "accepted": false
+    },
+    {
+      "iteration": 293,
+      "current_enhancement": 24.685157703023012,
+      "candidate_enhancement": 25.05147093897564,
+      "accepted": true
+    },
+    {
+      "iteration": 294,
+      "current_enhancement": 24.841689214195032,
+      "candidate_enhancement": 19.447753684695876,
+      "accepted": false
+    },
+    {
+      "iteration": 295,
+      "current_enhancement": 26.54602762897058,
+      "candidate_enhancement": 17.69976849903431,
+      "accepted": false
+    },
+    {
+      "iteration": 296,
+      "current_enhancement": 24.219041050107553,
+      "candidate_enhancement": 19.91546433709492,
+      "accepted": false
+    },
+    {
+      "iteration": 297,
+      "current_enhancement": 25.658475240283316,
+      "candidate_enhancement": 21.99762887492895,
+      "accepted": false
+    },
+    {
+      "iteration": 298,
+      "current_enhancement": 24.07960551401278,
+      "candidate_enhancement": 25.346412601757777,
+      "accepted": true
+    },
+    {
+      "iteration": 299,
+      "current_enhancement": 25.083933667215828,
+      "candidate_enhancement": 22.820134734994692,
+      "accepted": false
+    },
+    {
+      "iteration": 300,
+      "current_enhancement": 24.7303935091562,
+      "candidate_enhancement": 22.70508970714593,
+      "accepted": false
+    }
+  ]
+}

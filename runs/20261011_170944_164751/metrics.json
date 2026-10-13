@@ -1,0 +1,33 @@
+{
+    "dataset": "SNLS80mV.mat [42650:46746]",
+    "total_samples": 4096,
+    "train_samples": 3072,
+    "test_samples": 1024,
+    "sampling_frequency_Hz": 610.35,
+    "dt_sec": 0.0016384041943147375,
+    "baseline_rmse_train_V": 0.053020761068209035,
+    "baseline_rmse_test_V": 0.060491854406981314,
+    "architectures": {
+        "Architecture_A": {
+            "description": "2-layer MLP (hidden=64) with Tanh activation",
+            "train_steps": 300,
+            "rollout_length": 48,
+            "batch_size": 32,
+            "optimizer": "AdamW (lr=2e-3, cosine decay to 1e-4, weight_decay=1e-5)",
+            "train_rmse_V": 0.022836800006027436,
+            "test_rmse_V": 0.0343215283849692
+        },
+        "Architecture_B": {
+            "description": "3-layer MLP (hidden=64) with SiLU activation and linear feedthrough bypass",
+            "train_steps": 350,
+            "rollout_length": 48,
+            "batch_size": 32,
+            "optimizer": "AdamW (lr=2e-3, cosine decay to 1e-4, weight_decay=1e-5)",
+            "train_rmse_V": 0.0435244039485059,
+            "test_rmse_V": 0.04983714756700577
+        }
+    },
+    "retained_architecture": "Architecture A (2-layer Tanh)",
+    "retained_train_rmse_V": 0.022836800006027436,
+    "retained_test_rmse_V": 0.0343215283849692
+}
