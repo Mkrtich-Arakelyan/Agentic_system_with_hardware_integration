@@ -9,11 +9,16 @@ from pathlib import Path
 import sys
 import traceback
 
-from dotenv import load_dotenv
-from agents import MAX_DECISIONS, MIN_EXPERIMENTS
-
-
 BASE_DIR = Path(__file__).resolve().parent
+REQUIRED_DEPENDENCIES = {
+    "dotenv": "python-dotenv",
+    "numpy": "numpy",
+    "matplotlib": "matplotlib",
+    "pydantic": "pydantic",
+    "langchain_core": "langchain-core",
+    "langchain_openai": "langchain-openai",
+    "langgraph": "langgraph",
+}
 DEFAULT_REQUEST = (
     "Improve focusing at the fixed camera target. Autonomously choose and "
     "justify valid experiment settings, compare actual measured results, and "
@@ -93,7 +98,6 @@ def main() -> int:
     for stream in (sys.stdout, sys.stderr):
         if hasattr(stream, "reconfigure"):
             stream.reconfigure(errors="backslashreplace")
-    load_dotenv(BASE_DIR / ".env")
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--model", help="Override the configured model.")
     parser.add_argument("--request", help="Override the autonomous request for a new run.")
@@ -104,16 +108,23 @@ def main() -> int:
     args.request = args.request if args.request is not None else DEFAULT_REQUEST
     if not args.request.strip():
         parser.error("--request must not be blank.")
+    missing = [
+        package for module, package in REQUIRED_DEPENDENCIES.items()
+        if importlib.util.find_spec(module) is None
+    ]
+    if missing:
+        parser.error(
+            "Missing required dependencies: " + ", ".join(missing)
+            + f'. Install them with "{sys.executable}" -m pip install -r '
+            + f'"{BASE_DIR / "requirements.txt"}"'
+        )
+    from dotenv import load_dotenv
+    from agents import MAX_DECISIONS, MIN_EXPERIMENTS
+
+    load_dotenv(BASE_DIR / ".env")
     api_key = os.getenv("OPENAI_API_KEY", "").strip()
     if not api_key or api_key == "YOUR_OPENAI_API_KEY_HERE":
         parser.error("Set OPENAI_API_KEY in your environment or the .env beside main.py.")
-    missing = [
-        name for name in ("numpy", "matplotlib", "langchain_openai", "langgraph")
-        if importlib.util.find_spec(name) is None
-    ]
-    if missing:
-        parser.error("Install the required dependencies: " + ", ".join(missing))
-
     saved_config = None
     if args.resume:
         run_dir = args.resume.resolve()
