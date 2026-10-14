@@ -37,6 +37,8 @@ class State(TypedDict, total=False):
     hardware_passes: int
     budget_summary: str
     last_printer_reading: dict
+    scientist_response: dict
+    experiment_selection: dict
 
 
 def _successful_focusing_results(state: dict) -> list[dict]:
@@ -78,7 +80,57 @@ def _successful_focusing_results(state: dict) -> list[dict]:
 
 def _count_successful_focusing_results(state: dict) -> int:
     """Count valid focusing-tool evidence using the shared validation checks."""
-    return len(_successful_focusing_results(state))
+    return len({result["experiment_id"] for result in _successful_focusing_results(state)})
+
+
+def _selection_error(selection: dict, state: dict) -> str:
+    """Validate IDs against recorded evidence without making scientific choices."""
+    items = selection.get("selections", [])
+    if not isinstance(items, list) or len(items) != MIN_EXPERIMENTS:
+        return f"Select exactly {MIN_EXPERIMENTS} experiments."
+    try:
+        parsed = [agents.ExperimentSelection.model_validate(item) for item in items]
+    except (TypeError, ValueError):
+        return "Each selection needs an ID and all four scientific reasons."
+    ids = [item.experiment_id for item in parsed]
+    if len(set(ids)) != MIN_EXPERIMENTS:
+        return "Selected experiment IDs must be unique."
+    available = {item["experiment_id"] for item in _successful_focusing_results(state)}
+    if not set(ids) <= available:
+        return "Selected IDs must refer to validated successful focusing results."
+    if not isinstance(selection.get("group_reason"), str) or not selection["group_reason"].strip():
+        return "Explain how the selected experiments jointly answer the scientific question."
+    return ""
+
+
+def _load_scientist_evidence(state: dict, run_dir: Path) -> dict:
+    """Read recorded experiment JSON as application context, never an agent tool."""
+    evidence = {"experiments": [], "errors": []}
+    results = {item["experiment_id"]: item for item in _successful_focusing_results(state)}
+    root = run_dir.resolve()
+    for experiment_id, result in results.items():
+        try:
+            path = Path(result["paths"]["results_json"])
+            if not path.is_absolute():
+                path = root / path
+            path = path.resolve()
+            if not path.is_relative_to(root):
+                raise ValueError("results_json must be inside this run directory.")
+            record = json.loads(path.read_text(encoding="utf-8"))
+            if not isinstance(record, dict):
+                raise ValueError("results_json must contain an object.")
+            # Also reject non-finite numbers anywhere in the supplied JSON.
+            json.dumps(record, allow_nan=False)
+            for name in ("experiment_id", "settings", "initial_enhancement", "final_enhancement"):
+                expected = json.loads(json.dumps(result[name], allow_nan=False))
+                if record.get(name) != expected:
+                    raise ValueError(f"results_json {name} does not match recorded tool evidence.")
+            evidence["experiments"].append({
+                "experiment_id": experiment_id, "results_json": str(path), "record": record,
+            })
+        except (OSError, ValueError, TypeError, RecursionError) as error:
+            evidence["errors"].append({"experiment_id": experiment_id, "error": str(error)})
+    return evidence
 
 
 def _has_problem_field(result: dict) -> bool:
@@ -165,7 +217,7 @@ def build_graph(
                 update["decision"]["next_role"] = next_role
                 update["decision"]["instruction"] = (
                     "Run another planned focusing experiment with settings not tried yet; "
-                    "multiple settings may change together; report its enhancement."
+                    "follow the scientist's shared comparison settings; report its enhancement."
                     if has_plan else
                     f"Plan at least {MIN_EXPERIMENTS} focusing experiments with different "
                     "settings before the executor calls the tool."
@@ -183,7 +235,53 @@ def build_graph(
                 })
         if next_role == "report_and_print":
             update["hardware_passes"] = 0
+            selection_error = _selection_error(state.get("experiment_selection") or {}, state)
+            if selection_error:
+                next_role = "scientist"
+                update["decision"]["next_role"] = next_role
+                update["decision"]["instruction"] = (
+                    "Review all successful results and return a ready four-experiment "
+                    "selection, or request additional experiments with exact settings "
+                    "and evidence gaps. " + selection_error
+                )
+                update["dialogue"][0]["text"] = agents.RoutingDecision.model_validate(
+                    update["decision"]
+                ).model_dump_json()
+                update["dialogue"].append({
+                    "role": "system", "text": "Report refused: " + selection_error,
+                })
         update["route"] = next_role
+        return update
+
+    def scientist_node(state: State) -> dict:
+        evidence = _load_scientist_evidence(state, run_dir)
+        update = agents.scientist(state, llm, evidence=evidence)
+        response = update["scientist_response"]
+        # An accepted selection survives later analysis, print rounds and resume.
+        if state.get("experiment_selection"):
+            return update
+        error = ""
+        if response["status"] == "ready":
+            error = _selection_error(response, state)
+            loaded_ids = {item["experiment_id"] for item in evidence["experiments"]}
+            if any(item["experiment_id"] not in loaded_ids for item in response["selections"]):
+                error = "Selected experiments must have readable, consistent results.json evidence."
+            if response["proposed_experiments"]:
+                error = "A ready selection must not also propose more experiments."
+            if not error:
+                results = {item["experiment_id"]: item
+                           for item in _successful_focusing_results(state)}
+                update["experiment_selection"] = {
+                    "selections": [
+                        {**item, "paths": dict(results[item["experiment_id"]]["paths"])}
+                        for item in response["selections"]
+                    ],
+                    "group_reason": response["group_reason"],
+                }
+        elif response["selections"] or not response["proposed_experiments"]:
+            error = "Request more experiments with exact settings and reasons, without selections."
+        if error:
+            update["dialogue"].append({"role": "system", "text": "Selection not accepted: " + error})
         return update
 
     def budget_summary_node(state: State) -> dict:
@@ -214,6 +312,11 @@ def build_graph(
         return update
 
     def report_and_print_node(state: State) -> dict:
+        error = _selection_error(state.get("experiment_selection") or {}, state)
+        if error:
+            return {"route": "orchestrator", "dialogue": [{
+                "role": "system", "text": "Report refused: " + error,
+            }]}
         passes = state.get("hardware_passes", 0) + 1
         if passes > MAX_HARDWARE_PASSES:
             return {
@@ -350,6 +453,9 @@ def build_graph(
 
     def finish_gate_node(state: State) -> dict:
         missing = []
+        selection_error = _selection_error(state.get("experiment_selection") or {}, state)
+        if selection_error:
+            missing.append("a valid frozen scientist selection: " + selection_error)
         count = _count_successful_focusing_results(state)
         if count < MIN_EXPERIMENTS:
             missing.append(f"{MIN_EXPERIMENTS} successful focusing experiments (found {count})")
@@ -370,7 +476,7 @@ def build_graph(
 
     builder = StateGraph(State)
     builder.add_node("orchestrator", orchestrator_node)
-    builder.add_node("scientist", lambda state: agents.scientist(state, llm))
+    builder.add_node("scientist", scientist_node)
     builder.add_node("general", lambda state: agents.general(state, llm))
     builder.add_node("executor", lambda state: agents.executor(state, llm, focusing_tool))
     builder.add_node("report_and_print", report_and_print_node)

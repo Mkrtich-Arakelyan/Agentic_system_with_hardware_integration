@@ -11,7 +11,7 @@ from langchain_core.tools import BaseTool, tool
 from pydantic import BaseModel, Field
 
 
-MIN_EXPERIMENTS = 2
+MIN_EXPERIMENTS = 4
 # Counts report_and_print passes since the last human answer;
 # graph.py resets the counter to 0 after every human answer.
 MAX_HARDWARE_PASSES = 12
@@ -57,6 +57,13 @@ from the current block; specialist replies and tool calls do not. Use the
 remaining decisions wisely and get the report printed rather than counting on
 extra decisions. Base decisions and conclusions on recorded results, never
 invented measurements.
+
+Use the user's scientific question to guide planning and reporting. Before
+report_and_print, obtain a ready scientist selection of four experiments.
+If the scientist requests more experiments, route to the executor using the
+proposed settings, then back to the scientist for review. Four successes are
+only a minimum, not proof that the evidence is sufficient. Respect the existing
+decision budget. Once experiment_selection is frozen, reuse it for printing.
 """
 
 SCIENTIST_PROMPT = """
@@ -100,6 +107,28 @@ Use only recorded numbers and name the experiment IDs.
 
 You have no tools and do not invent results. If asked to execute, give ready-to-run
 settings and direct the orchestrator to the executor. Do not ask the human for settings.
+
+Use the user's scientific question to guide every plan and conclusion. Inspect
+all successful recorded results before choosing exactly four distinct experiment
+IDs. Select for validity, comparability, relevance and information gained, not
+simply the highest enhancements. Deliberate repeats may be useful, but justify
+them; separate IDs alone do not make identical settings informative.
+Return the structured ScientistResponse. Put your plan or analysis and REPORT
+SPEC in analysis. During planning or when evidence is insufficient, use
+needs_more_experiments, no selections, and proposed_experiments with exact
+settings and the evidence gap each addresses. Even after four successes you may
+request more experiments within the existing decision budget.
+Use ready only when four selections answer the question; give each selection's
+validity, comparability, relevance and information_gained reasons, plus a
+group_reason explaining how the four jointly answer it. Then leave
+proposed_experiments empty. A frozen experiment_selection must be reused;
+do not replace its IDs during report or printing revisions.
+
+The graph supplies complete validated results.json records as additional context,
+including histories, without giving you tools. Review every supplied record.
+Evidence-loading errors identify unavailable or inconsistent files; do not invent
+their contents or select those experiments. Saved array and image paths do not
+give you access to their contents.
 """
 
 GENERAL_PROMPT = """
@@ -145,7 +174,7 @@ Steps:
 
 After a human turn starting with "Change request for the report:":
 - if it only changes presentation (layout, titles, wording that does not change
-  a claim, colours, sizes, which recorded results are plotted), write a revised
+  a claim, colours, sizes), write a revised
   script with a new filename, rebuild report.pdf and call submit_print again;
 - if it changes a number, a claim or the verdict, or needs data or analysis you
   do not have, call request_information with missing (what is needed and from
@@ -156,6 +185,14 @@ After a printer problem and a human "retry", check job_status (or printer_status
 again; resubmit only if the job failed, was cancelled or was lost. If a tool returns an
 error, read it and fix the cause on the next pass, for example a report with
 two pages. Never invent results.
+
+The report-and-print context supplies the frozen experiment_selection, including
+the four selected IDs, reasons and saved paths. Read those results_json paths
+and validate that their experiment_id values match the selection. Base the
+report on those four experiments; any single-experiment graph must use one of
+them. Do not independently select from the CSV or change the selected IDs during
+layout revisions or printer retries. A request to change the selection requires
+request_information for scientific review, rather than silently substituting IDs.
 """
 
 SUMMARY_PROMPT = """
@@ -175,6 +212,31 @@ class RoutingDecision(BaseModel):
     reason: str = Field(min_length=1, description="One-sentence reason for this choice")
 
 
+class ExperimentSelection(BaseModel):
+    experiment_id: str = Field(min_length=1)
+    validity: str = Field(min_length=1)
+    comparability: str = Field(min_length=1)
+    relevance: str = Field(min_length=1)
+    information_gained: str = Field(min_length=1)
+
+
+class ProposedExperiment(BaseModel):
+    macropixel_size: int
+    focus_size: int
+    background_size: int
+    iterations: int
+    search_seed: int
+    reason: str = Field(min_length=1)
+
+
+class ScientistResponse(BaseModel):
+    status: Literal["needs_more_experiments", "ready"]
+    analysis: str = Field(min_length=1)
+    selections: list[ExperimentSelection]
+    group_reason: str
+    proposed_experiments: list[ProposedExperiment]
+
+
 def _messages(
     state: dict, prompt: str, *, include_budget: bool = False, extra: str = ""
 ) -> list:
@@ -182,6 +244,10 @@ def _messages(
     dialogue = json.dumps(state["dialogue"], ensure_ascii=False)
     evidence = json.dumps(state.get("execution_results", []), ensure_ascii=False)
     content = "Dialogue:\n" + dialogue + "\n\nRecorded tool results:\n" + evidence
+    content += "\n\nScientific review and frozen selection:\n" + json.dumps({
+        "scientist_response": state.get("scientist_response"),
+        "experiment_selection": state.get("experiment_selection"),
+    }, ensure_ascii=False)
     if include_budget:
         used = state.get("decision_count", 0)
         budget_limit = state.get("decision_budget", DEFAULT_INITIAL_DECISIONS)
@@ -222,9 +288,17 @@ def orchestrator(state: dict, llm: BaseChatModel) -> dict:
     }
 
 
-def scientist(state: dict, llm: BaseChatModel) -> dict:
-    response = llm.invoke(_messages(state, SCIENTIST_PROMPT, include_budget=True))
-    return {"dialogue": [{"role": "scientist", "text": response.text}]}
+def scientist(state: dict, llm: BaseChatModel, *, evidence: dict) -> dict:
+    response = llm.with_structured_output(
+        ScientistResponse, method="json_schema"
+    ).invoke(_messages(
+        state, SCIENTIST_PROMPT, include_budget=True,
+        extra="Validated experiment file evidence:\n" + json.dumps(evidence, ensure_ascii=False),
+    ))
+    return {
+        "scientist_response": response.model_dump(),
+        "dialogue": [{"role": "scientist", "text": response.model_dump_json()}],
+    }
 
 
 def general(state: dict, llm: BaseChatModel) -> dict:
@@ -407,6 +481,7 @@ def report_and_print(
     tool_map = {item.name: item for item in tools}
     context = {
         "report_path": str(report_path),
+        "experiment_selection": state.get("experiment_selection"),
         "report": state.get("report"),
         "approval": state.get("approval"),
         "active_job_id": state.get("active_job_id"),
