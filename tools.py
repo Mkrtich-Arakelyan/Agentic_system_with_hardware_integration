@@ -189,6 +189,8 @@ def create_focusing_tool(work_dir: str | Path, bench: SimulatedBench) -> BaseToo
             paths = {
                 "initial_camera": str(experiment_dir / "initial_camera.png"),
                 "final_camera": str(experiment_dir / "final_camera.png"),
+                "initial_intensity": str(experiment_dir / "initial_intensity.npy"),
+                "final_intensity": str(experiment_dir / "final_intensity.npy"),
                 "final_pattern": str(experiment_dir / "final_pattern.npy"),
                 "results_json": str(experiment_dir / "results.json"),
                 "experiments_csv": str(directory / "experiments.csv"),
@@ -196,6 +198,10 @@ def create_focusing_tool(work_dir: str | Path, bench: SimulatedBench) -> BaseToo
             }
             vmax = float(max(result["initial_image"].max(), result["final_image"].max()))
             for stage in ("initial", "final"):
+                np.save(
+                    paths[f"{stage}_intensity"], result[f"{stage}_image"],
+                    allow_pickle=False,
+                )
                 _save_camera_image(
                     result[f"{stage}_image"], paths[f"{stage}_camera"],
                     bench.target_position, focus_size, result[f"{stage}_enhancement"],

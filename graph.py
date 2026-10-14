@@ -165,7 +165,7 @@ def build_graph(
                 update["decision"]["next_role"] = next_role
                 update["decision"]["instruction"] = (
                     "Run another planned focusing experiment with settings not tried yet; "
-                    "preserve the planned comparison controls and report its enhancement."
+                    "multiple settings may change together; report its enhancement."
                     if has_plan else
                     f"Plan at least {MIN_EXPERIMENTS} focusing experiments with different "
                     "settings before the executor calls the tool."
