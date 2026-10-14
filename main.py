@@ -1,4 +1,4 @@
-"""Run Homework 2 Task 2: autonomous focusing on a simulated optical bench."""
+"""Run Homework 3: hardware in the loop with an office printer."""
 
 import argparse
 from datetime import datetime
@@ -18,12 +18,21 @@ REQUIRED_DEPENDENCIES = {
     "langchain_core": "langchain-core",
     "langchain_openai": "langchain-openai",
     "langgraph": "langgraph",
+    "mcp": "mcp",
+    "langchain_mcp_adapters": "langchain-mcp-adapters",
+    "pypdf": "pypdf",
 }
+FAKE_PRINTER_NAME = "Office_Printer"
 DEFAULT_REQUEST = (
-    "Improve focusing at the fixed camera target. Autonomously choose and "
-    "justify valid experiment settings, compare actual measured results, and "
-    "report the best observed experiment with its enhancement, settings, "
-    "and saved initial and final camera images."
+    "Compare two focusing experiments that differ in exactly one setting while all "
+    "other settings stay fixed. Judge whether the comparison is fair, compare "
+    "performance and computational cost, and suggest the next experiment. Then "
+    "produce a one-page report with one graph, its explanation and a verdict, and "
+    "print it on the office printer after my approval."
+)
+# Graph-internal keys of an interrupted visit; a resumed run starts at the orchestrator.
+RESUME_DROPPED_KEYS = (
+    "pending_print", "route", "hardware_passes", "last_printer_reading",
 )
 
 
@@ -51,7 +60,7 @@ def write_experiments_table(state: dict, run_dir: Path) -> None:
     (run_dir / "experiments_table.md").write_text("\n".join(rows) + "\n", encoding="utf-8")
 
 
-def load_resume(run_dir: Path) -> tuple[dict, dict]:
+def load_resume(run_dir: Path, initial_decisions: int) -> tuple[dict, dict]:
     """Restore a saved run and discard an orchestrator action that never completed."""
     state = json.loads((run_dir / "state.json").read_text(encoding="utf-8"))
     config = json.loads((run_dir / "config.json").read_text(encoding="utf-8"))
@@ -68,9 +77,15 @@ def load_resume(run_dir: Path) -> tuple[dict, dict]:
             continue
         if turn["role"] == "orchestrator":
             state["dialogue"].pop(index)
-            state["decision_count"] = max(0, state.get("decision_count", 0) - 1)
-            state.pop("decision", None)
+            # A progress summary that was never answered spent no decision.
+            if not turn["text"].startswith("Progress summary for the human:"):
+                state["decision_count"] = max(0, state.get("decision_count", 0) - 1)
+                state.pop("decision", None)
         break
+    for key in RESUME_DROPPED_KEYS:
+        state.pop(key, None)
+    # A run stopped at a budget check keeps its budget, so the question is asked again.
+    state.setdefault("decision_budget", state.get("decision_count", 0) + initial_decisions)
     state["stop_reason"] = "running"
     return state, config
 
@@ -92,6 +107,42 @@ def save_run(state: dict, run_dir: Path) -> None:
     write_experiments_table(state, run_dir)
 
 
+def positive_int(text: str) -> int:
+    value = int(text)
+    if value < 1:
+        raise argparse.ArgumentTypeError("must be at least 1")
+    return value
+
+
+def ask_human(payload: dict) -> str:
+    """Show one graph pause and return a valid answer; re-ask on empty or invalid input."""
+    kind = payload.get("kind")
+    print("\n" + "=" * 60, flush=True)
+    if kind == "print_approval":
+        print(f"Report: {payload.get('pdf_path')}\nPages: {payload.get('pages')}\n"
+              f"Printer: {payload.get('printer') or 'the default printer'}\n"
+              f"Copies: {payload.get('copies')}")
+        allowed = None
+    elif kind == "printer_problem":
+        print("Printer reading:\n" + json.dumps(payload.get("reading"), indent=2, ensure_ascii=False))
+        allowed = ("retry", "skip")
+    elif kind == "budget":
+        print(f"Progress summary:\n{payload.get('summary')}\n"
+              f"Orchestrator decisions used: {payload.get('decisions_used')}")
+        allowed = ("yes", "y", "no", "n")
+    else:
+        print(json.dumps(payload, indent=2, ensure_ascii=False))
+        allowed = None
+    while True:
+        reply = input(payload.get("question", "Your answer:") + "\n> ").strip()
+        if not reply:
+            continue
+        first_word = reply.split()[0].lower().strip(".,!:;")
+        if allowed is None or first_word in allowed:
+            return reply
+        print("Please answer with one of: " + ", ".join(allowed), flush=True)
+
+
 def main() -> int:
     # Model replies can contain symbols unsupported by redirected Windows consoles.
     # Keep saved evidence in UTF-8 and prevent display errors from stopping a run.
@@ -102,6 +153,13 @@ def main() -> int:
     parser.add_argument("--model", help="Override the configured model.")
     parser.add_argument("--request", help="Override the autonomous request for a new run.")
     parser.add_argument("--resume", type=Path, metavar="RUN_DIR", help="Continue a saved run in the same folder.")
+    parser.add_argument("--initial-decisions", type=positive_int, metavar="N",
+                        help="Orchestrator decisions before the first check-in (default 10).")
+    parser.add_argument("--extra-decisions", type=positive_int, metavar="N",
+                        help="Decisions added each time the human says yes (default 5).")
+    parser.add_argument("--fake-printer", action=argparse.BooleanOptionalAction, default=None,
+                        help=f"Use the fake printer {FAKE_PRINTER_NAME} (PRINTER_MODE=fake).")
+    parser.add_argument("--printer", metavar="NAME", help="Exact name of the office printer.")
     args = parser.parse_args()
     if args.resume and args.request is not None:
         parser.error("--request cannot change the request of a resumed run.")
@@ -119,17 +177,36 @@ def main() -> int:
             + f'"{BASE_DIR / "requirements.txt"}"'
         )
     from dotenv import load_dotenv
-    from agents import MAX_DECISIONS, MIN_EXPERIMENTS
+    from agents import DEFAULT_EXTRA_DECISIONS, DEFAULT_INITIAL_DECISIONS, MIN_EXPERIMENTS
 
     load_dotenv(BASE_DIR / ".env")
     api_key = os.getenv("OPENAI_API_KEY", "").strip()
     if not api_key or api_key == "YOUR_OPENAI_API_KEY_HERE":
         parser.error("Set OPENAI_API_KEY in your environment or the .env beside main.py.")
+
+    # Command-line values win; a resumed run otherwise keeps its saved values.
+    saved = {}
+    if args.resume:
+        try:
+            saved = json.loads((args.resume.resolve() / "config.json").read_text(encoding="utf-8"))
+        except (OSError, ValueError) as error:
+            parser.error(f"Cannot resume {args.resume.resolve()}: {error}")
+    initial_decisions = args.initial_decisions or saved.get("initial_decisions") or DEFAULT_INITIAL_DECISIONS
+    extra_decisions = args.extra_decisions or saved.get("extra_decisions") or DEFAULT_EXTRA_DECISIONS
+    fake_printer = (
+        args.fake_printer if args.fake_printer is not None
+        else bool(saved.get("fake_printer", False))
+    )
+    printer_name = (
+        args.printer or saved.get("printer_name")
+        or (FAKE_PRINTER_NAME if fake_printer else None)
+    )
+
     saved_config = None
     if args.resume:
         run_dir = args.resume.resolve()
         try:
-            state, saved_config = load_resume(run_dir)
+            state, saved_config = load_resume(run_dir, initial_decisions)
         except (OSError, ValueError, KeyError, TypeError) as error:
             parser.error(f"Cannot resume {run_dir}: {error}")
         args.request = saved_config["request"]
@@ -140,13 +217,19 @@ def main() -> int:
             "dialogue": [{"role": "user", "text": args.request}],
             "execution_results": [],
             "decision_count": 0,
+            "decision_budget": initial_decisions,
             "stop_reason": "running",
         }
     args.model = args.model or (saved_config or {}).get("model") or os.getenv("OPENAI_MODEL", "gpt-5-nano")
-    print(f"Model: {args.model}\nResults: {run_dir}\nRequest: {args.request}", flush=True)
+    print(f"Model: {args.model}\nResults: {run_dir}\nRequest: {args.request}\n"
+          f"Printer: {printer_name or 'found with list_printers'}"
+          + (" (fake)" if fake_printer else ""), flush=True)
 
     try:
         from langchain_openai import ChatOpenAI
+        from langgraph.checkpoint.memory import InMemorySaver
+        from langgraph.types import Command
+        from agents import create_information_tool
         from bench import SimulatedBench, SEARCH_SHOTS, VALIDATION_SHOTS
         from graph import build_graph
         from tools import create_coding_tool, create_focusing_tool, RUN_TIMEOUT_SECONDS
@@ -173,7 +256,7 @@ def main() -> int:
             "noise_std": bench.noise_std,
         }
         context = (
-            "Homework 2 Task 2: autonomous focusing through a simulated optical bench.\n"
+            "Homework 3: hardware in the loop.\n"
             f"Bench settings: {json.dumps(bench_settings)}\n"
             "These dimensions and noise settings are simulation choices, not hardware specifications.\n"
             "The DMD controls binary amplitudes 0 or 1; an illuminated pattern cannot be all off.\n"
@@ -202,14 +285,31 @@ def main() -> int:
             "Keeping focus and background regions fixed makes comparisons between "
             "macropixel sizes or iteration budgets easier to interpret. Changing the "
             "regions changes the metric; acknowledge that when comparing results.\n"
+            f"The run compares at least {MIN_EXPERIMENTS} successful focusing experiments "
+            "that change one setting.\n"
+            "Computational cost is compared by iterations and camera shots per measurement "
+            "(and by wall_time_seconds and camera_shots if the results include them).\n"
+            "The final product is report.pdf in the output directory: one A4 page with one "
+            "graph, its explanation, a fairness judgement, performance vs cost, a suggested "
+            "next experiment and a verdict. The executor builds it with write_and_run from "
+            "the saved files experiments.csv and each experiment's results.json; it must "
+            f"not type numbers into the script. Scripts must finish within {RUN_TIMEOUT_SECONDS} seconds.\n"
+            "The office printer is reached only through the executor's printer tools in the "
+            "report-and-print turn. The graph asks the human before any print. "
+            "Printer states: idle, printing, stopped, offline, error, unknown, out_of_paper, "
+            "paper_jam. Job states: waiting, printing, done, failed, unknown.\n"
+            + (
+                f"The office printer is named {printer_name}; pass printer=\"{printer_name}\" "
+                "to printer_status and submit_print.\n"
+                if printer_name else
+                "Call list_printers first and pass the office printer's exact name as printer "
+                "to printer_status and submit_print.\n"
+            ) +
             f"Output directory: {run_dir}\n"
             "The focusing tool saves initial/final camera images, the final pattern, "
             "results.json, and an experiments.csv table. Do not duplicate these outputs.\n"
-            "Use write_and_run only for explicitly needed supporting code tasks. "
-            f"Such scripts must finish within {RUN_TIMEOUT_SECONDS} seconds.\n"
             "Base all conclusions on recorded tool results, never proposals or invented "
-            "measurements. Finish only with successful focusing-tool evidence; identify "
-            "the best observed experiment, settings, final enhancement, and saved paths."
+            "measurements."
         )
         if not saved_config:
             state["dialogue"].insert(0, {"role": "system", "text": context})
@@ -222,14 +322,31 @@ def main() -> int:
             "request": args.request,
             "script_timeout_seconds": RUN_TIMEOUT_SECONDS,
         }
+        run_config.pop("max_orchestrator_decisions", None)
+        run_config.pop("printer_backend", None)
         run_config.update(
-            model=args.model, max_orchestrator_decisions=MAX_DECISIONS,
-            min_experiments=MIN_EXPERIMENTS,
+            model=args.model, min_experiments=MIN_EXPERIMENTS,
+            initial_decisions=initial_decisions, extra_decisions=extra_decisions,
+            fake_printer=fake_printer, printer_name=printer_name,
         )
         (run_dir / "config.json").write_text(
             json.dumps(run_config, indent=2, ensure_ascii=False), encoding="utf-8"
         )
         save_run(state, run_dir)
+
+        # Only variables the printer files read; FAKE_PRINTER_PROBLEM comes from the shell.
+        printer_env = {}
+        if fake_printer:
+            printer_env["PRINTER_MODE"] = "fake"
+        if printer_name:
+            printer_env["PRINTER_ALLOWED"] = printer_name
+        try:
+            from printer_tools import load_printer_tools
+
+            printer_tools = load_printer_tools(printer_env)
+        except Exception as error:
+            print(f"Could not start the printer MCP server: {error}", file=sys.stderr, flush=True)
+            raise
 
         llm = ChatOpenAI(
             model=args.model, api_key=api_key, max_tokens=16384,
@@ -240,20 +357,33 @@ def main() -> int:
         )
         coding_tool = create_coding_tool(run_dir)
         focusing_tool = create_focusing_tool(run_dir, bench)
-        workflow = build_graph(llm, coding_tool, focusing_tool)
+        workflow = build_graph(
+            llm, focusing_tool, coding_tool, printer_tools, create_information_tool(),
+            run_dir, extra_decisions, InMemorySaver(),
+        )
+        # The report-and-print self-loop needs more than the default 25 steps.
+        config = {"configurable": {"thread_id": run_dir.name}, "recursion_limit": 200}
         printed_dialogue = len(state["dialogue"])
         printed_results = len(state["execution_results"])
-        for snapshot in workflow.stream(state, stream_mode="values"):
-            state = snapshot
-            save_run(state, run_dir)
-            for turn in state["dialogue"][printed_dialogue:]:
-                print(f"\n[{turn['role']}]\n{turn['text']}", flush=True)
-            for record in state["execution_results"][printed_results:]:
-                print("\n[tool execution]\n" + json.dumps(
-                    record, indent=2, ensure_ascii=False
-                ), flush=True)
-            printed_dialogue = len(state["dialogue"])
-            printed_results = len(state["execution_results"])
+        graph_input = state
+        while True:
+            for snapshot in workflow.stream(graph_input, config, stream_mode="values"):
+                # An interrupt arrives as the state plus an "__interrupt__" entry.
+                state = {key: value for key, value in snapshot.items() if key != "__interrupt__"}
+                save_run(state, run_dir)
+                for turn in state["dialogue"][printed_dialogue:]:
+                    print(f"\n[{turn['role']}]\n{turn['text']}", flush=True)
+                for record in state["execution_results"][printed_results:]:
+                    print("\n[tool execution]\n" + json.dumps(
+                        record, indent=2, ensure_ascii=False
+                    ), flush=True)
+                printed_dialogue = len(state["dialogue"])
+                printed_results = len(state["execution_results"])
+            pending = workflow.get_state(config)
+            if not pending.next:
+                break
+            reply = ask_human(pending.tasks[0].interrupts[0].value)
+            graph_input = Command(resume=reply)
     except (Exception, KeyboardInterrupt) as error:
         failure_trace = traceback.format_exc()
         state["stop_reason"] = "execution_failure"
@@ -265,13 +395,17 @@ def main() -> int:
         except Exception as save_error:
             print(f"Could not save the latest failure evidence: {save_error}", file=sys.stderr)
         print(f"\n{message}\nLatest available evidence: {run_dir}", file=sys.stderr)
+        print(f"Continue with: python main.py --resume {run_dir}", file=sys.stderr)
         return 1
 
     print(f"\nStopped: {state['stop_reason']}")
     if state["stop_reason"] == "finished":
-        print("Finished with successful focusing-tool evidence.")
-    elif state["stop_reason"] == "decision_limit":
-        print("Decision budget reached; the workflow did not finish successfully.")
+        print("Finished: the report was made and printed, or printing was skipped by the human.")
+        print(f"Report: {(state.get('report') or {}).get('path', run_dir / 'report.pdf')}")
+        print(f"Print outcome: {state.get('print_outcome')}")
+    elif state["stop_reason"] == "stopped_by_human":
+        print("Stopped by the human at a budget check. Continue with: "
+              f"python main.py --resume {run_dir}")
     else:
         print("The workflow ended without an evidence-backed finish.")
 

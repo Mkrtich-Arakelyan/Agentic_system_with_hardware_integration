@@ -1,19 +1,24 @@
+import json
 import math
 from operator import add
+from pathlib import Path
 from typing import Annotated, TypedDict
 
 from langchain_core.language_models.chat_models import BaseChatModel
 from langchain_core.tools import BaseTool
 from langgraph.graph import END, START, StateGraph
+from langgraph.types import interrupt
 
 import agents
-from agents import MAX_DECISIONS, MIN_EXPERIMENTS
-
-
-DECISION_LIMIT_MESSAGE = (
-    f"The {MAX_DECISIONS}-orchestrator-decision budget was reached. "
-    "The workflow stopped without an evidence-backed finish."
+from agents import (
+    DEFAULT_INITIAL_DECISIONS, MAX_HARDWARE_PASSES, MIN_EXPERIMENTS,
 )
+
+
+# Keys of an agents.report_and_print result that belong in the graph state.
+REPORT_STATE_KEYS = ("dialogue", "execution_results", "report", "active_job_id", "pending_print")
+PROBLEM_JOB_STATES = {"held", "error", "cancelled", "canceled", "failed", "aborted"}
+PROBLEM_PRINTER_STATES = {"offline", "stopped", "error", "out_of_paper", "paper_jam"}
 
 
 class State(TypedDict, total=False):
@@ -21,7 +26,17 @@ class State(TypedDict, total=False):
     execution_results: Annotated[list[dict], add]
     decision: dict
     decision_count: int
+    decision_budget: int
     stop_reason: str
+    route: str
+    pending_print: dict
+    approval: dict
+    report: dict
+    print_outcome: str
+    active_job_id: str
+    hardware_passes: int
+    budget_summary: str
+    last_printer_reading: dict
 
 
 def _successful_focusing_results(state: dict) -> list[dict]:
@@ -66,33 +81,88 @@ def _count_successful_focusing_results(state: dict) -> int:
     return len(_successful_focusing_results(state))
 
 
+def _has_problem_field(result: dict) -> bool:
+    """True if a problem/problems/alerts field reports anything other than none."""
+    for key in ("problem", "problems", "alerts"):
+        value = result.get(key)
+        items = value if isinstance(value, list) else [value]
+        if any(item and str(item).strip().lower() != "none" for item in items):
+            return True
+    return False
+
+
+def _reading_route(tool_name: str, result: dict) -> str:
+    """Choose the next node from the last printer or report tool result."""
+    if not isinstance(result, dict):
+        return "report_and_print"
+    state = str(result.get("state", "")).lower()
+    if tool_name == "job_status":
+        if state == "done":
+            return "finish_gate"
+        if state in PROBLEM_JOB_STATES or _has_problem_field(result):
+            return "printer_question"
+    elif tool_name == "printer_status":
+        if state in PROBLEM_PRINTER_STATES or _has_problem_field(result):
+            return "printer_question"
+    elif tool_name == "submit_print" and result.get("ok") is False:
+        if "offline" in str(result.get("error", "")).lower():
+            return "printer_question"
+    return "report_and_print"
+
+
+def _route_update(tool_name: str, result: dict) -> dict:
+    """Turn a reading into route, print_outcome and last_printer_reading updates."""
+    route = _reading_route(tool_name, result)
+    update = {"route": route}
+    if route == "finish_gate":
+        update["print_outcome"] = "printed"
+    elif route == "printer_question":
+        update["last_printer_reading"] = {"tool_name": tool_name, "result": result}
+    return update
+
+
+def _first_word(reply) -> str:
+    text = str(reply).strip().lower()
+    return text.split()[0].strip(".,!:;") if text else ""
+
+
 def build_graph(
     llm: BaseChatModel,
-    coding_tool: BaseTool,
     focusing_tool: BaseTool,
+    coding_tool: BaseTool,
+    printer_tools: list[BaseTool],
+    info_tool: BaseTool,
+    run_dir: str | Path,
+    extra_decisions: int,
+    checkpointer,
 ):
-    """Route the four roles; only the executor receives both tools."""
+    """Route the four roles; only the executor's report_and_print turn gets the printer."""
+    run_dir = Path(run_dir).resolve()
+    printer_map = {item.name: item for item in printer_tools}
+    report_tools = [coding_tool, *printer_tools, info_tool]
+
+    def _invoke_printer(name: str, args: dict) -> dict:
+        try:
+            return agents._parse_tool_output(printer_map[name].invoke(args))
+        except Exception as error:
+            return {"ok": False, "error": f"{type(error).__name__}: {error}"}
 
     def orchestrator_node(state: State) -> dict:
-        # Let the final selected action complete, then stop before another LLM call.
-        if state.get("decision_count", 0) >= MAX_DECISIONS:
-            return {
-                "stop_reason": "decision_limit",
-                "dialogue": [{"role": "system", "text": DECISION_LIMIT_MESSAGE}],
-            }
+        # The budget check comes before any LLM call and spends no decision.
+        budget = state.get("decision_budget", DEFAULT_INITIAL_DECISIONS)
+        if state.get("decision_count", 0) >= budget:
+            return {"route": "budget"}
 
         update = agents.orchestrator(state, llm)
         next_role = update["decision"]["next_role"]
         update["stop_reason"] = "running"
 
-        if next_role == "finish":
+        if next_role == "report_and_print":
             count = _count_successful_focusing_results(state)
-            if count >= MIN_EXPERIMENTS:
-                update["stop_reason"] = "finished"
-            else:
+            if count < MIN_EXPERIMENTS:
                 has_plan = any(turn["role"] == "scientist" for turn in state["dialogue"])
-                redirected_role = "executor" if has_plan else "scientist"
-                update["decision"]["next_role"] = redirected_role
+                next_role = "executor" if has_plan else "scientist"
+                update["decision"]["next_role"] = next_role
                 update["decision"]["instruction"] = (
                     "Run another planned focusing experiment with settings not tried yet; "
                     "preserve the planned comparison controls and report its enhancement."
@@ -106,32 +176,235 @@ def build_graph(
                 update["dialogue"].append({
                     "role": "system",
                     "text": (
-                        f"Finish refused: only {count} successful focusing experiments "
+                        f"Report refused: only {count} successful focusing experiments "
                         f"are recorded; at least {MIN_EXPERIMENTS} are required. "
-                        f"This decision was redirected to {redirected_role}."
+                        f"This decision was redirected to {next_role}."
                     ),
                 })
+        if next_role == "report_and_print":
+            update["hardware_passes"] = 0
+        update["route"] = next_role
         return update
 
+    def budget_summary_node(state: State) -> dict:
+        summary = agents.summarize_progress(state, llm)
+        return {
+            "budget_summary": summary,
+            "dialogue": [{"role": "orchestrator", "text": "Progress summary for the human: " + summary}],
+        }
+
+    def budget_review_node(state: State) -> dict:
+        used = state.get("decision_count", 0)
+        reply = interrupt({
+            "kind": "budget",
+            "summary": state.get("budget_summary", ""),
+            "decisions_used": used,
+            "extra": extra_decisions,
+            "question": (
+                f"Continue for {extra_decisions} more orchestrator decisions? "
+                "Answer yes or no; you can add guidance after yes."
+            ),
+        })
+        update = {"dialogue": [{"role": "human", "text": str(reply)}], "hardware_passes": 0}
+        if _first_word(reply) in ("yes", "y"):
+            budget = state.get("decision_budget", DEFAULT_INITIAL_DECISIONS)
+            update.update(decision_budget=budget + extra_decisions, route="orchestrator")
+        else:
+            update.update(stop_reason="stopped_by_human", route="end")
+        return update
+
+    def report_and_print_node(state: State) -> dict:
+        passes = state.get("hardware_passes", 0) + 1
+        if passes > MAX_HARDWARE_PASSES:
+            return {
+                "hardware_passes": passes,
+                "route": "orchestrator",
+                "dialogue": [{
+                    "role": "system",
+                    "text": f"The {MAX_HARDWARE_PASSES}-pass hardware limit was reached; "
+                            "back to the orchestrator.",
+                }],
+            }
+
+        result = agents.report_and_print(state, llm, report_tools, run_dir)
+        update = {key: result[key] for key in REPORT_STATE_KEYS if key in result}
+        update["hardware_passes"] = passes
+        outcome = result["outcome"]
+        if outcome == "tool_ran":
+            reading = result["result"]
+            active_id = update.get("active_job_id", state.get("active_job_id"))
+            read_id = None
+            if result["tool_name"] == "job_status":
+                tool_args = result["execution_results"][0].get("tool_args") or {}
+                read_id = (reading.get("job_id") if isinstance(reading, dict) else None) \
+                    or tool_args.get("job_id")
+            # Only the current print job may finish the run: on Windows a job that
+            # left the queue reads as done, so a wrong id would look printed.
+            if result["tool_name"] == "job_status" and read_id != active_id:
+                update["route"] = "report_and_print"
+                update["dialogue"] = update.get("dialogue", []) + [{
+                    "role": "system",
+                    "text": f"job_status was read for {read_id}, but the current print job is "
+                            f"{active_id or 'none'}; check job_status for the current job.",
+                }]
+            else:
+                update.update(_route_update(result["tool_name"], reading))
+        elif outcome == "needs_print_approval":
+            update["route"] = "print_approval"
+        elif outcome == "needs_information":
+            update["route"] = "orchestrator"
+        else:
+            update["route"] = "report_and_print"
+        return update
+
+    def print_approval_node(state: State) -> dict:
+        pending = state.get("pending_print") or {}
+        args = dict(pending.get("args", {}))
+        report = state.get("report") or {}
+        reply = interrupt({
+            "kind": "print_approval",
+            "pdf_path": args.get("pdf_path"),
+            "pages": report.get("pages"),
+            "printer": args.get("printer"),
+            "copies": args.get("copies", 1),
+            "question": "Print this report? Type yes, or describe what to change.",
+        })
+        text = str(reply).strip()
+
+        if _first_word(text) in ("yes", "y", "approve"):
+            # The file must still be the version the human was shown.
+            current = agents.inspect_report(args.get("pdf_path", ""))
+            if not pending or current.get("sha256") != pending.get("report_sha256"):
+                return {
+                    "pending_print": {},
+                    "hardware_passes": 0,
+                    "report": current,
+                    "route": "report_and_print",
+                    "dialogue": [
+                        {"role": "human", "text": text},
+                        {"role": "system", "text": "Print not submitted: report.pdf changed "
+                                                   "after approval was requested."},
+                    ],
+                }
+            result = _invoke_printer("submit_print", args)
+            update = {
+                "pending_print": {},
+                "hardware_passes": 0,
+                "approval": agents._approval_key(pending["report_sha256"], args),
+                "execution_results": [
+                    {"tool_name": "submit_print", "tool_args": args, "result": result}
+                ],
+                "dialogue": [
+                    {"role": "human", "text": text},
+                    {"role": "executor", "text": "Human approved. submit_print result: "
+                                                 + json.dumps(result, ensure_ascii=False)},
+                ],
+            }
+            if result.get("ok") is not False and result.get("job_id"):
+                update["active_job_id"] = result["job_id"]
+            update.update(_route_update("submit_print", result))
+            return update
+
+        # No limit on change rounds: the human decides when to approve.
+        return {
+            "pending_print": {},
+            "hardware_passes": 0,
+            "route": "report_and_print",
+            "dialogue": [{"role": "human", "text": "Change request for the report: " + text}],
+        }
+
+    def printer_question_node(state: State) -> dict:
+        reply = interrupt({
+            "kind": "printer_problem",
+            "reading": state.get("last_printer_reading"),
+            "question": "The printer reports a problem. Fix it and type retry, "
+                        "or type skip to finish without printing.",
+            "choices": ["retry", "skip"],
+        })
+        update = {"dialogue": [{"role": "human", "text": str(reply)}], "hardware_passes": 0}
+        if _first_word(reply) != "skip":
+            update["route"] = "report_and_print"
+            return update
+
+        job_id = state.get("active_job_id")
+        job_done = any(
+            record.get("tool_name") == "job_status"
+            and isinstance(record.get("result"), dict)
+            and record["result"].get("job_id") == job_id
+            and record["result"].get("state") == "done"
+            for record in state.get("execution_results", [])
+        )
+        if job_id and not job_done and "cancel_job" in printer_map:
+            args = {"job_id": job_id}
+            result = _invoke_printer("cancel_job", args)
+            update["execution_results"] = [
+                {"tool_name": "cancel_job", "tool_args": args, "result": result}
+            ]
+            update["dialogue"].append({
+                "role": "system",
+                "text": f"Printing skipped; cancel_job {job_id}: "
+                        + json.dumps(result, ensure_ascii=False),
+            })
+        update.update(print_outcome="skipped", route="finish_gate")
+        return update
+
+    def finish_gate_node(state: State) -> dict:
+        missing = []
+        count = _count_successful_focusing_results(state)
+        if count < MIN_EXPERIMENTS:
+            missing.append(f"{MIN_EXPERIMENTS} successful focusing experiments (found {count})")
+        report = state.get("report") or {}
+        if not report.get("exists") or report.get("pages") != 1:
+            missing.append("a one-page report.pdf")
+        if state.get("print_outcome") not in ("printed", "skipped"):
+            missing.append("a printed or human-skipped print job")
+        if not missing:
+            return {"stop_reason": "finished", "route": "end"}
+        return {
+            "route": "orchestrator",
+            "dialogue": [{"role": "system", "text": "Finish refused; missing: " + "; ".join(missing) + "."}],
+        }
+
     def route(state: State) -> str:
-        if state["stop_reason"] != "running":
-            return END
-        return state["decision"]["next_role"]
+        return state.get("route", "orchestrator")
 
     builder = StateGraph(State)
     builder.add_node("orchestrator", orchestrator_node)
     builder.add_node("scientist", lambda state: agents.scientist(state, llm))
     builder.add_node("general", lambda state: agents.general(state, llm))
-    builder.add_node(
-        "executor", lambda state: agents.executor(state, llm, coding_tool, focusing_tool)
-    )
+    builder.add_node("executor", lambda state: agents.executor(state, llm, focusing_tool))
+    builder.add_node("report_and_print", report_and_print_node)
+    builder.add_node("print_approval", print_approval_node)
+    builder.add_node("printer_question", printer_question_node)
+    builder.add_node("budget_summary", budget_summary_node)
+    builder.add_node("budget_review", budget_review_node)
+    builder.add_node("finish_gate", finish_gate_node)
 
     builder.add_edge(START, "orchestrator")
     builder.add_conditional_edges("orchestrator", route, {
-        "scientist": "scientist",
-        "general": "general", "executor": "executor", END: END,
+        "scientist": "scientist", "general": "general", "executor": "executor",
+        "report_and_print": "report_and_print", "budget": "budget_summary",
     })
     for role in ("scientist", "general", "executor"):
         builder.add_edge(role, "orchestrator")
+    builder.add_edge("budget_summary", "budget_review")
+    builder.add_conditional_edges("budget_review", route, {
+        "orchestrator": "orchestrator", "end": END,
+    })
+    builder.add_conditional_edges("report_and_print", route, {
+        "report_and_print": "report_and_print", "print_approval": "print_approval",
+        "printer_question": "printer_question", "finish_gate": "finish_gate",
+        "orchestrator": "orchestrator",
+    })
+    builder.add_conditional_edges("print_approval", route, {
+        "report_and_print": "report_and_print", "printer_question": "printer_question",
+        "finish_gate": "finish_gate", "orchestrator": "orchestrator",
+    })
+    builder.add_conditional_edges("printer_question", route, {
+        "report_and_print": "report_and_print", "finish_gate": "finish_gate",
+    })
+    builder.add_conditional_edges("finish_gate", route, {
+        "orchestrator": "orchestrator", "end": END,
+    })
 
-    return builder.compile()
+    return builder.compile(checkpointer=checkpointer)
