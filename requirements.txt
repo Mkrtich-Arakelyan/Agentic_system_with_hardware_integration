@@ -7,3 +7,4 @@ matplotlib
 mcp>=1.2,<2
 pypdf
 langchain-mcp-adapters
+pymupdf
