@@ -24,8 +24,10 @@ REQUIRED_DEPENDENCIES = {
 }
 FAKE_PRINTER_NAME = "Office_Printer"
 DEFAULT_REQUEST = (
-    "Compare two focusing experiments that differ in exactly one setting while all "
-    "other settings stay fixed. Judge whether the comparison is fair, compare "
+    "Compare at least four focusing experiments, changing one setting at a time while "
+    "holding other settings fixed. Have the scientist select four experiments that "
+    "answer the scientific question, requesting more runs if needed. "
+    "Judge whether the comparison is fair, compare "
     "performance and computational cost, and suggest the next experiment. Then "
     "produce a one-page report with one graph, its explanation and a verdict, and "
     "print it on the office printer after my approval."
