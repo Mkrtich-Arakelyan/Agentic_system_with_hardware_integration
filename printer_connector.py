@@ -11,6 +11,8 @@ fake printer report that problem.
 
 Printer states: idle, printing, stopped, offline, out_of_paper, paper_jam, error, unknown.
 Job states:     waiting, printing, done, failed, unknown.
+                A waiting job that is stuck on a printer problem also has a "problem" field
+                (for example out_of_paper).
 Job ids look like "<printer>-<number>", e.g. Office_Printer-1.
 """
 import json
@@ -66,8 +68,11 @@ def _printer_state(text):
     t = text.lower()
     for state, words in [("paper_jam", ("jam",)),
                          ("out_of_paper", ("paperout", "paper out", "media-empty", "media empty", "out of paper")),
-                         ("offline", ("offline", "not connected", "unreachable", "notavailable")),
-                         ("error", ("error",)),
+                         ("offline", ("offline", "not connected", "unreachable", "notavailable",
+                                      "unable to connect", "unable to locate")),
+                         ("error", ("error", "dooropen", "door open", "notoner", "no toner",
+                                    "userintervention", "user intervention",
+                                    "paperproblem", "paper problem")),
                          ("stopped", ("paused", "disabled", "stopped")),
                          ("printing", ("printing", "processing", "busy")),
                          ("idle", ("idle", "normal"))]:
@@ -77,14 +82,26 @@ def _printer_state(text):
 
 
 def _job_state(text):
-    """Turn a Windows job status into one of our job states."""
+    """Turn a Windows job status into (job state, printer problem or None).
+
+    A job still in the queue has not failed: a printer problem leaves it waiting,
+    and Windows resumes it once the problem is fixed.
+    """
     t = text.lower()
-    for state, words in [("failed", ("error", "deleted", "aborted", "cancel")),
-                         ("done", ("printed", "complete")),
-                         ("printing", ("printing", "spooling", "processing"))]:
+    if any(w in t for w in ("deleted", "deleting", "aborted", "cancel")):
+        return "failed", None
+    if any(w in t for w in ("printed", "complete")):
+        return "done", None
+    for problem, words in [("out_of_paper", ("paperout", "paper out")),
+                           ("paper_jam", ("jam",)),
+                           ("offline", ("offline",)),
+                           ("stopped", ("paused", "blocked", "userintervention", "user intervention")),
+                           ("error", ("error",))]:
         if any(w in t for w in words):
-            return state
-    return "waiting"
+            return "waiting", problem
+    if any(w in t for w in ("printing", "spooling", "processing")):
+        return "printing", None
+    return "waiting", None
 
 
 # ---------- fake printer ----------
@@ -172,7 +189,9 @@ def submit_print(pdf_path, printer):
                 break
             time.sleep(0.5)
         else:
-            raise PrinterError(f"print command ran, but no new job appeared on {printer}")
+            # Raising would make the agent print again; job_status reads "-0" as done.
+            return {"job_id": f"{printer}-0", "printer": printer, "file": str(pdf),
+                    "message": "print command ran, but the job left the queue before it was seen"}
         job_id = f"{printer}-{max(new, key=int)}"
     else:
         match = re.search(r"request id is (\S+)", _run(["lp", "-d", printer, str(pdf)]))
@@ -198,11 +217,18 @@ def job_status(job_id):
                   "if ($j) { 'found: ' + $j.JobStatus } else { 'gone' }")
         if out == "gone":
             return {"job_id": job_id, "state": "done", "message": "job left the queue (assumed printed)"}
-        return {"job_id": job_id, "state": _job_state(out), "message": out}
+        state, problem = _job_state(out)
+        result = {"job_id": job_id, "state": state, "message": out}
+        if problem:
+            result["problem"] = problem
+        return result
     if any(line.split()[0] == job_id for line in _run(["lpstat", "-o", printer]).splitlines()):
         status = printer_status(printer)
         state = "printing" if f"now printing {job_id}" in status["message"] else "waiting"
-        return {"job_id": job_id, "state": state, "message": f"printer is {status['state']}"}
+        result = {"job_id": job_id, "state": state, "message": f"printer is {status['state']}"}
+        if status["state"] in ("stopped", "offline", "out_of_paper", "paper_jam", "error"):
+            result["problem"] = status["state"]
+        return result
     if any(line.split()[0] == job_id for line in _run(["lpstat", "-W", "completed", "-o", printer]).splitlines()):
         return {"job_id": job_id, "state": "done", "message": "job is in the completed list"}
     return {"job_id": job_id, "state": "unknown", "message": "job not found in the queue or completed list"}
