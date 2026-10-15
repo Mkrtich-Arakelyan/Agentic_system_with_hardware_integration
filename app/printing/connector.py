@@ -32,7 +32,7 @@ import time
 from pathlib import Path
 
 FAKE_PRINTER = "Office_Printer"
-FAKE_JOBS_FILE = Path(os.environ.get("FAKE_PRINTER_FILE", Path(__file__).with_name("fake_printer_jobs.json")))
+FAKE_JOBS_FILE = Path(os.environ.get("FAKE_PRINTER_FILE", Path(__file__).resolve().parents[2] / "fake_printer_jobs.json"))
 FAKE_PROBLEMS = ("out_of_paper", "offline", "paper_jam")
 FAKE_QUEUE_SECONDS = 1.0   # a fake job waits this long, then prints
 FAKE_PRINT_SECONDS = 3.0   # a fake job is done this long after submission
@@ -323,12 +323,12 @@ def cancel_job(job_id):
 # ---------- command line ----------
 
 USAGE = """usage:
-  python printer_connector.py list
-  python printer_connector.py status PRINTER
-  python printer_connector.py print PDF_FILE PRINTER
-  python printer_connector.py trial PDF_FILE PRINTER
-  python printer_connector.py job JOB_ID
-  python printer_connector.py cancel JOB_ID"""
+  python -m app.printing.connector list
+  python -m app.printing.connector status PRINTER
+  python -m app.printing.connector print PDF_FILE PRINTER
+  python -m app.printing.connector trial PDF_FILE PRINTER
+  python -m app.printing.connector job JOB_ID
+  python -m app.printing.connector cancel JOB_ID"""
 
 
 def main(argv):

@@ -21,7 +21,7 @@ from matplotlib.backends.backend_pdf import PdfPages
 from matplotlib.figure import Figure
 from matplotlib.patches import Rectangle
 
-from grayscale_render import (MAPPING_PARAMETERS, MappingError, _is_number, apply_mapping, changed_parameters,
+from app.print_tuning.grayscale_render import (MAPPING_PARAMETERS, MappingError, _is_number, apply_mapping, changed_parameters,
                               compute_limits, load_config, mapping_label, scale_bar, validate_config,
                               validate_mapping)
 

@@ -1,16 +1,16 @@
 import json
 import math
-from operator import add
 from pathlib import Path
-from typing import Annotated, TypedDict
 
 from langchain_core.language_models.chat_models import BaseChatModel
 from langchain_core.tools import BaseTool
 from langgraph.graph import END, START, StateGraph
 from langgraph.types import interrupt
 
-import agents
-from agents import (
+from app.workflow.state import State
+
+from app.agents import definitions as agents
+from app.agents.definitions import (
     DEFAULT_INITIAL_DECISIONS, MAX_HARDWARE_PASSES, MIN_EXPERIMENTS,
 )
 
@@ -20,25 +20,6 @@ REPORT_STATE_KEYS = ("dialogue", "execution_results", "report", "active_job_id",
 PROBLEM_JOB_STATES = {"held", "error", "cancelled", "canceled", "failed", "aborted"}
 PROBLEM_PRINTER_STATES = {"offline", "stopped", "error", "out_of_paper", "paper_jam"}
 
-
-class State(TypedDict, total=False):
-    dialogue: Annotated[list[dict], add]
-    execution_results: Annotated[list[dict], add]
-    decision: dict
-    decision_count: int
-    decision_budget: int
-    stop_reason: str
-    route: str
-    pending_print: dict
-    approval: dict
-    report: dict
-    print_outcome: str
-    active_job_id: str
-    hardware_passes: int
-    budget_summary: str
-    last_printer_reading: dict
-    scientist_response: dict
-    experiment_selection: dict
 
 
 def _successful_focusing_results(state: dict) -> list[dict]:

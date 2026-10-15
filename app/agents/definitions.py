@@ -13,7 +13,7 @@ from pydantic import BaseModel, Field
 
 MIN_EXPERIMENTS = 4
 # Counts report_and_print passes since the last human answer;
-# graph.py resets the counter to 0 after every human answer.
+# app/workflow/graph.py resets the counter to 0 after every human answer.
 MAX_HARDWARE_PASSES = 12
 DEFAULT_INITIAL_DECISIONS = 10
 DEFAULT_EXTRA_DECISIONS = 5
@@ -449,7 +449,7 @@ def _parse_tool_output(raw) -> dict:
 
 
 def _approval_key(report_sha256: str, args: dict) -> dict:
-    """Normalised approval record; graph.py stores state["approval"] with this too."""
+    """Normalised approval record; app/workflow/graph.py stores state["approval"] with this too."""
     return {
         "report_sha256": report_sha256,
         "printer": str(args.get("printer") or ""),

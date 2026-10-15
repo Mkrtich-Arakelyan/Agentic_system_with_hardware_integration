@@ -10,7 +10,7 @@ from uuid import uuid4
 import numpy as np
 from langchain_core.tools import BaseTool, tool
 
-from bench import SimulatedBench, run_focusing_search
+from app.experiments.bench import SimulatedBench, run_focusing_search
 
 
 RUN_TIMEOUT_SECONDS = 300
