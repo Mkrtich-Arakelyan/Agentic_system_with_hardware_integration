@@ -435,6 +435,24 @@ def _references(references: Mapping[str, Mapping[str, Any]] | None, ids: list[st
     return valid
 
 
+def validate_context(context: ValidationContext) -> ValidationContext:
+    """Check non-model context before requesting a specialist decision.
+
+    Initial proposals require references. Reviews require a valid bound manifest;
+    optional supplied references are checked for shape/ranges/sharing only here.
+    Their agreement with the eventual winners is checked by validate_response.
+    No proposal or winner is fabricated to perform this preflight.
+    """
+    ids, errors = _prepare_context(context)
+    if context.expected_stage in _ROUNDS:
+        _manifest_candidates(context, ids, errors)
+    if context.expected_stage == "propose_gamma" or context.reference_mappings is not None:
+        _references(context.reference_mappings, ids, context.config, errors)
+    if errors:
+        raise TuningValidationError(errors)
+    return context
+
+
 def _tests(tests: Sequence[Any], reference: dict, parameter: str, config: dict,
            where: str, errors: list[str]) -> None:
     _coverage([t.candidate_id for t in tests], TEST_IDS, where + ".candidate_id", errors)

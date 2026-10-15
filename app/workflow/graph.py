@@ -9,13 +9,18 @@ from langgraph.types import interrupt
 
 from app.workflow.state import State
 
-from app.agents import definitions as agents
-from app.agents.definitions import (
-    DEFAULT_INITIAL_DECISIONS, MAX_HARDWARE_PASSES, MIN_EXPERIMENTS,
+from app.agents.common import DEFAULT_INITIAL_DECISIONS, MIN_EXPERIMENTS
+from app.agents.orchestrator import RoutingDecision, orchestrator as run_orchestrator, summarize_progress
+from app.agents.scientist import ExperimentSelection, scientist as run_scientist
+from app.agents.executor import executor as run_executor
+from app.agents.general import general as run_general
+from app.agents.report_and_print import (
+    MAX_HARDWARE_PASSES, _approval_key, _parse_tool_output, inspect_report,
+    report_and_print as run_report_and_print,
 )
 
 
-# Keys of an agents.report_and_print result that belong in the graph state.
+# Keys of a report_and_print result that belong in the graph state.
 REPORT_STATE_KEYS = ("dialogue", "execution_results", "report", "active_job_id", "pending_print")
 PROBLEM_JOB_STATES = {"held", "error", "cancelled", "canceled", "failed", "aborted"}
 PROBLEM_PRINTER_STATES = {"offline", "stopped", "error", "out_of_paper", "paper_jam"}
@@ -70,7 +75,7 @@ def _selection_error(selection: dict, state: dict) -> str:
     if not isinstance(items, list) or len(items) != MIN_EXPERIMENTS:
         return f"Select exactly {MIN_EXPERIMENTS} experiments."
     try:
-        parsed = [agents.ExperimentSelection.model_validate(item) for item in items]
+        parsed = [ExperimentSelection.model_validate(item) for item in items]
     except (TypeError, ValueError):
         return "Each selection needs an ID and all four scientific reasons."
     ids = [item.experiment_id for item in parsed]
@@ -176,7 +181,7 @@ def build_graph(
 
     def _invoke_printer(name: str, args: dict) -> dict:
         try:
-            return agents._parse_tool_output(printer_map[name].invoke(args))
+            return _parse_tool_output(printer_map[name].invoke(args))
         except Exception as error:
             return {"ok": False, "error": f"{type(error).__name__}: {error}"}
 
@@ -186,7 +191,7 @@ def build_graph(
         if state.get("decision_count", 0) >= budget:
             return {"route": "budget"}
 
-        update = agents.orchestrator(state, llm)
+        update = run_orchestrator(state, llm)
         next_role = update["decision"]["next_role"]
         update["stop_reason"] = "running"
 
@@ -203,7 +208,7 @@ def build_graph(
                     f"Plan at least {MIN_EXPERIMENTS} focusing experiments with different "
                     "settings before the executor calls the tool."
                 )
-                update["dialogue"][0]["text"] = agents.RoutingDecision.model_validate(
+                update["dialogue"][0]["text"] = RoutingDecision.model_validate(
                     update["decision"]
                 ).model_dump_json()
                 update["dialogue"].append({
@@ -225,7 +230,7 @@ def build_graph(
                     "selection, or request additional experiments with exact settings "
                     "and evidence gaps. " + selection_error
                 )
-                update["dialogue"][0]["text"] = agents.RoutingDecision.model_validate(
+                update["dialogue"][0]["text"] = RoutingDecision.model_validate(
                     update["decision"]
                 ).model_dump_json()
                 update["dialogue"].append({
@@ -236,7 +241,7 @@ def build_graph(
 
     def scientist_node(state: State) -> dict:
         evidence = _load_scientist_evidence(state, run_dir)
-        update = agents.scientist(state, llm, evidence=evidence)
+        update = run_scientist(state, llm, evidence=evidence)
         response = update["scientist_response"]
         # An accepted selection survives later analysis, print rounds and resume.
         if state.get("experiment_selection"):
@@ -266,7 +271,7 @@ def build_graph(
         return update
 
     def budget_summary_node(state: State) -> dict:
-        summary = agents.summarize_progress(state, llm)
+        summary = summarize_progress(state, llm)
         return {
             "budget_summary": summary,
             "dialogue": [{"role": "orchestrator", "text": "Progress summary for the human: " + summary}],
@@ -310,7 +315,7 @@ def build_graph(
                 }],
             }
 
-        result = agents.report_and_print(state, llm, report_tools, run_dir)
+        result = run_report_and_print(state, llm, report_tools, run_dir)
         update = {key: result[key] for key in REPORT_STATE_KEYS if key in result}
         update["hardware_passes"] = passes
         outcome = result["outcome"]
@@ -357,7 +362,7 @@ def build_graph(
 
         if _first_word(text) in ("yes", "y", "approve"):
             # The file must still be the version the human was shown.
-            current = agents.inspect_report(args.get("pdf_path", ""))
+            current = inspect_report(args.get("pdf_path", ""))
             if not pending or current.get("sha256") != pending.get("report_sha256"):
                 return {
                     "pending_print": {},
@@ -374,7 +379,7 @@ def build_graph(
             update = {
                 "pending_print": {},
                 "hardware_passes": 0,
-                "approval": agents._approval_key(pending["report_sha256"], args),
+                "approval": _approval_key(pending["report_sha256"], args),
                 "execution_results": [
                     {"tool_name": "submit_print", "tool_args": args, "result": result}
                 ],
@@ -458,8 +463,8 @@ def build_graph(
     builder = StateGraph(State)
     builder.add_node("orchestrator", orchestrator_node)
     builder.add_node("scientist", scientist_node)
-    builder.add_node("general", lambda state: agents.general(state, llm))
-    builder.add_node("executor", lambda state: agents.executor(state, llm, focusing_tool))
+    builder.add_node("general", lambda state: run_general(state, llm))
+    builder.add_node("executor", lambda state: run_executor(state, llm, focusing_tool))
     builder.add_node("report_and_print", report_and_print_node)
     builder.add_node("print_approval", print_approval_node)
     builder.add_node("printer_question", printer_question_node)

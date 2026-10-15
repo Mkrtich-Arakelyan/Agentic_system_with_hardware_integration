@@ -179,7 +179,8 @@ def main() -> int:
             + f'"{BASE_DIR / "requirements.txt"}"'
         )
     from dotenv import load_dotenv
-    from app.agents.definitions import DEFAULT_EXTRA_DECISIONS, DEFAULT_INITIAL_DECISIONS, MIN_EXPERIMENTS
+    from app.agents.common import DEFAULT_INITIAL_DECISIONS, MIN_EXPERIMENTS
+    from app.agents.orchestrator import DEFAULT_EXTRA_DECISIONS
 
     load_dotenv(BASE_DIR / ".env")
     api_key = os.getenv("OPENAI_API_KEY", "").strip()
@@ -231,7 +232,7 @@ def main() -> int:
         from langchain_openai import ChatOpenAI
         from langgraph.checkpoint.memory import InMemorySaver
         from langgraph.types import Command
-        from app.agents.definitions import create_information_tool
+        from app.agents.report_and_print import create_information_tool
         from app.experiments.bench import SimulatedBench, SEARCH_SHOTS, VALIDATION_SHOTS
         from app.workflow.graph import build_graph
         from app.experiments.tools import create_coding_tool, create_focusing_tool, RUN_TIMEOUT_SECONDS

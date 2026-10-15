@@ -37,6 +37,7 @@ from app.print_tuning.validation import (
     ValidationContext,
     get_candidate_correspondence,
     resolve_review_winners,
+    validate_context,
     validate_response,
 )
 
@@ -71,5 +72,6 @@ __all__ = [
     "get_candidate_correspondence",
     "ValidationContext",
     "resolve_review_winners",
+    "validate_context",
     "validate_response",
 ]
