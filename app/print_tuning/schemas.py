@@ -1,11 +1,9 @@
 """Structured specialist responses for the four print-tuning decision stages.
 
-Future contextual validation must check the four frozen experiment IDs, active
-stage/round, five correctly identified tests, configuration ranges/allowed values,
-duplicate tests and references, endpoint ordering, shared endpoint consistency,
-and winner membership in the reviewed manifest/round. It must also enforce the
-assessment conditions below and the absence of proposals after the final review.
-No contextual checks or cross-field validation are implemented here.
+Contextual checks live in app.print_tuning.validation: frozen experiment IDs,
+active stage/round, candidate counts, configuration ranges, duplicate tests and
+references, endpoint ordering/sharing, winner membership, and assessment rules.
+No contextual checks or cross-field validation are implemented in these schemas.
 
 For usable reviews, supply all applicable winners and next-round proposals.
 For needs_rescan or insufficient_contrast, issues must explain the problem,

@@ -31,6 +31,14 @@ from app.print_tuning.trial_sheet import (
     create_trial_sheet,
     load_panel_data,
 )
+from app.print_tuning.validation import (
+    CandidateIdentity,
+    TuningValidationError,
+    ValidationContext,
+    get_candidate_correspondence,
+    resolve_review_winners,
+    validate_response,
+)
 
 __all__ = [
     "ConfigError",
@@ -58,4 +66,10 @@ __all__ = [
     "TrialSheetError",
     "create_trial_sheet",
     "load_panel_data",
+    "TuningValidationError",
+    "CandidateIdentity",
+    "get_candidate_correspondence",
+    "ValidationContext",
+    "resolve_review_winners",
+    "validate_response",
 ]
