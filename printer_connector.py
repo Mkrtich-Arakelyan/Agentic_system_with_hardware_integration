@@ -1,9 +1,17 @@
 """Connector for the office printer: the only code that talks to the instrument.
 
 Interface: the operating system's own print commands, run through subprocess.
-  - Windows:       PowerShell Get-Printer / Get-PrintJob, and SumatraPDF -print-to
-                   (if SUMATRA_PATH is set) or Start-Process -Verb PrintTo.
-  - macOS / Linux: CUPS commands lp and lpstat.
+  - Windows:       PowerShell Get-Printer / Get-PrintJob / Remove-PrintJob, and SumatraPDF
+                   -print-to (if SUMATRA_PATH is set) or Start-Process -Verb PrintTo.
+  - macOS / Linux: CUPS commands lp, lpstat and cancel.
+
+Two ways to print:
+  - submit_print:       the one-page report, with the system's default print settings.
+  - submit_trial_print: the grayscale trial sheets from trial_sheet.py: one copy, A4,
+                        grayscale, one-sided and at 100% size (no fit-to-page), because the
+                        sheet's positions are measured in mm on the scan. On Windows this
+                        needs SumatraPDF (SUMATRA_PATH), since the default path may scale.
+cancel_job removes a job that has not printed yet.
 
 Set PRINTER_MODE=fake to use a pretend printer called Office_Printer instead of real
 commands. Set FAKE_PRINTER_PROBLEM=out_of_paper (or offline, paper_jam) to make the
@@ -12,7 +20,7 @@ fake printer report that problem.
 Printer states: idle, printing, stopped, offline, out_of_paper, paper_jam, error, unknown.
 Job states:     waiting, printing, done, failed, unknown.
                 A waiting job that is stuck on a printer problem also has a "problem" field
-                (for example out_of_paper).
+                (for example out_of_paper). A cancelled job is failed, with message "cancelled".
 Job ids look like "<printer>-<number>", e.g. Office_Printer-1.
 """
 import json
@@ -28,6 +36,11 @@ FAKE_JOBS_FILE = Path(os.environ.get("FAKE_PRINTER_FILE", Path(__file__).with_na
 FAKE_PROBLEMS = ("out_of_paper", "offline", "paper_jam")
 FAKE_QUEUE_SECONDS = 1.0   # a fake job waits this long, then prints
 FAKE_PRINT_SECONDS = 3.0   # a fake job is done this long after submission
+
+# Trial sheets: measured in mm, so 1 copy, A4, gray, one-sided and never scaled.
+TRIAL_LP_OPTIONS = ["-n", "1", "-o", "media=A4", "-o", "ColorModel=Gray", "-o", "print-color-mode=monochrome",
+                    "-o", "sides=one-sided", "-o", "print-scaling=none", "-o", "nofit-to-page"]
+TRIAL_SUMATRA_SETTINGS = "noscale,monochrome,simplex,paper=A4,1x"
 
 
 class PrinterError(Exception):
@@ -115,6 +128,8 @@ def _fake_load():
 def _fake_job_state(job, problem):
     """A job sent during a problem never prints; a problem that starts later stops unfinished jobs."""
     age = time.time() - job["submitted"]
+    if job.get("cancelled"):
+        return "failed"
     if job.get("problem"):
         return "failed"
     if age >= FAKE_PRINT_SECONDS:
@@ -134,7 +149,51 @@ def _fake_check(printer):
         raise PrinterError(f"unknown printer: {printer} (the fake printer is {FAKE_PRINTER})")
 
 
-# ---------- the four connector functions ----------
+def _fake_submit(pdf, printer, **extra):
+    """Add a job to the fake jobs file and return its id."""
+    _fake_check(printer)
+    data = _fake_load()
+    job_id = f"{printer}-{data['next_id']}"
+    data["next_id"] += 1
+    data["jobs"][job_id] = {"file": str(pdf), "submitted": time.time(), "problem": _fake_problem(), **extra}
+    FAKE_JOBS_FILE.write_text(json.dumps(data, indent=2))
+    return job_id
+
+
+# ---------- shared by the two print functions ----------
+
+def _existing_pdf(pdf_path):
+    pdf = Path(pdf_path).resolve()
+    if not pdf.is_file():
+        raise PrinterError(f"file not found: {pdf}")
+    return pdf
+
+
+def _windows_submit(printer, pdf, print_command):
+    """Run print_command, then find the new job in the printer's queue (Windows gives no id back)."""
+    ids = f"Get-PrintJob -PrinterName {_quote(printer)} | Select-Object -ExpandProperty Id"
+    before = set(_ps(ids).split())
+    print_command()
+    for _ in range(30):
+        new = set(_ps(ids).split()) - before
+        if new:
+            break
+        time.sleep(0.5)
+    else:
+        # Raising would make the agent print again; job_status reads "-0" as done.
+        return {"job_id": f"{printer}-0", "printer": printer, "file": str(pdf),
+                "message": "print command ran, but the job left the queue before it was seen"}
+    return {"job_id": f"{printer}-{max(new, key=int)}", "printer": printer, "file": str(pdf)}
+
+
+def _lp_submit(printer, pdf, options=()):
+    match = re.search(r"request id is (\S+)", _run(["lp", "-d", printer, *options, str(pdf)]))
+    if not match:
+        raise PrinterError("lp did not return a job id")
+    return {"job_id": match.group(1), "printer": printer, "file": str(pdf)}
+
+
+# ---------- the connector functions ----------
 
 def list_printers():
     """Return the names of the printers this computer knows."""
@@ -165,40 +224,33 @@ def printer_status(printer):
 
 def submit_print(pdf_path, printer):
     """Send a PDF to the printer. Return {"job_id", "printer", "file"}."""
-    pdf = Path(pdf_path).resolve()
-    if not pdf.is_file():
-        raise PrinterError(f"file not found: {pdf}")
+    pdf = _existing_pdf(pdf_path)
     if _fake():
-        _fake_check(printer)
-        data = _fake_load()
-        job_id = f"{printer}-{data['next_id']}"
-        data["next_id"] += 1
-        data["jobs"][job_id] = {"file": str(pdf), "submitted": time.time(), "problem": _fake_problem()}
-        FAKE_JOBS_FILE.write_text(json.dumps(data, indent=2))
-    elif _windows():
-        ids = f"Get-PrintJob -PrinterName {_quote(printer)} | Select-Object -ExpandProperty Id"
-        before = set(_ps(ids).split())
-        if os.environ.get("SUMATRA_PATH"):
-            _run([os.environ["SUMATRA_PATH"], "-print-to", printer, "-silent", str(pdf)])
-        else:
-            _ps(f"Start-Process -FilePath {_quote(str(pdf))} -Verb PrintTo "
-                f"-ArgumentList {_quote(chr(34) + printer + chr(34))} -WindowStyle Hidden")
-        for _ in range(30):   # Windows gives no job id back, so wait for a new job in the queue
-            new = set(_ps(ids).split()) - before
-            if new:
-                break
-            time.sleep(0.5)
-        else:
-            # Raising would make the agent print again; job_status reads "-0" as done.
-            return {"job_id": f"{printer}-0", "printer": printer, "file": str(pdf),
-                    "message": "print command ran, but the job left the queue before it was seen"}
-        job_id = f"{printer}-{max(new, key=int)}"
-    else:
-        match = re.search(r"request id is (\S+)", _run(["lp", "-d", printer, str(pdf)]))
-        if not match:
-            raise PrinterError("lp did not return a job id")
-        job_id = match.group(1)
-    return {"job_id": job_id, "printer": printer, "file": str(pdf)}
+        return {"job_id": _fake_submit(pdf, printer), "printer": printer, "file": str(pdf)}
+    if _windows():
+        def print_command():
+            if os.environ.get("SUMATRA_PATH"):
+                _run([os.environ["SUMATRA_PATH"], "-print-to", printer, "-silent", str(pdf)])
+            else:
+                _ps(f"Start-Process -FilePath {_quote(str(pdf))} -Verb PrintTo "
+                    f"-ArgumentList {_quote(chr(34) + printer + chr(34))} -WindowStyle Hidden")
+        return _windows_submit(printer, pdf, print_command)
+    return _lp_submit(printer, pdf)
+
+
+def submit_trial_print(pdf_path, printer):
+    """Send a trial sheet PDF: 1 copy, A4, grayscale, one-sided, 100% size. Same result as submit_print."""
+    pdf = _existing_pdf(pdf_path)
+    if _fake():
+        return {"job_id": _fake_submit(pdf, printer, kind="trial"), "printer": printer, "file": str(pdf)}
+    if _windows():
+        sumatra = os.environ.get("SUMATRA_PATH")
+        if not sumatra:
+            raise PrinterError("trial sheets need SumatraPDF (set SUMATRA_PATH): the default Windows "
+                               "print path may scale the page, and the sheet is measured in mm")
+        return _windows_submit(printer, pdf, lambda: _run(
+            [sumatra, "-print-to", printer, "-print-settings", TRIAL_SUMATRA_SETTINGS, "-silent", str(pdf)]))
+    return _lp_submit(printer, pdf, TRIAL_LP_OPTIONS)
 
 
 def job_status(job_id):
@@ -210,7 +262,10 @@ def job_status(job_id):
             raise PrinterError(f"unknown job: {job_id}")
         problem = job.get("problem") or _fake_problem()
         state = _fake_job_state(job, problem)
-        message = f"printer reports {problem}" if state == "failed" else f"fake job is {state}"
+        if job.get("cancelled"):
+            message = "cancelled"
+        else:
+            message = f"printer reports {problem}" if state == "failed" else f"fake job is {state}"
         return {"job_id": job_id, "state": state, "message": message}
     if _windows():
         out = _ps(f"$j = Get-PrintJob -PrinterName {_quote(printer)} | Where-Object Id -eq {int(number)}; "
@@ -234,18 +289,52 @@ def job_status(job_id):
     return {"job_id": job_id, "state": "unknown", "message": "job not found in the queue or completed list"}
 
 
+def cancel_job(job_id):
+    """Cancel a job that has not printed yet. Return {"job_id", "state", "message"}.
+
+    A job that is already done stays done. An unknown job raises PrinterError.
+    """
+    if _fake():
+        data = _fake_load()
+        job = data["jobs"].get(job_id)
+        if job is None:
+            raise PrinterError(f"unknown job: {job_id}")
+        if _fake_job_state(job, job.get("problem") or _fake_problem()) == "done":
+            return {"job_id": job_id, "state": "done", "message": "job was already printed; nothing to cancel"}
+        job["cancelled"] = True
+        FAKE_JOBS_FILE.write_text(json.dumps(data, indent=2))
+        return {"job_id": job_id, "state": "failed", "message": "cancelled"}
+
+    status = job_status(job_id)
+    if status["state"] == "done":
+        return {"job_id": job_id, "state": "done", "message": "job was already printed; nothing to cancel"}
+    if status["state"] == "unknown":
+        raise PrinterError(f"unknown job: {job_id}")
+    if _windows():
+        printer, _, number = job_id.rpartition("-")
+        if not number.isdigit():
+            raise PrinterError(f"unknown job: {job_id}")
+        _ps(f"Remove-PrintJob -PrinterName {_quote(printer)} -ID {int(number)}")
+    else:
+        _run(["cancel", job_id])
+    return {"job_id": job_id, "state": "failed", "message": "cancelled"}
+
+
 # ---------- command line ----------
 
 USAGE = """usage:
   python printer_connector.py list
   python printer_connector.py status PRINTER
   python printer_connector.py print PDF_FILE PRINTER
-  python printer_connector.py job JOB_ID"""
+  python printer_connector.py trial PDF_FILE PRINTER
+  python printer_connector.py job JOB_ID
+  python printer_connector.py cancel JOB_ID"""
 
 
 def main(argv):
     commands = {"list": (list_printers, 0), "status": (printer_status, 1),
-                "print": (submit_print, 2), "job": (job_status, 1)}
+                "print": (submit_print, 2), "trial": (submit_trial_print, 2),
+                "job": (job_status, 1), "cancel": (cancel_job, 1)}
     if not argv or argv[0] not in commands or len(argv) - 1 != commands[argv[0]][1]:
         print(USAGE)
         return 2

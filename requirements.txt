@@ -7,4 +7,5 @@ matplotlib
 mcp>=1.2,<2
 pypdf
 langchain-mcp-adapters
-pymupdf
+Pillow  # scan_evaluation.py: reads PNG/JPG scans
+PyMuPDF  # scan_evaluation.py: renders PDF scans
