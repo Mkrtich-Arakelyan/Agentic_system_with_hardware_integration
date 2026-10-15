@@ -1,13 +1,13 @@
 """Package experiments that the experiment side already chose into a trial sheet selection.
 
 This module does not choose experiments: no ranking, no top-N and no random picks. The
-scientist agent chooses them (graph.py freezes its choice in state["experiment_selection"]);
+scientist agent chooses them (app/workflow/graph.py freezes its choice in state["experiment_selection"]);
 here results are only looked up, checked and packaged into the `selection` dict that
-trial_sheet.py create_trial_sheet() expects.
+app/print_tuning/trial_sheet.py create_trial_sheet() expects.
 
 Command line, to print the round-1 sheet of a run:
-    python selection.py RUN_FOLDER                              # the scientist's frozen choice
-    python selection.py RUN_FOLDER --ids ID1 ID2 ID3 ID4        # or four ids chosen by hand
+    python -m app.experiments.selection RUN_FOLDER                              # the scientist's frozen choice
+    python -m app.experiments.selection RUN_FOLDER --ids ID1 ID2 ID3 ID4        # or four ids chosen by hand
     [--out OUT]                                                 # default RUN_FOLDER/print_tuning
 """
 import argparse
@@ -20,8 +20,8 @@ import uuid
 from datetime import datetime, timezone
 from pathlib import Path, PureWindowsPath
 
-from grayscale_render import _is_number, default_mapping, load_config
-from trial_sheet import TrialSheetError, create_trial_sheet, load_panel_data
+from app.print_tuning.grayscale_render import _is_number, default_mapping, load_config
+from app.print_tuning.trial_sheet import TrialSheetError, create_trial_sheet, load_panel_data
 
 SCHEMA_VERSION = "selection/1"
 PANELS = ("Initial", "Final")
@@ -48,7 +48,7 @@ def _file_sha256(path) -> str:
 def successful_results(state: dict) -> list[dict]:
     """The successful focusing results recorded in a graph state.
 
-    A copy of graph.py _successful_focusing_results (not imported, so this file does not depend
+    A copy of app/workflow/graph.py _successful_focusing_results (not imported, so this file does not depend
     on the graph): only tool payloads count, not a results.json lying in the run folder.
     """
     successful = []
@@ -94,7 +94,7 @@ def pick_by_ids(results: list[dict], experiment_ids: list[str]) -> list[dict]:
 def _raw_camera_path(result: dict, stage: str) -> str:
     """The raw camera .npy of stage 'initial' or 'final', checked to be a finite 2D array."""
     paths = result.get("paths") or {}
-    candidates = [paths.get(f"{stage}_camera_npy"), paths.get(f"{stage}_intensity")]   # tools.py: _intensity
+    candidates = [paths.get(f"{stage}_camera_npy"), paths.get(f"{stage}_intensity")]   # app/experiments/tools.py: _intensity
     if paths.get(f"{stage}_camera"):
         candidates.append(str(Path(paths[f"{stage}_camera"]).with_suffix(".npy")))
     candidates = [candidate for candidate in candidates if candidate]
@@ -200,7 +200,7 @@ def build_selection(chosen_results: list[dict], run_id: str, out_dir, chosen_by:
 
 def selection_from_scientist(experiment_selection: dict, results: list[dict], run_id: str, out_dir,
                              target_position=None, state: dict | None = None) -> dict:
-    """Package the scientist's frozen choice (graph.py state["experiment_selection"]).
+    """Package the scientist's frozen choice (app/workflow/graph.py state["experiment_selection"]).
 
     results hold the experiments' data paths, e.g. load_run_results(run_folder). If state is
     given, only experiments that succeeded in state["execution_results"] are accepted.
@@ -239,12 +239,12 @@ def _local_path(saved: str, experiment_dir: Path) -> str:
 
 
 def load_run_results(run_folder) -> list[dict]:
-    """Every experiment saved in a run folder by tools.py, read from its results.json."""
+    """Every experiment saved in a run folder by app/experiments/tools.py, read from its results.json."""
     results = []
     for path in sorted(Path(run_folder).glob("*/results.json")):
         record = json.loads(path.read_text(encoding="utf-8"))
         record["paths"] = {key: _local_path(value, path.parent) for key, value in record.get("paths", {}).items()}
-        results.append({"ok": True, **record})     # tools.py only writes results.json on success
+        results.append({"ok": True, **record})     # app/experiments/tools.py only writes results.json on success
     return results
 
 

@@ -1,6 +1,6 @@
 """Give the printer MCP server's tools to the executor as LangChain tools.
 
-load_printer_tools(env) starts printer_mcp_server.py over stdio, loads its tools
+load_printer_tools(env) starts app.printing.mcp_server over stdio, loads its tools
 with langchain-mcp-adapters and wraps each one so a plain synchronous .invoke(args)
 works and returns the server's JSON result as one string. Each call starts the
 server, runs the tool and stops it, which is fine for a printer.
@@ -14,7 +14,7 @@ import sys
 from langchain_core.tools import BaseTool, StructuredTool
 from langchain_mcp_adapters.client import MultiServerMCPClient
 
-SERVER = Path(__file__).resolve().parent / "printer_mcp_server.py"
+PROJECT_ROOT = Path(__file__).resolve().parents[2]
 
 
 def mcp_client(env=None):
@@ -23,7 +23,8 @@ def mcp_client(env=None):
         "printer": {
             "transport": "stdio",
             "command": sys.executable,
-            "args": [str(SERVER)],
+            "args": ["-m", "app.printing.mcp_server"],
+            "cwd": str(PROJECT_ROOT),
             "env": dict(os.environ) | (env or {}),
         }
     })

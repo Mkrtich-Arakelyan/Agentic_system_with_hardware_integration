@@ -1,7 +1,7 @@
 """MCP server for the office printer: exposes the connector's controls as tools.
 
-Run over stdio as `python printer_mcp_server.py`; printer_tools.py starts it and
-gives its tools to the executor. Every tool calls printer_connector.py, which is
+Run over stdio as `python -m app.printing.mcp_server`; app.printing.tools starts it and
+gives its tools to the executor. Every tool calls app.printing.connector, which is
 the only code that talks to the printer, and returns the connector's result with
 an "ok" field added, or {"ok": false, "error": ...}.
 
@@ -18,7 +18,7 @@ from pathlib import Path
 from mcp.server.fastmcp import FastMCP
 from pypdf import PdfReader
 
-import printer_connector as connector
+from app.printing import connector
 
 mcp = FastMCP("office-printer")
 
