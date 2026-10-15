@@ -22,6 +22,8 @@ from app.agents.report_and_print import (
 
 # Keys of a report_and_print result that belong in the graph state.
 REPORT_STATE_KEYS = ("dialogue", "execution_results", "report", "active_job_id", "pending_print")
+# The printer tools the report-and-print turn may call.
+REPORT_PRINTER_TOOLS = ("list_printers", "printer_status", "submit_print", "job_status")
 PROBLEM_JOB_STATES = {"held", "error", "cancelled", "canceled", "failed", "aborted"}
 PROBLEM_PRINTER_STATES = {"offline", "stopped", "error", "out_of_paper", "paper_jam"}
 
@@ -177,7 +179,11 @@ def build_graph(
     """Route the four roles; only the executor's report_and_print turn gets the printer."""
     run_dir = Path(run_dir).resolve()
     printer_map = {item.name: item for item in printer_tools}
-    report_tools = [coding_tool, *printer_tools, info_tool]
+    # The report turn checks human approval only for submit_print, so it gets only that action
+    # and the readings. cancel_job stays with the graph's own skip path (via printer_map), and
+    # submit_trial_print is kept for the trial-sheet turn, which has its own approval.
+    report_tools = [coding_tool, *(item for item in printer_tools if item.name in REPORT_PRINTER_TOOLS),
+                    info_tool]
 
     def _invoke_printer(name: str, args: dict) -> dict:
         try:

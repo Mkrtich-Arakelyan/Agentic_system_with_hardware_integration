@@ -1,4 +1,4 @@
-﻿# Local credentials and generated Python files.
+# Local credentials and generated Python files.
 .env
 .env.*
 !.env.example
@@ -11,3 +11,5 @@ venv/
 fake_printer_jobs.json
 runs/*/print_tuning/
 *.zip
+runs/
+.DS_Store

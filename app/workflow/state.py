@@ -22,3 +22,12 @@ class State(TypedDict, total=False):
     last_printer_reading: dict
     scientist_response: dict
     experiment_selection: dict
+    # Print tuning (optional; nodes that do not tune never set them).
+    tuning_round: int | None
+    active_trial_id: str | None
+    pending_trial_print: dict | None
+    trial_approval: dict | None
+    last_scan_result: dict | None
+    accepted_settings: dict | None
+    final_settings: dict | None
+    final_figure_path: str | None

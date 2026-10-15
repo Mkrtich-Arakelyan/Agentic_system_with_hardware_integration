@@ -21,6 +21,8 @@ REQUIRED_DEPENDENCIES = {
     "mcp": "mcp",
     "langchain_mcp_adapters": "langchain-mcp-adapters",
     "pypdf": "pypdf",
+    "PIL": "Pillow",
+    "pymupdf": "PyMuPDF",
 }
 FAKE_PRINTER_NAME = "Office_Printer"
 DEFAULT_REQUEST = (
@@ -34,7 +36,7 @@ DEFAULT_REQUEST = (
 )
 # Graph-internal keys of an interrupted visit; a resumed run starts at the orchestrator.
 RESUME_DROPPED_KEYS = (
-    "pending_print", "route", "hardware_passes", "last_printer_reading",
+    "pending_print", "pending_trial_print", "route", "hardware_passes", "last_printer_reading",
 )
 
 
