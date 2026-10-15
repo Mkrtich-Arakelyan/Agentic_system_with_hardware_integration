@@ -50,7 +50,7 @@ def write_experiments_table(state: dict, run_dir: Path) -> None:
     best = max((result["final_enhancement"] for result in results), default=None)
     for number, result in enumerate(results, 1):
         settings = result["settings"]
-        values = [str(settings.get(name, "â€”")) for name in (
+        values = [str(settings.get(name, "—")) for name in (
             "macropixel_size", "focus_size", "background_size", "iterations", "search_seed",
         )]
         final = f"{result['final_enhancement']:.3f}"

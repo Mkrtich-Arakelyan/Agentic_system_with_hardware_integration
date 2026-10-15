@@ -11,6 +11,8 @@ __all__ = [
     "list_printers",
     "printer_status",
     "submit_print",
+    "submit_trial_print",
+    "cancel_job",
     "job_status",
     "load_printer_tools",
     "mcp_client",

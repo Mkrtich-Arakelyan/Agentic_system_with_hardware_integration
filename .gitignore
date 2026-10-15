@@ -8,3 +8,6 @@ __pycache__/
 venv/
 .idea/
 .vscode/
+fake_printer_jobs.json
+runs/*/print_tuning/
+*.zip

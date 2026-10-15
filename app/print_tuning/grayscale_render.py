@@ -228,13 +228,13 @@ def scale_bar(limits: dict, mapping: dict, n: int = 256) -> dict:
 
 
 def mapping_label(mapping: dict) -> str:
-    """Short tile label, e.g. "Î³ 0.65 Â· 0.05â€“0.90 Â· smooth" or "Î³ 1.00 Â· 0.00â€“1.00 Â· 8 steps Â· inverted"."""
-    parts = [f"Î³ {mapping['gamma']:.2f}",
-             f"{mapping['dark_level']:.2f}â€“{mapping['light_level']:.2f}",
+    """Short tile label, e.g. "γ 0.65 · 0.05–0.90 · smooth" or "γ 1.00 · 0.00–1.00 · 8 steps · inverted"."""
+    parts = [f"γ {mapping['gamma']:.2f}",
+             f"{mapping['dark_level']:.2f}–{mapping['light_level']:.2f}",
              f"{mapping['steps']} steps" if mapping["steps"] >= 2 else "smooth"]
     if mapping["invert"]:
         parts.append("inverted")
-    return " Â· ".join(parts)
+    return " · ".join(parts)
 
 
 def changed_parameters(reference: dict, other: dict) -> set[str]:
