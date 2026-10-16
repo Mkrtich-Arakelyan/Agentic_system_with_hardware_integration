@@ -9,6 +9,14 @@ or manifest paths; both come from the run folder the tools were made for.
     make_trial_sheet(round_id)          draws the round's trial sheet from the session's proposal
     read_scan(scan_paths)               measures the scan of the session's active trial
     prepare_specialist_previews(...)    plain function, before round 1: previews and limits
+    summarize_scan_result(result)       plain function: a short read_scan result for the executor model
+                                        (the specialist gets the full one); see docs/tuning_tool_results.md
+
+read_scan's "ok" result: contract_version, status, session_id, trial_id, round_id, evaluation_path,
+scan_quality, pages, candidates, printer_response, measurement_docs and scan_files, all taken from
+the scan_eval/2 evaluation. The evaluation JSON and its <name>_tiles folder (tile crops and panel
+PNGs) are saved in run_dir/print_tuning under a new name each time, so a rescan keeps earlier ones.
+For tests and fake-printer dry runs, app.print_tuning.fake_scan makes scan PNGs from a trial PDF.
 
 Session keys read (all in _session_inputs, the only place to change if the graph's names differ):
     contract_version        1
@@ -318,7 +326,54 @@ def _read_scan(run_dir: Path, scan_paths: list[str]) -> dict:
                                          f"not {active['trial_id']}", **ids)
     return {"contract_version": CONTRACT_VERSION, "status": "ok", **ids,
             "evaluation_path": result["evaluation_path"], "scan_quality": result["scan_quality"],
-            "pages": result["pages"], "candidates": result["candidates"]}
+            "pages": result["pages"], "candidates": result["candidates"],
+            # scan_eval/2 always has these; copied only when present so a smaller result still works
+            **{key: result[key] for key in ("printer_response", "measurement_docs", "scan_files") if key in result}}
+
+
+# The candidate measurements in the executor's summary: what is lost from the gray tones on paper.
+SUMMARY_MEASUREMENTS = ("collapsed_levels", "full_black_share", "paper_white_share")
+# One row per candidate, as a table, so 24 candidates stay well under 4 KB of JSON.
+CANDIDATE_COLUMNS = ("candidate_id", "role", "mapping", "warnings", *SUMMARY_MEASUREMENTS)
+SHORT_KEYS = ("contract_version", "status", "error_code", "message", "session_id", "trial_id", "round_id")
+
+
+def _short_number(value):
+    return round(value, 3) if isinstance(value, float) else value
+
+
+def summarize_scan_result(result: dict) -> dict:
+    """A short version of a read_scan result for the executor model; the specialist gets the full one.
+
+    needs_rescan / error: only the identifying and error keys. ok: the scan quality, one line per page
+    and, per experiment, one row per candidate in CANDIDATE_COLUMNS order: candidate_id, role, mapping
+    label, warnings and SUMMARY_MEASUREMENTS (levels that merge on paper, cells clipped to full black,
+    cells clipped to paper white). No image paths, panel numbers, measurement_docs or
+    printer_response. Never raises: anything unexpected gives an error with error_code "summary_failed".
+    """
+    try:
+        if result["status"] != "ok":
+            return {key: result[key] for key in SHORT_KEYS if key in result}
+        experiments = {}
+        for candidate in result["candidates"]:
+            values = candidate["measurements"]
+            row = [candidate["candidate_id"], candidate["role"], mapping_label(candidate["mapping"]),
+                   list(candidate["warnings"]), *(_short_number(values[name]) for name in SUMMARY_MEASUREMENTS)]
+            experiments.setdefault(candidate["experiment_id"], []).append(row)
+        quality = result["scan_quality"]
+        return {
+            "contract_version": result["contract_version"], "status": "ok",
+            "session_id": result["session_id"], "trial_id": result["trial_id"], "round_id": result["round_id"],
+            "evaluation_path": result["evaluation_path"],
+            "scan_quality": {"usable": quality["usable"], "issues": list(quality["issues"])},
+            "pages": [{"page_number": page["page_number"], "code_matches": page["code_matches"],
+                       "issues": list(page["issues"])} for page in result["pages"]],
+            "candidate_columns": list(CANDIDATE_COLUMNS),
+            "experiments": [{"experiment_id": experiment_id, "candidates": rows}
+                            for experiment_id, rows in experiments.items()],
+        }
+    except Exception as error:
+        return _error("summary_failed", f"cannot summarize the read_scan result: {type(error).__name__}: {error}")
 
 
 def create_tuning_tools(run_dir: str | Path) -> list[BaseTool]:
@@ -349,9 +404,12 @@ def create_tuning_tools(run_dir: str | Path) -> list[BaseTool]:
 
         scan_paths is one PDF holding every page, or one image (PNG or JPG) per page; relative
         paths are taken from the run folder. The trial is the session's active trial: no
-        manifest is chosen here. Returns status "ok" with the scan quality, page records and
-        one measured record per candidate (no ranking), "needs_rescan" with the problem when a
-        new scan would fix it, or "error".
+        manifest is chosen here. Returns status "ok" with evaluation_path, scan_quality, pages,
+        candidates (one measured record per candidate, no ranking), printer_response (paper,
+        black and gray patches), measurement_docs (units and meaning of every number) and
+        scan_files (each scan file with its sha256); "needs_rescan" with error_code and the
+        problem when a new scan would fix it; or "error". Every evaluation is saved in the run's
+        print_tuning folder under its own new name, so a rescan never overwrites an earlier one.
         """
         try:
             return _read_scan(directory, scan_paths)
