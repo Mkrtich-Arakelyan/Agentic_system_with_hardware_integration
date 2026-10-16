@@ -436,7 +436,7 @@ class SessionTests(unittest.TestCase):
             self.assertEqual(initialize.call_args.kwargs["paper_color"], "yellow")
             frozen = state | {"experiment_selection": update["experiment_selection"], "decision_count": 10, "decision_budget": 10}
             budget = nodes["orchestrator"](frozen)
-            self.assertEqual(budget["route"], "budget")
+            self.assertEqual(budget["route"], "tuning_route")
             self.assertEqual(initialize.call_count, 2)
             self.assertEqual(initialize.call_args.kwargs["paper_color"], "yellow")
             initialize.side_effect = TuningSessionError("missing array")

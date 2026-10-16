@@ -25,6 +25,12 @@ class State(TypedDict, total=False):
     # Authoritative progress is in this JSON; this projection is initialization only.
     tuning_session_path: str
     tuning_initialization: dict
+    # Routing/pending inputs only; progress and print history stay in the session.
+    tuning_action: dict
+    tuning_printer: str
+    tuning_failure: str
+    tuning_failures: int
+    tuning_polls: int
     # Print tuning (optional; nodes that do not tune never set them).
     tuning_round: int | None
     active_trial_id: str | None

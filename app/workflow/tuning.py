@@ -345,7 +345,7 @@ def record_trial_result(session_path: str | Path, result: dict) -> dict:
             return session
     _need(not any(t["result"]["trial_id"] == result.get("trial_id") for r in session["rounds"].values() for t in r["trials"]), "Trial IDs must be unique within the session")
     _need(session["phase"] in ("ready_for_trial", "awaiting_scan", "awaiting_review") and entry["proposal"] is not None, "Trial generation is out of order")
-    _need(not any(a["result"] is None for a in entry["print_attempts"]), "Submission outcome uncertain; resolve it before regenerating")
+    _need(not any(a["result"] is None and not a.get("human_resolution") for a in entry["print_attempts"]), "Submission outcome uncertain; resolve it before regenerating")
     try:
         _trial_manifest(session, result, entry)
     except (KeyError, TypeError, ValueError, _ToolError) as error:
@@ -598,7 +598,7 @@ def record_print_approval(
     _need(not any(a["metadata"]["approval_id"] == approval_id for r in session["rounds"].values() for a in r["approvals"]), "Approval IDs must be unique within the session")
     _need(session["phase"] == "awaiting_scan", "Approval is out of order")
     if reprint:
-        _need(bool(entry["print_attempts"]) and all(a["result"] is not None for a in entry["print_attempts"]), "Prior submission outcome must be recorded before approving a reprint")
+        _need(bool(entry["print_attempts"]) and all(a["result"] is not None or a.get("human_resolution") for a in entry["print_attempts"]), "Prior submission outcome must be recorded before approving a reprint")
         _increment(session, entry, "reprints")
     else:
         _need(not any(a["metadata"]["trial_id"] == trial_id for a in entry["approvals"])
@@ -626,12 +626,13 @@ def begin_print_attempt(session_path: str | Path, *, approval_id: str, attempt_i
     _need(isinstance(attempt_id, str) and bool(attempt_id.strip()), "Print attempt ID required")
     approvals = [a for a in entry["approvals"] if a["metadata"]["approval_id"] == approval_id]
     _need(len(approvals) == 1 and approvals[0]["metadata"]["trial_id"] == session["active_trial_id"], "Current-trial print approval required")
-    _need(not any(a["approval_id"] == approval_id or a["result"] is None for a in entry["print_attempts"]), "Approval already consumed or submission outcome uncertain")
+    _need(not any(a["approval_id"] == approval_id or (a["result"] is None and not a.get("human_resolution")) for a in entry["print_attempts"]), "Approval already consumed or submission outcome uncertain")
     _need(session["phase"] == "awaiting_scan", "Print submission is out of order")
     approval = approvals[0]["metadata"]
     _need(_sha(entry["trial_result"]["pdf_path"]) == approval["pdf_sha256"], "Approved PDF changed before submission")
     entry["print_attempts"].append({"attempt_id": attempt_id, "approval_id": approval_id, "trial_id": session["active_trial_id"],
                                     "submission_state": "outcome_uncertain", "result": None, "job_results": [], "recorded_at": _now()})
+    entry["reprint_requested"] = False
     return _write(path, session)
 
 
@@ -654,6 +655,53 @@ def record_print_result(session_path: str | Path, *, attempt_id: str, result: di
             _need(attempt["result"] == data, "Conflicting duplicate submission outcome")
             return session
         attempt.update(result=data, submission_state="result_recorded")
+    return _write(path, session)
+
+
+def resolve_print_outcome(session_path: str | Path, *, attempt_id: str, outcome: str) -> dict:
+    """Record a human tray check, separately from the verbatim printer results.
+
+    Also resolves a crash between submission intent and recording its outcome.
+    Callers serialize access; a conflicting second resolution is rejected.
+    """
+    path = Path(session_path)
+    session = load_tuning_session(path)
+    entry = _active(session)
+    _need(session["phase"] == "awaiting_scan", "Print resolution is out of order")
+    matches = [a for a in entry["print_attempts"] if a["attempt_id"] == attempt_id
+               and a["trial_id"] == session["active_trial_id"]]
+    _need(len(matches) == 1 and matches[0] is entry["print_attempts"][-1], "Resolve only the latest active-trial attempt")
+    _need(outcome in ("printed", "not_printed"), "Human outcome must be printed or not_printed")
+    attempt = matches[0]
+    if attempt.get("human_resolution"):
+        _need(attempt["human_resolution"]["outcome"] == outcome, "Conflicting human print resolution")
+        return session
+    attempt["human_resolution"] = {"outcome": outcome, "recorded_at": _now()}
+    return _write(path, session)
+
+
+def request_trial_reprint(session_path: str | Path) -> dict:
+    """Record human recovery intent; fresh approval consumes the one-reprint limit.
+
+    This does not print, approve, or regenerate a sheet. Scans remain historical
+    artifacts, but their active pointer is cleared before replacement scanning.
+    """
+    path = Path(session_path)
+    session = load_tuning_session(path)
+    entry = _active(session)
+    _need(session["phase"] in ("awaiting_scan", "awaiting_review"), "Reprint is out of order")
+    _need(entry["retries"]["reprints"] < session["retry_limits"]["reprints"], "One reprint per round is permitted")
+    _need(bool(entry["print_attempts"]), "There is no previous submission to reprint")
+    latest = entry["print_attempts"][-1]
+    reading = (latest["job_results"] or [latest["result"]])[-1] or {}
+    resolved = latest.get("human_resolution")
+    _need(bool(resolved) or reading.get("confirmed") is True and reading.get("state") in ("done", "failed")
+          or latest["result"] is not None and latest["result"].get("ok") is False,
+          "Resolve the previous submission before requesting a reprint")
+    if entry.get("reprint_requested"):
+        return session
+    entry.update(reprint_requested=True, active_evaluation_id=None)
+    session["phase"] = "awaiting_scan"
     return _write(path, session)
 
 

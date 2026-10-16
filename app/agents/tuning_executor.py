@@ -113,6 +113,8 @@ def _uncertain(result: dict) -> bool:
 
 def _unresolved_print(entry: dict) -> bool:
     for attempt in entry["print_attempts"]:
+        if attempt.get("human_resolution"):
+            continue
         result = attempt["result"]
         if result is None or _uncertain(result) or any(_uncertain(r) for r in attempt["job_results"][-1:]):
             return True

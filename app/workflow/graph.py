@@ -1,6 +1,7 @@
 import json
 import math
 from pathlib import Path
+from uuid import uuid4
 
 from langchain_core.language_models.chat_models import BaseChatModel
 from langchain_core.tools import BaseTool
@@ -8,7 +9,14 @@ from langgraph.graph import END, START, StateGraph
 from langgraph.types import interrupt
 
 from app.workflow.state import State
-from app.workflow.tuning import TuningSessionError, initialize_tuning_session
+from app.workflow.tuning import (
+    TuningSessionError, initialize_tuning_session, load_tuning_session,
+    accept_specialist_response, record_print_approval, begin_print_attempt,
+    record_print_result, resolve_print_outcome, request_trial_reprint, record_stop,
+    _bound_trial, _trial_manifest,
+)
+from app.workflow.tuning_evidence import prepare_tuning_inputs
+from app.agents.photo_quality_specialist import photo_quality_specialist
 
 from app.agents.common import DEFAULT_INITIAL_DECISIONS, MIN_EXPERIMENTS
 from app.agents.orchestrator import RoutingDecision, orchestrator as run_orchestrator, summarize_progress
@@ -176,10 +184,37 @@ def build_graph(
     run_dir: str | Path,
     extra_decisions: int,
     checkpointer,
+    *,
+    tuning_tools: list[BaseTool] | None = None,
+    specialist_llm: BaseChatModel | None = None,
 ):
-    """Route the four roles; only the executor's report_and_print turn gets the printer."""
+    """Build the experiment, tuning, then report workflow.
+
+    tuning_tools supplies make_trial_sheet/read_scan; printer readings and
+    submit_trial_print may be supplied there or in printer_tools. No tools or
+    models are constructed. specialist_llm defaults to llm. The terminal runner
+    is not adapted here. Resume interrupts with these explicit dictionaries:
+
+    tuning_printer: {action: printer, printer: <exact name>} or {action: stop}
+    trial_print_approval: {action: approve} or {action: stop}
+    tuning_scan: {action: scan, scan_paths: [<path>, ...]}, reprint, or stop
+    tuning_print_confirmation: {action: printed}, not_printed, or stop
+    tuning_poll: {action: check} or stop (at most three readings per pause)
+    tuning_problem: {action: retry}, regenerate (artifact errors), reprint, stop
+
+    Bare words above abbreviate {action: <word>}. Invalid answers re-interrupt.
+    Session operations must be serialized. InMemorySaver is not durable storage.
+    """
+    # The executor imports session helpers through app.workflow, whose public
+    # initializer exports build_graph. Import here to keep both entry points
+    # independently importable without a partially initialized module cycle.
+    from app.agents.tuning_executor import TUNING_TOOLS, TuningTask, tuning_executor, _pending_trial
+
     run_dir = Path(run_dir).resolve()
     printer_map = {item.name: item for item in printer_tools}
+    supplied = [*printer_tools, *(tuning_tools or [])]
+    tuning_map = {item.name: item for item in supplied if item.name in TUNING_TOOLS}
+    tuning_dependencies = list(tuning_map.values())
     # The report turn checks human approval only for submit_print, so it gets only that action
     # and the readings. cancel_job stays with the graph's own skip path (via printer_map), and
     # submit_trial_print is kept for the trial-sheet turn, which has its own approval.
@@ -193,7 +228,7 @@ def build_graph(
             return {"ok": False, "error": f"{type(error).__name__}: {error}"}
 
     def initialize_selected_tuning(state: State, selection: dict) -> dict:
-        """Application hook only: no specialist, executor turn, or routing change."""
+        """Freeze/reuse session before entering the direct tuning route."""
         if _selection_error(selection, state):
             return {}
         path = str(run_dir / "tuning_session.json")
@@ -209,6 +244,8 @@ def build_graph(
         # Also covers pre-existing frozen selections on resume. The session is
         # authoritative; do not mirror its accepted settings into graph state.
         tuning = initialize_selected_tuning(state, state["experiment_selection"]) if state.get("experiment_selection") else {}
+        if state.get("experiment_selection") and not _selection_error(state["experiment_selection"], state):
+            return {**tuning, "route": "tuning_route"}
         # The budget check comes before any LLM call and spends no decision.
         budget = state.get("decision_budget", DEFAULT_INITIAL_DECISIONS)
         if state.get("decision_count", 0) >= budget:
@@ -270,6 +307,7 @@ def build_graph(
         # An accepted selection survives later analysis, print rounds and resume.
         if state.get("experiment_selection"):
             update.update(initialize_selected_tuning(state, state["experiment_selection"]))
+            update["route"] = "tuning_route"
             return update
         error = ""
         if response["status"] == "ready":
@@ -290,6 +328,7 @@ def build_graph(
                     "group_reason": response["group_reason"],
                 }
                 update.update(initialize_selected_tuning(state, update["experiment_selection"]))
+                update["route"] = "tuning_route"
         elif response["selections"] or not response["proposed_experiments"]:
             error = "Request more experiments with exact settings and reasons, without selections."
         if error:
@@ -324,6 +363,15 @@ def build_graph(
         return update
 
     def report_and_print_node(state: State) -> dict:
+        # Every entry, including direct/replayed report routing, checks the gate.
+        try:
+            session = load_tuning_session(state.get("tuning_session_path", run_dir / "tuning_session.json"))
+            if session["status"] != "completed":
+                return {"route": "tuning_route"}
+            if not tuning_completed(session):
+                return blocked("Session lacks an accepted final round-3 review and complete final mappings")
+        except TuningSessionError as error:
+            return blocked(str(error))
         error = _selection_error(state.get("experiment_selection") or {}, state)
         if error:
             return {"route": "orchestrator", "dialogue": [{
@@ -483,6 +531,323 @@ def build_graph(
             "dialogue": [{"role": "system", "text": "Finish refused; missing: " + "; ".join(missing) + "."}],
         }
 
+    # Tuning uses direct, bounded application routing, never orchestrator decisions.
+    def blocked(message: str) -> dict:
+        return {"route": "end", "stop_reason": "tuning_blocked", "tuning_failure": message,
+                "dialogue": [{"role": "system", "text": "Tuning blocked: " + message}]}
+
+    def session_for(state):
+        return load_tuning_session(state["tuning_session_path"])
+
+    def tuning_completed(session):
+        final = session["rounds"]["3"]
+        review = final.get("review") or {}
+        return (session["status"] == "completed" and session["phase"] == "completed"
+                and session["active_round"] == 3 and bool(session.get("final_settings"))
+                and session["final_settings"] == session["accepted_settings"] == final["winners"]
+                and review.get("stage") == "review_steps" and review.get("assessment") == "usable")
+
+    def action(name: str, **kwargs) -> dict:
+        return {"route": "tuning_executor", "tuning_action": {"action": name, **kwargs}}
+
+    def problem(state, message: str) -> dict:
+        failures = state.get("tuning_failures", 0) + 1
+        if failures >= 3:
+            return blocked("Three tuning failures require application recovery. " + message)
+        return {"route": "tuning_problem", "tuning_failure": message, "tuning_failures": failures}
+
+    def latest_attempt(session):
+        entry = session["rounds"][str(session["active_round"])]
+        attempts = [a for a in entry["print_attempts"] if a["trial_id"] == session["active_trial_id"]]
+        return attempts[-1] if attempts else None
+
+    def after_print(state, session) -> dict:
+        attempt = latest_attempt(session)
+        if not attempt:
+            return {"route": "tuning_printer"}
+        resolution = (attempt.get("human_resolution") or {}).get("outcome")
+        if resolution == "printed":
+            return {"route": "tuning_scan"}
+        if resolution == "not_printed":
+            return {"route": "tuning_recovery"}
+        result = attempt["result"]
+        reading = (attempt["job_results"] or [result])[-1] or {}
+        if (result is None or result.get("tracked") is False or reading.get("state") == "uncertain"
+                or reading.get("confirmed") is False):
+            return {"route": "tuning_confirmation"}
+        if reading.get("ok") is False or reading.get("state") == "failed":
+            return {"route": "tuning_recovery"}
+        if reading.get("state") == "done" and reading.get("confirmed") is True:
+            return {"route": "tuning_scan"}
+        if _has_problem_field(reading):
+            return problem(state, "Printer job problem: " + json.dumps(reading))
+        if not isinstance(result.get("job_id"), str) or not result["job_id"]:
+            return {"route": "tuning_confirmation"}
+        if state.get("tuning_polls", 0) >= 3:
+            return {"route": "tuning_poll"}
+        return action("job_status", job_id=result["job_id"])
+
+    def tuning_route_node(state):
+        try:
+            session = session_for(state)
+            if session["status"] == "completed":
+                if not tuning_completed(session):
+                    return blocked("Completed session lacks round-3 final settings")
+                return {"route": "report_and_print", "hardware_passes": 0}
+            if session["status"] == "stopped":
+                return {"route": "end", "stop_reason": "stopped_by_human"}
+            if session["status"] != "active":
+                review = session["rounds"][str(session["active_round"])].get("review") or {}
+                explanation = review.get("issues") or session.get("outcomes", [])[-1:] or session["phase"]
+                return blocked(f"Session {session['status']}: {explanation}")
+            missing = TUNING_TOOLS - tuning_map.keys()
+            if missing:
+                return blocked("Missing injected tuning tools: " + ", ".join(sorted(missing)))
+            phase = session["phase"]
+            if phase == "awaiting_gamma_proposal":
+                return {"route": "tuning_specialist"}
+            if phase == "ready_for_trial":
+                return action("make_trial_sheet")
+            entry = session["rounds"][str(session["active_round"])]
+            if entry.get("reprint_requested"):
+                return {"route": "tuning_printer"}
+            # A recorded rescan is reviewable once; an accepted rescan review is
+            # followed by human scan input, not another call on the same evidence.
+            evaluation = entry["active_evaluation_id"]
+            reviewed = any(r["evaluation_record_id"] == evaluation for r in entry["reviews"])
+            if evaluation and not reviewed:
+                return {"route": "tuning_specialist"}
+            if evaluation and reviewed:
+                return {"route": "tuning_scan"}
+            return after_print(state, session)
+        except (TuningSessionError, KeyError, OSError) as error:
+            return blocked(str(error))
+
+    def tuning_specialist_node(state):
+        try:
+            session = session_for(state)
+            if session["status"] != "active" or session["phase"] not in (
+                    "awaiting_gamma_proposal", "awaiting_review", "awaiting_scan"):
+                return {"route": "tuning_route"}
+            if session["phase"] != "awaiting_gamma_proposal":
+                entry = session["rounds"][str(session["active_round"])]
+                evaluation = entry["active_evaluation_id"]
+                if not evaluation or any(r["evaluation_record_id"] == evaluation for r in entry["reviews"]):
+                    # Acceptance may have committed before this node checkpoint.
+                    return {"route": "tuning_route"}
+            stage = ("propose_gamma" if session["phase"] == "awaiting_gamma_proposal" else
+                     {1: "review_gamma", 2: "review_gray_levels", 3: "review_steps"}[session["active_round"]])
+            inputs = prepare_tuning_inputs(state["tuning_session_path"], stage)
+            response = photo_quality_specialist(
+                specialist_llm if specialist_llm is not None else llm, inputs.context, inputs.evidence,
+                prior_decisions=inputs.prior_decisions, paper_color=inputs.paper_color)
+            accept_specialist_response(state["tuning_session_path"], response, inputs.context,
+                                       evaluation_record_id=inputs.evaluation_record_id)
+            return {"route": "tuning_route", "tuning_polls": 0,
+                    "dialogue": [{"role": "photo_quality_specialist", "text": response.model_dump_json()}]}
+        except Exception as error:
+            # Provider and bounded specialist errors surface to human/application
+            # recovery, never as scan evidence or automatic model retries here.
+            return problem(state, f"Specialist input/decision failed: {type(error).__name__}: {error}")
+
+    def tuning_executor_node(state):
+        task = TuningTask(**state["tuning_action"])
+        result = tuning_executor(llm, tuning_dependencies, state["tuning_session_path"], task)
+        update = {key: result[key] for key in ("dialogue", "execution_results") if key in result}
+        outcome = result["outcome"]
+        if outcome == "needs_trial_print_approval":
+            session = session_for(state)
+            entry = session["rounds"][str(session["active_round"])]
+            pending = result["pending_trial_print"]
+            consumed = {a["approval_id"] for a in entry["print_attempts"]}
+            # Recovery after approval was saved but before intent was recorded:
+            # ask again, then reuse the unconsumed identity (never a used one).
+            reusable = [a["metadata"]["approval_id"] for a in entry["approvals"]
+                        if a["metadata"]["approval_id"] not in consumed
+                        and a["metadata"]["trial_id"] == pending["trial_id"]
+                        and a["metadata"]["pdf_sha256"] == pending["pdf_sha256"]
+                        and a["metadata"]["printer"] == pending["args"]["printer"]]
+            update.update(route="tuning_approval", pending_trial_print={
+                **pending, "approval_id": reusable[-1] if reusable else uuid4().hex})
+        elif result.get("tool_name") == "job_status" and result.get("tool_executed") and result.get("result"):
+            session = session_for(state)
+            attempt = latest_attempt(session)
+            record_print_result(state["tuning_session_path"], attempt_id=attempt["attempt_id"],
+                                result=result["result"], job_result=True)
+            update.update(after_print({**state, "tuning_polls": state.get("tuning_polls", 0) + 1}, session_for(state)))
+            update["tuning_polls"] = state.get("tuning_polls", 0) + 1
+        elif outcome in ("tool_ran", "needs_information") and task.action == "read_scan" and result.get("tool_executed"):
+            if result.get("result", {}).get("status") in ("ok", "needs_rescan"):
+                update["route"] = "tuning_route"
+            else:
+                update.update(problem(state, result["message"]))
+        elif outcome == "tool_ran" and task.action == "make_trial_sheet":
+            update.update(route="tuning_printer", tuning_polls=0)
+        elif outcome == "tool_ran" and task.action == "printer_status":
+            reading = result["result"]
+            if reading.get("state") != "idle" or _has_problem_field(reading):
+                update.update(problem(state, "Printer is not ready: " + json.dumps(reading)))
+            else:
+                update.update(action("submit_trial_print", printer=state["tuning_printer"]))
+        elif outcome == "needs_information" and result.get("information_required", {}).get("kind") == "print_confirmation":
+            update["route"] = "tuning_confirmation"
+        else:
+            update.update(problem(state, result["message"]))
+        return update
+
+    def stop_tuning(state):
+        record_stop(state["tuning_session_path"], "Human stopped print tuning")
+        return {"route": "end", "stop_reason": "stopped_by_human", "pending_trial_print": None}
+
+    def tuning_printer_node(state):
+        printer = state.get("tuning_printer")
+        if not printer:
+            reply = interrupt({"kind": "tuning_printer", "question": "Supply the exact printer name, or stop.",
+                               "choices": ["printer", "stop"]})
+            if isinstance(reply, dict) and reply.get("action") == "stop":
+                return stop_tuning(state)
+            if not (isinstance(reply, dict) and reply.get("action") == "printer"
+                    and isinstance(reply.get("printer"), str) and reply["printer"].strip()):
+                return {"route": "tuning_printer"}
+            printer = reply["printer"]
+        return {**action("printer_status", printer=printer), "tuning_printer": printer}
+
+    def tuning_approval_node(state):
+        pending = state.get("pending_trial_print") or {}
+        reply = interrupt({"kind": "trial_print_approval", "pdf_path": pending.get("args", {}).get("pdf_path"),
+                           "page_count": pending.get("trial_result", {}).get("page_count"),
+                           "printer": pending.get("args", {}).get("printer"),
+                           "session_id": pending.get("session_id"), "round_id": pending.get("round_id"),
+                           "trial_id": pending.get("trial_id"), "pdf_sha256": pending.get("pdf_sha256"),
+                           "question": "Approve printing this exact trial PDF? Choose approve or stop.",
+                           "choices": ["approve", "stop"]})
+        if isinstance(reply, dict) and reply.get("action") == "stop":
+            return stop_tuning(state)
+        if not isinstance(reply, dict) or reply.get("action") != "approve":
+            return {"route": "tuning_approval"}
+        return {"route": "tuning_submit"}
+
+    def tuning_submit_node(state):
+        pending = state["pending_trial_print"]
+        approval_id = pending["approval_id"]
+        attempt_id = approval_id + ":submission"
+        try:
+            session = session_for(state)
+            entry = session["rounds"][str(session["active_round"])]
+            # Replay after side effects: NEVER invoke the printer again.
+            if any(a["attempt_id"] == attempt_id for a in entry["print_attempts"]):
+                return {**after_print(state, session), "pending_trial_print": None}
+            fresh = _pending_trial(session, Path(state["tuning_session_path"]).resolve().parent, pending["args"])
+            if fresh != {k: v for k, v in pending.items() if k != "approval_id"}:
+                raise TuningSessionError("Pending approval no longer matches the active trial/artifacts")
+            record_print_approval(state["tuning_session_path"], approval_id=approval_id,
+                trial_id=pending["trial_id"], pdf_sha256=pending["pdf_sha256"], printer=pending["args"]["printer"],
+                print_settings={**pending["args"], "copies": 1, "paper": "A4", "color_mode": "grayscale",
+                                "sides": "one-sided", "scale": "100%"},
+                approved_by="graph human interrupt", reprint=bool(entry["print_attempts"]))
+            begin_print_attempt(state["tuning_session_path"], approval_id=approval_id, attempt_id=attempt_id)
+        except (TuningSessionError, KeyError, ValueError, OSError) as error:
+            return {**problem(state, "Approval invalid; fresh approval is required: " + str(error)),
+                    "pending_trial_print": None}
+        try:
+            # The only graph submission path uses the executor's exact request.
+            result = _parse_tool_output(tuning_map["submit_trial_print"].invoke(pending["args"]))
+        except Exception:
+            # Intent is persisted, outcome is absent: ask the human, never retry.
+            return {"route": "tuning_confirmation", "pending_trial_print": None}
+        try:
+            record_print_result(state["tuning_session_path"], attempt_id=attempt_id, result=result)
+        except TuningSessionError as error:
+            return {"route": "tuning_confirmation", "pending_trial_print": None,
+                    "tuning_failure": "Submission outcome could not be recorded: " + str(error)}
+        return {**after_print(state, session_for(state)), "pending_trial_print": None, "tuning_polls": 0,
+                "execution_results": [{"tool_name": "submit_trial_print", "tool_args": pending["args"], "result": result}]}
+
+    def tuning_scan_node(state):
+        session = session_for(state)
+        reply = interrupt({"kind": "tuning_scan", "round_id": session["active_round"],
+            "trial_id": session["active_trial_id"],
+            "suggested_scan_directory": str(run_dir / "scans" / f"round_{session['active_round']}"),
+            "question": "Scan the printed pages with your phone, save them, and supply explicit paths; or reprint/stop.",
+            "choices": ["scan", "reprint", "stop"]})
+        if not isinstance(reply, dict):
+            return {"route": "tuning_scan"}
+        choice = reply.get("action")
+        if choice == "stop":
+            return stop_tuning(state)
+        if choice == "reprint":
+            return reprint(state)
+        paths = reply.get("scan_paths")
+        if choice == "scan" and isinstance(paths, list) and paths and all(isinstance(p, str) and p.strip() for p in paths):
+            return action("read_scan", scan_paths=paths)
+        return {"route": "tuning_scan"}
+
+    def reprint(state):
+        try:
+            request_trial_reprint(state["tuning_session_path"])
+            return {"route": "tuning_printer", "pending_trial_print": None, "tuning_polls": 0}
+        except TuningSessionError as error:
+            return blocked(str(error))
+
+    def tuning_confirmation_node(state):
+        attempt = latest_attempt(session_for(state))
+        if not attempt:
+            return blocked("No recorded print attempt to resolve")
+        reply = interrupt({"kind": "tuning_print_confirmation", "attempt_id": attempt["attempt_id"],
+                           "question": "Check the printer tray. Did this trial print?",
+                           "choices": ["printed", "not_printed", "stop"]})
+        choice = reply.get("action") if isinstance(reply, dict) else None
+        if choice == "stop":
+            return stop_tuning(state)
+        if choice not in ("printed", "not_printed"):
+            return {"route": "tuning_confirmation"}
+        resolve_print_outcome(state["tuning_session_path"], attempt_id=attempt["attempt_id"], outcome=choice)
+        return {"route": "tuning_scan"} if choice == "printed" else reprint(state)
+
+    def tuning_poll_node(state):
+        reply = interrupt({"kind": "tuning_poll", "question": "Job is still waiting/printing. Check again or stop?",
+                           "choices": ["check", "stop"]})
+        choice = reply.get("action") if isinstance(reply, dict) else None
+        if choice == "stop":
+            return stop_tuning(state)
+        return {"route": "tuning_route", "tuning_polls": 0} if choice == "check" else {"route": "tuning_poll"}
+
+    def tuning_problem_node(state):
+        reply = interrupt({"kind": "tuning_problem", "message": state.get("tuning_failure"),
+                           "question": "Resolve the problem, then retry; regenerate only damaged trial artifacts, or stop.",
+                           "choices": ["retry", "regenerate", "stop"]})
+        choice = reply.get("action") if isinstance(reply, dict) else None
+        if choice == "stop":
+            return stop_tuning(state)
+        if choice == "regenerate":
+            session = session_for(state)
+            entry = session["rounds"][str(session["active_round"])]
+            if entry["trial_result"]:
+                try:
+                    _bound_trial(session, session["active_trial_id"])
+                    _trial_manifest(session, entry["trial_result"], entry)
+                except (TuningSessionError, OSError, ValueError):
+                    if entry["print_attempts"]:
+                        try:
+                            request_trial_reprint(state["tuning_session_path"])
+                        except TuningSessionError as error:
+                            return blocked(str(error))
+                    return {**action("make_trial_sheet"), "pending_trial_print": None}
+                return problem(state, "Existing trial artifacts are valid; use the normal reprint path")
+            return action("make_trial_sheet")
+        if choice == "retry":
+            # Re-read the authoritative phase; never blindly repeat submission.
+            return {"route": "tuning_route"}
+        return {"route": "tuning_problem"}
+
+    def tuning_recovery_node(state):
+        reply = interrupt({"kind": "tuning_problem", "question": "The trial did not print successfully. Reprint with fresh approval, or stop?",
+                           "choices": ["reprint", "stop"]})
+        choice = reply.get("action") if isinstance(reply, dict) else None
+        if choice == "stop":
+            return stop_tuning(state)
+        return reprint(state) if choice == "reprint" else {"route": "tuning_recovery"}
+
     def route(state: State) -> str:
         return state.get("route", "orchestrator")
 
@@ -497,13 +862,30 @@ def build_graph(
     builder.add_node("budget_summary", budget_summary_node)
     builder.add_node("budget_review", budget_review_node)
     builder.add_node("finish_gate", finish_gate_node)
+    tuning_nodes = {
+        "tuning_route": tuning_route_node, "tuning_specialist": tuning_specialist_node,
+        "tuning_executor": tuning_executor_node, "tuning_printer": tuning_printer_node,
+        "tuning_approval": tuning_approval_node, "tuning_submit": tuning_submit_node,
+        "tuning_scan": tuning_scan_node, "tuning_confirmation": tuning_confirmation_node,
+        "tuning_poll": tuning_poll_node, "tuning_problem": tuning_problem_node,
+        "tuning_recovery": tuning_recovery_node,
+    }
+    for name, node in tuning_nodes.items():
+        builder.add_node(name, node)
+        builder.add_conditional_edges(name, route, {
+            **{target: target for target in tuning_nodes},
+            "report_and_print": "report_and_print", "end": END,
+        })
 
     builder.add_edge(START, "orchestrator")
     builder.add_conditional_edges("orchestrator", route, {
         "scientist": "scientist", "general": "general", "executor": "executor",
         "report_and_print": "report_and_print", "budget": "budget_summary",
+        "tuning_route": "tuning_route",
     })
-    for role in ("scientist", "general", "executor"):
+    builder.add_conditional_edges("scientist", lambda state: "tuning_route" if state.get("experiment_selection") else "orchestrator",
+                                  {"tuning_route": "tuning_route", "orchestrator": "orchestrator"})
+    for role in ("general", "executor"):
         builder.add_edge(role, "orchestrator")
     builder.add_edge("budget_summary", "budget_review")
     builder.add_conditional_edges("budget_review", route, {
@@ -513,6 +895,7 @@ def build_graph(
         "report_and_print": "report_and_print", "print_approval": "print_approval",
         "printer_question": "printer_question", "finish_gate": "finish_gate",
         "orchestrator": "orchestrator",
+        "tuning_route": "tuning_route", "end": END,
     })
     builder.add_conditional_edges("print_approval", route, {
         "report_and_print": "report_and_print", "printer_question": "printer_question",
