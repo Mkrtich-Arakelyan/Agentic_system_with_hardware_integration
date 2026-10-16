@@ -1,0 +1,3 @@
+# Test runner required by tests/print_tuning/test_fake_scan_read_scan.py.
+# Install application dependencies from requirements.txt separately.
+pytest>=8,<10
