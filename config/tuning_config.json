@@ -85,5 +85,13 @@
     "recommended_dpi": 300,
     "accepted_formats": ["pdf", "png", "jpg", "jpeg"],
     "description": "Requirements for the scanned page the user returns."
+  },
+  "paper_presets": {
+    "description": "Starting dark_level by paper color for round 1's reference. First guesses, not measured; the tuning rounds still decide the final values. Unknown or missing colors use the parameter defaults.",
+    "presets": [
+      {"name": "light", "match": ["cream", "ivory", "light", "pastel"], "dark_level": 0.03},
+      {"name": "dark", "match": ["dark", "deep"], "dark_level": 0.1},
+      {"name": "colored", "match": ["yellow", "blue", "green", "pink", "orange", "gray", "grey", "red", "purple"], "dark_level": 0.05}
+    ]
   }
 }

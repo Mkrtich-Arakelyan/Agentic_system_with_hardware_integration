@@ -31,3 +31,5 @@ class State(TypedDict, total=False):
     accepted_settings: dict | None
     final_settings: dict | None
     final_figure_path: str | None
+    # Paper the user prints on (None: plain white). Kept on resume, so it is asked only once.
+    paper_color: str | None

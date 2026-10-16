@@ -34,7 +34,12 @@ DEFAULT_REQUEST = (
     "produce a one-page report with one graph, its explanation and a verdict, and "
     "print it on the office printer after my approval."
 )
+# Paper color: asked once per new run; empty or one of these words means plain white (None).
+PAPER_QUESTION = "Which paper color will you print on? Press Enter for the default (plain white): "
+PAPER_COLOR_MAX = 40
+DEFAULT_PAPER_WORDS = {"white", "plain white", "default"}
 # Graph-internal keys of an interrupted visit; a resumed run starts at the orchestrator.
+# paper_color is not one of them: a resumed run keeps it and is not asked again.
 RESUME_DROPPED_KEYS = (
     "pending_print", "pending_trial_print", "route", "hardware_passes", "last_printer_reading",
 )
@@ -118,6 +123,34 @@ def positive_int(text: str) -> int:
     return value
 
 
+def clean_paper_color(text: str | None) -> str | None:
+    """The paper color with spaces tidied and at most PAPER_COLOR_MAX characters; None means plain white."""
+    color = " ".join(str(text or "").split())[:PAPER_COLOR_MAX].strip()
+    return None if not color or color.lower() in DEFAULT_PAPER_WORDS else color
+
+
+def ask_paper_color() -> str | None:
+    """Ask once for the paper color; without an interactive terminal use the default without asking."""
+    if not sys.stdin.isatty():
+        return None
+    try:
+        return clean_paper_color(input(PAPER_QUESTION))
+    except EOFError:                   # Ctrl+D: the default, on a fresh line
+        print(flush=True)
+        return None
+
+
+def paper_line(color: str | None) -> str:
+    return f"Paper: {color}" if color else "Paper: plain white (default)"
+
+
+def paper_context_line(color: str | None) -> str:
+    """The paper line of a new run's context, so the agents know the paper too."""
+    if color:
+        return f"Paper: {color} (named by the user). Everything is printed in black toner on this paper.\n"
+    return "Paper: plain white (default).\n"
+
+
 def ask_human(payload: dict) -> str:
     """Show one graph pause and return a valid answer; re-ask on empty or invalid input."""
     kind = payload.get("kind")
@@ -164,9 +197,14 @@ def main() -> int:
     parser.add_argument("--fake-printer", action=argparse.BooleanOptionalAction, default=None,
                         help=f"Use the fake printer {FAKE_PRINTER_NAME} (PRINTER_MODE=fake).")
     parser.add_argument("--printer", metavar="NAME", help="Exact name of the office printer.")
+    parser.add_argument("--paper-color", metavar="COLOR",
+                        help='Paper color to print on, e.g. "light yellow" (default: plain white; '
+                             "asked at the start of a new run if not given).")
     args = parser.parse_args()
     if args.resume and args.request is not None:
         parser.error("--request cannot change the request of a resumed run.")
+    if args.resume and args.paper_color is not None:
+        parser.error("--paper-color cannot change the paper of a resumed run.")
     args.request = args.request if args.request is not None else DEFAULT_REQUEST
     if not args.request.strip():
         parser.error("--request must not be blank.")
@@ -216,6 +254,8 @@ def main() -> int:
             parser.error(f"Cannot resume {run_dir}: {error}")
         args.request = saved_config["request"]
     else:
+        # Asked before the run folder exists, so stopping at the question leaves no empty folder.
+        paper_color = clean_paper_color(args.paper_color) if args.paper_color is not None else ask_paper_color()
         run_dir = BASE_DIR / "runs" / datetime.now().strftime("%Y%m%d_%H%M%S_%f")
         run_dir.mkdir(parents=True, exist_ok=False)
         state = {
@@ -224,11 +264,12 @@ def main() -> int:
             "decision_count": 0,
             "decision_budget": initial_decisions,
             "stop_reason": "running",
+            "paper_color": paper_color,
         }
     args.model = args.model or (saved_config or {}).get("model") or os.getenv("OPENAI_MODEL", "gpt-5-nano")
     print(f"Model: {args.model}\nResults: {run_dir}\nRequest: {args.request}\n"
           f"Printer: {printer_name or 'found with list_printers'}"
-          + (" (fake)" if fake_printer else ""), flush=True)
+          + (" (fake)" if fake_printer else "") + "\n" + paper_line(state.get("paper_color")), flush=True)
 
     try:
         from langchain_openai import ChatOpenAI
@@ -310,6 +351,7 @@ def main() -> int:
                 "Call list_printers first and pass the office printer's exact name as printer "
                 "to printer_status and submit_print.\n"
             ) +
+            paper_context_line(state.get("paper_color")) +
             f"Output directory: {run_dir}\n"
             "The focusing tool saves initial/final camera images, the final pattern, "
             "results.json, and an experiments.csv table. Do not duplicate these outputs.\n"

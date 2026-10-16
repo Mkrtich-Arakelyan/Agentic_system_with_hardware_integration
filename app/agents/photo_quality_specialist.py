@@ -3,8 +3,11 @@
 The application supplies already loaded evidence and explicit PNG/JPEG/WebP
 paths. Only these files are read; their original bytes are sent unchanged.
 No model, tools, files, or session are created at import time. No settings are
-accepted or persisted here. See docs/photo-quality-specialist.md for adapting
-the existing root scan_evaluation.py's scan_eval/1 output.
+accepted or persisted here. Review evidence is adapted from the scan_eval/2
+result of app/print_tuning/scan_evaluation.py (candidates with their panel PNGs
+and measurements, pages, printer_response and session_id). An optional paper
+color named by the user is passed on as one line of text, below the measured
+references in weight.
 """
 
 import base64
@@ -138,7 +141,7 @@ class SpecialistEvidence:
 
     normalization_limits uses each experiment's existing lo/hi/method record.
     Review trial_id/round_id must bind measurements and images to the manifest.
-    calibration_session_id is optional because scan_eval/1 does not supply it.
+    calibration_session_id is optional; scan_eval/2 supplies it as session_id.
     Missing crops must be declared or explained by incomplete_evidence_reason;
     complete scan-page images may instead cover all candidates. prior_settings
     means accepted settings BEFORE the reviewed round, not the new winners.
@@ -188,8 +191,18 @@ def _diagnostic(value: str) -> str:
     return re.sub(r"data:image/[^\s\"'<>]+", "[image payload omitted]", value)[:8000]
 
 
+def _paper_line(paper_color: str | None) -> str:
+    """The one line about the paper: the user's color name, or plain white when none was given."""
+    if paper_color is None:
+        return ("Paper: not given; assume plain white office paper unless the measured paper and black "
+                "references show otherwise.")
+    return (f"Paper: {paper_color}, as reported by the user. Black toner cannot print lighter than this paper. "
+            "Trust the measured paper and black references over this name.")
+
+
 def prepare_specialist_messages(
     context: ValidationContext, evidence: SpecialistEvidence, *, prior_decisions: Sequence[Response] = (),
+    paper_color: str | None = None,
 ) -> list[BaseMessage]:
     """Preflight supplied context/identities, then attach original image bytes.
 
@@ -206,6 +219,7 @@ def prepare_specialist_messages(
         value = getattr(evidence, name)
         _require(isinstance(value, Sequence) and not isinstance(value, (str, bytes)), f"{name}: a sequence is required")
     _require(isinstance(prior_decisions, Sequence) and not isinstance(prior_decisions, (str, bytes)), "prior_decisions: parsed response sequence required")
+    _require(paper_color is None or _text(paper_color), "paper_color: nonblank text or None required")
     ids = list(context.selected_experiment_ids)
     review = context.expected_stage != "propose_gamma"
     correspondence = get_candidate_correspondence(context) if review else ()
@@ -324,7 +338,8 @@ def prepare_specialist_messages(
         metadata["manifest"]["items"] = [{k: v for k, v in item.items() if k != "panels"} | {
             "panels": [{k: v for k, v in panel.items() if k != "data_path"} for panel in item["panels"]]
         } for item in items.values()]
-    content: list[dict] = [{"type": "text", "text": _json(metadata)}]
+    content: list[dict] = [{"type": "text", "text": _json(metadata)},
+                           {"type": "text", "text": _paper_line(paper_color)}]
     for index, attachment in enumerate(evidence.images):
         try:
             pixels = Path(attachment.path).read_bytes()
@@ -345,7 +360,7 @@ def prepare_specialist_messages(
 
 def photo_quality_specialist(
     llm: BaseChatModel, context: ValidationContext, evidence: SpecialistEvidence,
-    *, prior_decisions: Sequence[Response] = (),
+    *, prior_decisions: Sequence[Response] = (), paper_color: str | None = None,
 ) -> Response:
     """Invoke an injected image-capable model, with at most one decision correction.
 
@@ -359,7 +374,8 @@ def photo_quality_specialist(
         raise SpecialistInputError("The supplied model reports no image input support.")
     if isinstance(profile, Mapping) and profile.get("structured_output") is False:
         raise SpecialistInputError("The supplied model reports no structured output support.")
-    messages = prepare_specialist_messages(context, evidence, prior_decisions=prior_decisions)
+    messages = prepare_specialist_messages(context, evidence, prior_decisions=prior_decisions,
+                                           paper_color=paper_color)
     schema = _SCHEMAS[context.expected_stage]
     structured = llm.with_structured_output(schema, method="json_schema", include_raw=True)
     diagnostics = []
