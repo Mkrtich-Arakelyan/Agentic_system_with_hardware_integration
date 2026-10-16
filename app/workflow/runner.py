@@ -40,9 +40,19 @@ PAPER_COLOR_MAX = 40
 DEFAULT_PAPER_WORDS = {"white", "plain white", "default"}
 # Graph-internal keys of an interrupted visit; a resumed run starts at the orchestrator.
 # paper_color is not one of them: a resumed run keeps it and is not asked again.
+# Print tuning: tuning_session.json is the real record and the graph re-reads it on resume, so
+# only per-visit routing keys are dropped (a pending action or approval, failure and poll
+# counters). tuning_session_path and tuning_printer are kept, so the printer is not asked again.
 RESUME_DROPPED_KEYS = (
     "pending_print", "pending_trial_print", "route", "hardware_passes", "last_printer_reading",
+    "tuning_action", "tuning_failure", "tuning_failures", "tuning_polls",
 )
+SCAN_ROUNDS = (1, 2, 3)
+DEFAULT_SCAN_FORMATS = ("pdf", "png", "jpg", "jpeg")
+TRIAL_PRINT_REMINDER = ("Print settings: A4, grayscale, one-sided, Actual size / 100% "
+                        "(no fit to page, no scaling).")
+TUNING_KINDS = ("tuning_printer", "trial_print_approval", "tuning_scan", "tuning_print_confirmation",
+                "tuning_poll", "tuning_problem")
 
 
 def write_experiments_table(state: dict, run_dir: Path) -> None:
@@ -151,10 +161,145 @@ def paper_context_line(color: str | None) -> str:
     return "Paper: plain white (default).\n"
 
 
-def ask_human(payload: dict) -> str:
-    """Show one graph pause and return a valid answer; re-ask on empty or invalid input."""
+def check_tuning_tools(printer_tools, tuning_tools) -> None:
+    """Fail early if the graph's tuning loop would lack a tool (it builds tuning_map from both lists)."""
+    from app.agents.tuning_executor import TUNING_TOOLS
+
+    missing = TUNING_TOOLS - {tool.name for tool in [*printer_tools, *tuning_tools]}
+    if missing:
+        raise RuntimeError("print tuning needs these tools, which are missing: " + ", ".join(sorted(missing)))
+
+
+def scan_folders(run_dir: Path) -> list[Path]:
+    """Create run_dir/scans/round_1 .. round_3 (the folders the tuning pauses suggest) and return them."""
+    folders = [Path(run_dir) / "scans" / f"round_{number}" for number in SCAN_ROUNDS]
+    for folder in folders:
+        folder.mkdir(parents=True, exist_ok=True)
+    return folders
+
+
+def scan_formats() -> tuple[str, ...]:
+    """File types read_scan accepts: the tuning config's scan.accepted_formats (as trial manifests copy it)."""
+    try:
+        from app.print_tuning.grayscale_render import load_config
+
+        return tuple(str(name).lower() for name in load_config()["scan"]["accepted_formats"])
+    except Exception:
+        return DEFAULT_SCAN_FORMATS
+
+
+def _ask_choice(question: str, choices) -> tuple[str, str]:
+    """(choice, rest of the line): re-ask until the first word is one of choices."""
+    choices = [str(choice).lower() for choice in choices]
+    while True:
+        reply = input(question + "\n> ").strip()
+        if not reply:
+            continue
+        first, _, rest = reply.partition(" ")
+        word = first.lower().strip(".,!:;")
+        if word in choices:
+            return word, rest.strip()
+        print("Please answer with one of: " + ", ".join(choices), flush=True)
+
+
+def resolve_scan_paths(text: str, folder: Path, formats=None) -> tuple[list[str], str]:
+    """(absolute scan file paths, problem): the words after "scan", or every scan file in folder.
+
+    A folder gives its files of an accepted type, sorted by name; files keep the order given.
+    A relative path is looked up in the current folder, then in the suggested scan folder.
+    """
+    import shlex
+
+    formats = tuple(formats or scan_formats())
+    try:
+        words = shlex.split(text)
+    except ValueError as error:
+        return [], f"cannot read the paths ({error}); put paths with spaces in quotes"
+    paths, problems = [], []
+    for word in words or [str(folder)]:
+        path = Path(word).expanduser()
+        if not path.is_absolute() and not path.exists() and (folder / path).exists():
+            path = folder / path
+        path = path.resolve()
+        if path.is_dir():
+            found = sorted(p for p in path.iterdir()
+                           if p.is_file() and not p.name.startswith(".") and p.suffix.lower().lstrip(".") in formats)
+            if not found:
+                problems.append(f"no scan files ({', '.join(formats)}) in {path}")
+            paths.extend(found)
+        elif not path.is_file():
+            problems.append(f"file not found: {path}")
+        elif path.suffix.lower().lstrip(".") not in formats:
+            problems.append(f"{path.name} is not a scan file read_scan accepts ({', '.join(formats)})")
+        else:
+            paths.append(path)
+    unique = list(dict.fromkeys(str(path) for path in paths))
+    if problems or not unique:
+        return [], "; ".join(problems) or "no scan files given"
+    return unique, ""
+
+
+def _ask_tuning(payload: dict, default_printer: str | None) -> dict:
+    """Show one print-tuning pause and return its answer as the dict the graph expects."""
+    kind = payload["kind"]
+    choices = payload.get("choices") or []
+    question = payload.get("question", "Your answer:")
+    if kind == "tuning_printer":
+        print("Print tuning: which printer prints the trial sheets?")
+        if default_printer:
+            print(f"Default printer: {default_printer}")
+        hint = (f'Type "printer" to use {default_printer}, ' if default_printer else "") + \
+            'type "printer <exact name>", or "stop".'
+        while True:
+            choice, rest = _ask_choice(question + "\n" + hint, choices)
+            if choice == "stop":
+                return {"action": "stop"}
+            if rest or default_printer:
+                return {"action": "printer", "printer": rest or default_printer}
+            print('Give the printer name, for example: printer Office_Printer', flush=True)
+    if kind == "trial_print_approval":
+        print(f"Trial sheet for round {payload.get('round_id')} (trial {payload.get('trial_id')})\n"
+              f"PDF: {payload.get('pdf_path')}\nPages: {payload.get('page_count')}\n"
+              f"Printer: {payload.get('printer')}\nPDF sha256: {payload.get('pdf_sha256')}\n"
+              + TRIAL_PRINT_REMINDER)
+        return {"action": _ask_choice(question, choices)[0]}
+    if kind == "tuning_scan":
+        folder = Path(payload.get("suggested_scan_directory") or Path.cwd())
+        folder.mkdir(parents=True, exist_ok=True)
+        print(f"Round {payload.get('round_id')} (trial {payload.get('trial_id')}): scan the printed pages.\n"
+              f"Save the scans in: {folder}\n"
+              'Type "scan" to use every scan file in that folder, "scan <files or folder>" for others, '
+              '"reprint" to print the sheet again, or "stop".')
+        while True:
+            choice, rest = _ask_choice(question, choices)
+            if choice != "scan":
+                return {"action": choice}
+            paths, problem = resolve_scan_paths(rest, folder)
+            if paths:
+                print("Scan files:\n  " + "\n  ".join(paths), flush=True)
+                return {"action": "scan", "scan_paths": paths}
+            print(f"No usable scan files: {problem}. Save the scans and try again.", flush=True)
+    if kind == "tuning_print_confirmation":
+        print("The trial print could not be confirmed: the printer did not report that it printed.\n"
+              "Please check the printer tray. Did the pages come out? "
+              '"printed" = yes, "not_printed" = no, "stop" = end tuning.')
+    elif kind == "tuning_poll":
+        print("The trial print is still waiting or printing.")
+    elif kind == "tuning_problem" and payload.get("message"):
+        print("Problem: " + str(payload["message"]))
+    return {"action": _ask_choice(question, choices)[0]}
+
+
+def ask_human(payload: dict, default_printer: str | None = None) -> str | dict:
+    """Show one graph pause and return a valid answer; re-ask on empty or invalid input.
+
+    The report and budget pauses return text; the print-tuning pauses (and any other pause
+    with choices) return {"action": ...} dicts, as build_graph documents.
+    """
     kind = payload.get("kind")
     print("\n" + "=" * 60, flush=True)
+    if kind in TUNING_KINDS:
+        return _ask_tuning(payload, default_printer)
     if kind == "print_approval":
         print(f"Report: {payload.get('pdf_path')}\nPages: {payload.get('pages')}\n"
               f"Printer: {payload.get('printer') or 'the default printer'}\n"
@@ -169,6 +314,8 @@ def ask_human(payload: dict) -> str:
         allowed = ("yes", "y", "no", "n")
     else:
         print(json.dumps(payload, indent=2, ensure_ascii=False))
+        if payload.get("choices"):
+            return {"action": _ask_choice(payload.get("question", "Your answer:"), payload["choices"])[0]}
         allowed = None
     while True:
         reply = input(payload.get("question", "Your answer:") + "\n> ").strip()
@@ -197,6 +344,9 @@ def main() -> int:
     parser.add_argument("--fake-printer", action=argparse.BooleanOptionalAction, default=None,
                         help=f"Use the fake printer {FAKE_PRINTER_NAME} (PRINTER_MODE=fake).")
     parser.add_argument("--printer", metavar="NAME", help="Exact name of the office printer.")
+    parser.add_argument("--specialist-model", metavar="MODEL",
+                        help="Separate image-capable model for the photo quality specialist "
+                             "(default: OPENAI_SPECIALIST_MODEL, else the main model).")
     parser.add_argument("--paper-color", metavar="COLOR",
                         help='Paper color to print on, e.g. "light yellow" (default: plain white; '
                              "asked at the start of a new run if not given).")
@@ -267,9 +417,17 @@ def main() -> int:
             "paper_color": paper_color,
         }
     args.model = args.model or (saved_config or {}).get("model") or os.getenv("OPENAI_MODEL", "gpt-5-nano")
+    specialist_model = (args.specialist_model or (saved_config or {}).get("specialist_model")
+                        or os.getenv("OPENAI_SPECIALIST_MODEL") or None)
+    if specialist_model == args.model:
+        specialist_model = None
     print(f"Model: {args.model}\nResults: {run_dir}\nRequest: {args.request}\n"
           f"Printer: {printer_name or 'found with list_printers'}"
           + (" (fake)" if fake_printer else "") + "\n" + paper_line(state.get("paper_color")), flush=True)
+    if specialist_model:
+        print(f"Specialist model: {specialist_model}", flush=True)
+    folders = scan_folders(run_dir)
+    print(f"Scan folders for the trial sheets: {folders[0].parent}/round_1, round_2, round_3", flush=True)
 
     try:
         from langchain_openai import ChatOpenAI
@@ -279,6 +437,7 @@ def main() -> int:
         from app.experiments.bench import SimulatedBench, SEARCH_SHOTS, VALIDATION_SHOTS
         from app.workflow.graph import build_graph
         from app.experiments.tools import create_coding_tool, create_focusing_tool, RUN_TIMEOUT_SECONDS
+        from app.print_tuning.tuning_tools import create_tuning_tools
 
         if saved_config:
             bench_options = dict(saved_config["bench"])
@@ -343,7 +502,11 @@ def main() -> int:
             "The office printer is reached only through the executor's printer tools in the "
             "report-and-print turn. The graph asks the human before any print. "
             "Printer states: idle, printing, stopped, offline, error, unknown, out_of_paper, "
-            "paper_jam. Job states: waiting, printing, done, failed, unknown.\n"
+            "paper_jam. Job states: waiting, printing, done, failed, uncertain.\n"
+            "Print tuning: after the four experiments are chosen, the graph tunes how their heatmaps "
+            "print in 3 rounds: gamma, then the dark/light gray levels, then the number of gray steps.\n"
+            "Every trial sheet print needs human approval of that exact PDF and printer. The human "
+            f"scans the printed pages into {run_dir / 'scans'}/round_N (N = 1, 2, 3).\n"
             + (
                 f"The office printer is named {printer_name}; pass printer=\"{printer_name}\" "
                 "to printer_status and submit_print.\n"
@@ -374,7 +537,7 @@ def main() -> int:
         run_config.update(
             model=args.model, min_experiments=MIN_EXPERIMENTS,
             initial_decisions=initial_decisions, extra_decisions=extra_decisions,
-            fake_printer=fake_printer, printer_name=printer_name,
+            fake_printer=fake_printer, printer_name=printer_name, specialist_model=specialist_model,
         )
         (run_dir / "config.json").write_text(
             json.dumps(run_config, indent=2, ensure_ascii=False), encoding="utf-8"
@@ -395,18 +558,24 @@ def main() -> int:
             print(f"Could not start the printer MCP server: {error}", file=sys.stderr, flush=True)
             raise
 
-        llm = ChatOpenAI(
-            model=args.model, api_key=api_key, max_tokens=16384,
-            timeout=120, max_retries=2,
-            use_responses_api=True, output_version="responses/v1",
-            reasoning={"effort": "medium"},
-            store=False, include=["reasoning.encrypted_content"],
-        )
+        def chat_model(model):
+            return ChatOpenAI(
+                model=model, api_key=api_key, max_tokens=16384,
+                timeout=120, max_retries=2,
+                use_responses_api=True, output_version="responses/v1",
+                reasoning={"effort": "medium"},
+                store=False, include=["reasoning.encrypted_content"],
+            )
+
+        llm = chat_model(args.model)
         coding_tool = create_coding_tool(run_dir)
         focusing_tool = create_focusing_tool(run_dir, bench)
+        tuning_tools = create_tuning_tools(run_dir)
+        check_tuning_tools(printer_tools, tuning_tools)
         workflow = build_graph(
             llm, focusing_tool, coding_tool, printer_tools, create_information_tool(),
-            run_dir, extra_decisions, InMemorySaver(),
+            run_dir, extra_decisions, InMemorySaver(), tuning_tools=tuning_tools,
+            **({"specialist_llm": chat_model(specialist_model)} if specialist_model else {}),
         )
         # The report-and-print self-loop needs more than the default 25 steps.
         config = {"configurable": {"thread_id": run_dir.name}, "recursion_limit": 200}
@@ -429,7 +598,7 @@ def main() -> int:
             pending = workflow.get_state(config)
             if not pending.next:
                 break
-            reply = ask_human(pending.tasks[0].interrupts[0].value)
+            reply = ask_human(pending.tasks[0].interrupts[0].value, default_printer=printer_name)
             graph_input = Command(resume=reply)
     except (Exception, KeyboardInterrupt) as error:
         failure_trace = traceback.format_exc()
