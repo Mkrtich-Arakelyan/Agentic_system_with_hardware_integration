@@ -22,6 +22,9 @@ class State(TypedDict, total=False):
     last_printer_reading: dict
     scientist_response: dict
     experiment_selection: dict
+    # Authoritative progress is in this JSON; this projection is initialization only.
+    tuning_session_path: str
+    tuning_initialization: dict
     # Print tuning (optional; nodes that do not tune never set them).
     tuning_round: int | None
     active_trial_id: str | None

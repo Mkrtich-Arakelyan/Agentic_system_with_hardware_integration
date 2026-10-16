@@ -8,6 +8,7 @@ from langgraph.graph import END, START, StateGraph
 from langgraph.types import interrupt
 
 from app.workflow.state import State
+from app.workflow.tuning import TuningSessionError, initialize_tuning_session
 
 from app.agents.common import DEFAULT_INITIAL_DECISIONS, MIN_EXPERIMENTS
 from app.agents.orchestrator import RoutingDecision, orchestrator as run_orchestrator, summarize_progress
@@ -191,13 +192,30 @@ def build_graph(
         except Exception as error:
             return {"ok": False, "error": f"{type(error).__name__}: {error}"}
 
+    def initialize_selected_tuning(state: State, selection: dict) -> dict:
+        """Application hook only: no specialist, executor turn, or routing change."""
+        if _selection_error(selection, state):
+            return {}
+        path = str(run_dir / "tuning_session.json")
+        try:
+            session = initialize_tuning_session(run_dir, selection, _successful_focusing_results(state),
+                                                paper_color=state.get("paper_color"))
+            metadata = {"status": session["initialization"]["status"], "session_id": session["session_id"]}
+        except TuningSessionError as error:
+            metadata = {"status": "error", "message": str(error)}
+        return {"tuning_session_path": path, "tuning_initialization": metadata}
+
     def orchestrator_node(state: State) -> dict:
+        # Also covers pre-existing frozen selections on resume. The session is
+        # authoritative; do not mirror its accepted settings into graph state.
+        tuning = initialize_selected_tuning(state, state["experiment_selection"]) if state.get("experiment_selection") else {}
         # The budget check comes before any LLM call and spends no decision.
         budget = state.get("decision_budget", DEFAULT_INITIAL_DECISIONS)
         if state.get("decision_count", 0) >= budget:
-            return {"route": "budget"}
+            return {"route": "budget", **tuning}
 
         update = run_orchestrator(state, llm)
+        update.update(tuning)
         next_role = update["decision"]["next_role"]
         update["stop_reason"] = "running"
 
@@ -251,6 +269,7 @@ def build_graph(
         response = update["scientist_response"]
         # An accepted selection survives later analysis, print rounds and resume.
         if state.get("experiment_selection"):
+            update.update(initialize_selected_tuning(state, state["experiment_selection"]))
             return update
         error = ""
         if response["status"] == "ready":
@@ -270,6 +289,7 @@ def build_graph(
                     ],
                     "group_reason": response["group_reason"],
                 }
+                update.update(initialize_selected_tuning(state, update["experiment_selection"]))
         elif response["selections"] or not response["proposed_experiments"]:
             error = "Request more experiments with exact settings and reasons, without selections."
         if error:
