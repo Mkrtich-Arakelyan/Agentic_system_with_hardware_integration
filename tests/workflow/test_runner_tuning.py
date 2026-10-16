@@ -64,41 +64,126 @@ def scan_payload(folder):
             "question": "Scan the printed pages ...", "choices": ["scan", "reprint", "stop"]}
 
 
-def test_scan_uses_every_scan_file_in_the_suggested_folder(monkeypatch, tmp_path, capsys):
+def test_scan_requires_explicit_files_even_when_folder_contains_old_scans(monkeypatch, tmp_path, capsys):
     folder = tmp_path / "scans" / "round_2"
-    prompts = answers(monkeypatch, "scan", lambda: (
-        [(folder / name).write_bytes(b"x") for name in ("b.png", "a.JPG", "notes.txt", ".hidden.png")], "scan")[1])
+    folder.mkdir(parents=True)
+    for name in ("b.png", "a.JPG", "old_rescan.png", "notes.txt", ".hidden.png"):
+        (folder / name).write_bytes(b"x")
+    prompts = answers(monkeypatch, "scan", "", str(folder), "", "b.png", "a.JPG", "", "confirm")
     result = runner.ask_human(scan_payload(folder))
-    assert folder.is_dir()                                            # created when missing
-    assert result == {"action": "scan", "scan_paths": [str((folder / "a.JPG").resolve()), str((folder / "b.png").resolve())]}
+    assert result == {"action": "scan", "scan_paths": [str((folder / "b.png").resolve()), str((folder / "a.JPG").resolve())]}
     out = capsys.readouterr().out
-    assert str(folder) in out and "No usable scan files: no scan files" in out
-    assert len(prompts) == 2
+    assert str(folder) in out and "give explicit scan file paths" in out and "directory given" in out
+    assert any('Type "confirm"' in prompt for prompt in prompts)
 
 
-def test_scan_with_explicit_files_or_another_folder(monkeypatch, tmp_path):
+def test_scan_prompt_creates_missing_folder_without_selecting_files(monkeypatch, tmp_path):
+    folder = tmp_path / "scans" / "round_1"
+    answers(monkeypatch, "scan", "", "stop")
+    assert runner.ask_human(scan_payload(folder)) == {"action": "stop"}
+    assert folder.is_dir()
+
+
+def test_scan_accepts_one_pdf_or_multiple_images(monkeypatch, tmp_path, capsys):
     folder, other = tmp_path / "round_2", tmp_path / "phone"
     folder.mkdir(), other.mkdir()
     (folder / "page2.png").write_bytes(b"x")
-    (tmp_path / "page1.pdf").write_bytes(b"x")
-    (other / "img_1.jpeg").write_bytes(b"x")
-    answers(monkeypatch, f'scan "{tmp_path / "page1.pdf"}" page2.png')       # absolute, then relative to the folder
-    assert runner.ask_human(scan_payload(folder))["scan_paths"] == [
-        str((tmp_path / "page1.pdf").resolve()), str((folder / "page2.png").resolve())]
-    answers(monkeypatch, f"scan {other}")
-    assert runner.ask_human(scan_payload(folder))["scan_paths"] == [str((other / "img_1.jpeg").resolve())]
+    pdf = tmp_path / "both pages.pdf"
+    pdf.write_bytes(b"x")
+    image = other / "phone page 1.jpeg"
+    image.write_bytes(b"x")
+    # A whole input line is one path, even with spaces and no quotes.
+    answers(monkeypatch, "scan", str(pdf), "", "confirm")
+    assert runner.ask_human(scan_payload(folder)) == {"action": "scan", "scan_paths": [str(pdf.resolve())]}
+    answers(monkeypatch, "scan", f'"{image}"', "'page2.png'", "", "confirm")
+    assert runner.ask_human(scan_payload(folder))["scan_paths"] == [str(image.resolve()), str((folder / "page2.png").resolve())]
+    out = capsys.readouterr().out
+    assert "Selected scan files:" in out and str(pdf.resolve()) in out and str(image.resolve()) in out
 
 
 def test_scan_rejects_missing_files_and_wrong_types(monkeypatch, tmp_path, capsys):
     folder = tmp_path / "round_1"
     folder.mkdir()
     (folder / "notes.txt").write_text("x")
-    answers(monkeypatch, "scan missing.png", "scan notes.txt", "scan", "reprint")
-    assert runner.ask_human(scan_payload(folder)) == {"action": "reprint"}
+    answers(monkeypatch, "scan", "missing.png", "notes.txt", "", "", "stop")
+    assert runner.ask_human(scan_payload(folder)) == {"action": "stop"}
     out = capsys.readouterr().out
-    assert "file not found" in out and "notes.txt is not a scan file" in out and "no scan files" in out
+    assert "file not found" in out and "notes.txt is not a scan file" in out and "give explicit scan file paths" in out
     answers(monkeypatch, "stop")
     assert runner.ask_human(scan_payload(folder)) == {"action": "stop"}
+    answers(monkeypatch, "reprint")
+    assert runner.ask_human(scan_payload(folder)) == {"action": "reprint"}
+
+
+def test_scan_confirmation_can_correct_selection(monkeypatch, tmp_path, capsys):
+    for name in ("wrong.jpg", "page 1.jpg", "page 2.png"):
+        (tmp_path / name).write_bytes(b"x")
+    prompts = answers(monkeypatch, "scan", "wrong.jpg", "", "correct", "page 1.jpg", "page 2.png", "",
+                      "yes", "", "confirm")
+    assert runner.ask_human(scan_payload(tmp_path)) == {
+        "action": "scan", "scan_paths": [str((tmp_path / name).resolve()) for name in ("page 1.jpg", "page 2.png")]}
+    out = capsys.readouterr().out
+    assert "wrong.jpg" in out and "page 1.jpg" in out
+    assert "Please answer with one of: confirm, correct, stop" in out
+    assert sum('Type "confirm"' in prompt for prompt in prompts) == 4
+
+
+@pytest.mark.parametrize("at_confirmation", [False, True])
+def test_scan_can_stop_during_entry_or_confirmation(monkeypatch, tmp_path, at_confirmation):
+    (tmp_path / "page.jpg").write_bytes(b"x")
+    replies = ("scan", "page.jpg", "", "stop") if at_confirmation else ("scan", "page.jpg", "stop")
+    answers(monkeypatch, *replies)
+    assert runner.ask_human(scan_payload(tmp_path)) == {"action": "stop"}
+
+
+def test_scan_only_accepts_files_entered_after_choosing_scan(monkeypatch, tmp_path, capsys):
+    (tmp_path / "old.jpg").write_bytes(b"old")
+    answers(monkeypatch, "scan old.jpg", "scan", "stop")
+    assert runner.ask_human(scan_payload(tmp_path)) == {"action": "stop"}
+    assert 'Type "scan" alone' in capsys.readouterr().out
+
+
+@pytest.mark.parametrize("text, expected", [
+    (r"C:\Users\Mkrtich\scans\page1.jpg", r"C:\Users\Mkrtich\scans\page1.jpg"),
+    (r"C:\Users\First Last\scans\page 1.jpg", r"C:\Users\First Last\scans\page 1.jpg"),
+    (r"C:\Users\O'Neil\scans\page1.jpg", r"C:\Users\O'Neil\scans\page1.jpg"),
+    ('"C:\\Users\\First Last\\scans\\page1.jpg"', r"C:\Users\First Last\scans\page1.jpg"),
+    (r"\\server\share\page1.jpg", r"\\server\share\page1.jpg"),
+    ('"\\\\server\\scans with spaces\\page1.jpg"', r"\\server\scans with spaces\page1.jpg"),
+    ("'/tmp/scans with spaces/page1.jpg'", "/tmp/scans with spaces/page1.jpg"),
+    (r"C:\scans\page#1.jpg", r"C:\scans\page#1.jpg"),
+])
+def test_scan_lines_preserve_paths_on_every_platform(monkeypatch, tmp_path, text, expected):
+    # Exercise the real line handling, isolating only platform-specific resolution
+    # so Windows/UNC regressions are also caught when these tests run on POSIX.
+    file = tmp_path / "page1.jpg"
+    file.write_bytes(b"x")
+    seen = []
+    def path(value):
+        seen.append(value)
+        return file
+    monkeypatch.setattr(runner, "Path", path)
+    paths, error = runner.resolve_scan_paths(text, tmp_path, formats=("jpg",))
+    assert seen == [expected]
+    assert paths == [str(file.resolve())] and not error
+
+
+def test_explicit_unquoted_paths_preserve_order_and_do_not_expand_folders(tmp_path):
+    files = [tmp_path / name for name in ("page2.jpg", "page1.jpg")]
+    for file in files:
+        file.write_bytes(b"x")
+    (tmp_path / "old_rescan.jpg").write_bytes(b"old")
+    # Spaces and backslashes do not need shell quoting; each line is one file.
+    text = "\n".join(str(file) for file in files)
+    assert runner.resolve_scan_paths(text, tmp_path, formats=("jpg",)) == ([str(f.resolve()) for f in files], "")
+    paths, error = runner.resolve_scan_paths(f'"{files[0]}"\n"{tmp_path}"', tmp_path, formats=("jpg",))
+    assert paths == [] and "directory given" in error
+
+
+@pytest.mark.parametrize("text", ['"unclosed.jpg', "'unclosed.jpg"])
+def test_scan_rejects_unmatched_quotes(tmp_path, text):
+    paths, error = runner.resolve_scan_paths(text, tmp_path, formats=("jpg",))
+    assert paths == [] and "surrounding quotes must match" in error
 
 
 def test_scan_formats_are_the_ones_read_scan_accepts():
@@ -126,6 +211,15 @@ def test_print_confirmation_poll_and_problem(monkeypatch, capsys):
     recovery = {"kind": "tuning_problem", "question": "Reprint or stop?", "choices": ["reprint", "stop"]}
     answers(monkeypatch, "retry", "reprint")                          # choices come from the payload
     assert runner.ask_human(recovery) == {"action": "reprint"}
+
+
+@pytest.mark.parametrize("choice", ["printed", "not_printed", "retry", "skip", "stop"])
+def test_report_print_confirmation_returns_payload_choice_as_action(monkeypatch, choice):
+    # Choices belong to the graph's payload, not a second hardcoded runner list.
+    payload = {"kind": "report_print_confirmation", "question": "Confirm the report print outcome.",
+               "choices": ["printed", "not_printed", "retry", "skip", "stop"]}
+    answers(monkeypatch, "yes", choice)
+    assert runner.ask_human(payload) == {"action": choice}
 
 
 def test_unknown_kinds_and_the_old_kinds(monkeypatch):

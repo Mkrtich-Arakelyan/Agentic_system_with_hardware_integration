@@ -203,30 +203,33 @@ def _ask_choice(question: str, choices) -> tuple[str, str]:
 
 
 def resolve_scan_paths(text: str, folder: Path, formats=None) -> tuple[list[str], str]:
-    """(absolute scan file paths, problem): the words after "scan", or every scan file in folder.
+    """Validate explicit scan paths, one per line, preserving their supplied order.
 
-    A folder gives its files of an accepted type, sorted by name; files keep the order given.
+    Spaces and backslashes are literal; matching surrounding single/double quotes
+    are optional. No shell parsing, directory expansion, or scan discovery occurs.
+    Empty input and directories are rejected.
     A relative path is looked up in the current folder, then in the suggested scan folder.
     """
-    import shlex
-
     formats = tuple(formats or scan_formats())
-    try:
-        words = shlex.split(text)
-    except ValueError as error:
-        return [], f"cannot read the paths ({error}); put paths with spaces in quotes"
+    lines = [line.strip() for line in text.splitlines() if line.strip()]
+    if not lines:
+        return [], "give explicit scan file paths, one per line"
     paths, problems = [], []
-    for word in words or [str(folder)]:
+    for word in lines:
+        if word[0] in ("'", '"'):
+            if len(word) < 2 or word[-1] != word[0]:
+                problems.append("cannot read the path: surrounding quotes must match")
+                continue
+            word = word[1:-1]
+        if not word.strip():
+            problems.append("empty scan file path")
+            continue
         path = Path(word).expanduser()
         if not path.is_absolute() and not path.exists() and (folder / path).exists():
             path = folder / path
         path = path.resolve()
         if path.is_dir():
-            found = sorted(p for p in path.iterdir()
-                           if p.is_file() and not p.name.startswith(".") and p.suffix.lower().lstrip(".") in formats)
-            if not found:
-                problems.append(f"no scan files ({', '.join(formats)}) in {path}")
-            paths.extend(found)
+            problems.append(f"directory given: {path}; name the specific scan files instead")
         elif not path.is_file():
             problems.append(f"file not found: {path}")
         elif path.suffix.lower().lstrip(".") not in formats:
@@ -237,6 +240,33 @@ def resolve_scan_paths(text: str, folder: Path, formats=None) -> tuple[list[str]
     if problems or not unique:
         return [], "; ".join(problems) or "no scan files given"
     return unique, ""
+
+
+def _ask_scan_files(folder: Path) -> dict:
+    """Collect and confirm explicit files; keep local edits out of graph state."""
+    while True:
+        print('Enter one scan file path per line (one multipage PDF or the page images).\n'
+              'Paths may contain spaces; surrounding quotes are optional.\n'
+              'Finish with a blank line, or type "stop" to end tuning.', flush=True)
+        lines = []
+        while True:
+            line = input("Scan file: ").strip()
+            if line.lower() == "stop":
+                return {"action": "stop"}
+            if not line:
+                break
+            lines.append(line)
+        paths, problem = resolve_scan_paths("\n".join(lines), folder)
+        if problem:
+            print(f"No usable scan files: {problem}. Enter the corrected selection.", flush=True)
+            continue
+        print("Selected scan files:\n  " + "\n  ".join(paths), flush=True)
+        choice, _ = _ask_choice('Use these files? Type "confirm", "correct" to enter a new selection, or "stop".',
+                                ("confirm", "correct", "stop"))
+        if choice == "stop":
+            return {"action": "stop"}
+        if choice == "confirm":
+            return {"action": "scan", "scan_paths": paths}
 
 
 def _ask_tuning(payload: dict, default_printer: str | None) -> dict:
@@ -268,17 +298,17 @@ def _ask_tuning(payload: dict, default_printer: str | None) -> dict:
         folder.mkdir(parents=True, exist_ok=True)
         print(f"Round {payload.get('round_id')} (trial {payload.get('trial_id')}): scan the printed pages.\n"
               f"Save the scans in: {folder}\n"
-              'Type "scan" to use every scan file in that folder, "scan <files or folder>" for others, '
+              'Type "scan", then enter each file path on its own line and finish with a blank line. '
+              'You will confirm the selected files before they are used. '
               '"reprint" to print the sheet again, or "stop".')
         while True:
             choice, rest = _ask_choice(question, choices)
             if choice != "scan":
                 return {"action": choice}
-            paths, problem = resolve_scan_paths(rest, folder)
-            if paths:
-                print("Scan files:\n  " + "\n  ".join(paths), flush=True)
-                return {"action": "scan", "scan_paths": paths}
-            print(f"No usable scan files: {problem}. Save the scans and try again.", flush=True)
+            if rest:
+                print('Type "scan" alone, then enter one path per line.', flush=True)
+                continue
+            return _ask_scan_files(folder)
     if kind == "tuning_print_confirmation":
         print("The trial print could not be confirmed: the printer did not report that it printed.\n"
               "Please check the printer tray. Did the pages come out? "
@@ -293,8 +323,9 @@ def _ask_tuning(payload: dict, default_printer: str | None) -> dict:
 def ask_human(payload: dict, default_printer: str | None = None) -> str | dict:
     """Show one graph pause and return a valid answer; re-ask on empty or invalid input.
 
-    The report and budget pauses return text; the print-tuning pauses (and any other pause
-    with choices) return {"action": ...} dicts, as build_graph documents.
+    Legacy report approval, printer-problem and budget pauses return text. Tuning
+    pauses and other pauses with choices (including report_print_confirmation)
+    return {"action": ...} dicts using the payload's allowed choices.
     """
     kind = payload.get("kind")
     print("\n" + "=" * 60, flush=True)
