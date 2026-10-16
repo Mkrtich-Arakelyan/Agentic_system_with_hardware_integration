@@ -17,7 +17,8 @@ from app.agents.common import _messages, _summarize
 MAX_HARDWARE_PASSES = 12
 
 
-# A pre-approved report may be resubmitted only if its last job was lost.
+# Legacy state labels retained for existing public exports. The graph, never
+# these labels alone, authorizes another copy through fresh human approval.
 LOST_JOB_STATES = {"failed", "cancelled", "canceled", "error", "aborted", "unknown"}
 
 
@@ -28,15 +29,16 @@ pass. After each call its result is added to the dialogue and you are called aga
 Steps:
 1. If there is no up-to-date one-page report.pdf, call write_and_run with a
    complete script that reads experiments.csv and the results.json files named in
-   the recorded results (never type numbers into the script), draws the graph
-   named in the latest REPORT SPEC, adds the title, the explanation from general,
+   the recorded results (never type numbers into the script), embeds the supplied
+   final tuned figure, adds the title, the explanation from general,
    the fairness, performance-vs-cost and next-experiment sentences and the
    verdict, and saves report.pdf in the current folder as exactly one A4 portrait
    page (matplotlib savefig or PdfPages is enough). Use a fresh script filename.
 2. Call printer_status for the office printer named in the context.
 3. Call submit_print with pdf_path set to the report path given below. The graph
    asks the human for approval before it really prints.
-4. Call job_status with the returned job id until the job is done.
+4. Call job_status with the workflow's current job id. The graph handles done,
+   failed, uncertain, and unconfirmed readings and pauses for human recovery.
 
 After a human turn starting with "Change request for the report:":
 - if it only changes presentation (layout, titles, wording that does not change
@@ -47,8 +49,9 @@ After a human turn starting with "Change request for the report:":
   whom) and human_request (the human's words). Never change a claim just because
   the human asked; claims must come from recorded results.
 
-After a printer problem and a human "retry", check job_status (or printer_status)
-again; resubmit only if the job failed, was cancelled or was lost. If a tool returns an
+After a printer problem and a human "retry", check the tracked current job when
+one is supplied. Only request another print after the graph resolves the previous
+attempt and clears its job ID; every new copy needs fresh approval. If a tool returns an
 error, read it and fix the cause on the next pass, for example a report with
 two pages. Never invent results.
 
@@ -56,9 +59,24 @@ The report-and-print context supplies the frozen experiment_selection, including
 the four selected IDs, reasons and saved paths. Read those results_json paths
 and validate that their experiment_id values match the selection. Base the
 report on those four experiments; any single-experiment graph must use one of
-them. Do not independently select from the CSV or change the selected IDs during
+   them. Do not independently select from the CSV or change the selected IDs during
 layout revisions or printer retries. A request to change the selection requires
 request_information for scientific review, rather than silently substituting IDs.
+
+The context supplies final_figure_path and final_figure_metadata, rendered by
+the application from the completed calibration, original Initial/Final arrays,
+fixed normalization limits, and final mappings. Embed that EXACT PNG as the
+report's figure. Do not redraw it, replace it with camera previews, recompute
+grayscale mappings, enhance its contrast, or change its pixels. Insert the PNG
+directly with PyMuPDF page.insert_image, or use matplotlib imshow with
+interpolation='none' to preserve its original pixels in the PDF. Keep its aspect
+ratio, fully inside the one A4 portrait page, at least 25% of page width and
+height. The application checks the actual embedded pixels before approval.
+Scientific findings and selection reasons come from the scientific evidence;
+gamma/endpoints/steps are presentation and print adjustments, not new findings.
+submit_print is always an approval REQUEST here, never an immediate submission.
+An uncertain/untracked job, unconfirmed reading, or submission exception needs
+human resolution. Never resubmit an uncertain print or claim it printed.
 """
 
 
@@ -152,6 +170,8 @@ def report_and_print(
         "report": state.get("report"),
         "approval": state.get("approval"),
         "active_job_id": state.get("active_job_id"),
+        "final_figure_path": state.get("final_figure_path"),
+        "final_figure_metadata": state.get("final_figure_metadata"),
     }
     messages = _messages(
         state, REPORT_AND_PRINT_PROMPT,
@@ -178,6 +198,10 @@ def report_and_print(
                     f"Human request: {args.get('human_request', '')}",
         }]}
 
+    if name == "job_status" and (not state.get("active_job_id") or args != {"job_id": state["active_job_id"]}):
+        return {"outcome": "no_tool", "dialogue": [{"role": "executor",
+                "text": "Read only the current report job ID supplied by the workflow."}]}
+
     report = None
     if name == "submit_print":
         pdf_path = Path(str(args.get("pdf_path", "")))
@@ -189,42 +213,40 @@ def report_and_print(
                 "text": f"No tool ran: submit_print must use the run's report {report_path}.",
             }]}
         # Inspect the file itself, so an approval always matches the bytes that print.
-        report = inspect_report(report_path)
-        if not report["exists"] or report["pages"] != 1:
+        from app.workflow.reporting import inspect_tuned_report
+        figure = state.get("final_figure_metadata")
+        if not figure:
+            return {"outcome": "no_tool", "dialogue": [{"role": "executor", "text": "Validated final tuned figure is required."}]}
+        report = inspect_tuned_report(report_path, figure)
+        if not report["exists"] or report["pages"] != 1 or not report.get("figure_embedded") or report.get("error"):
             return {"outcome": "no_tool", "report": report, "dialogue": [{
                 "role": "executor",
                 "text": "No tool ran: report.pdf must exist and have exactly one page "
-                        f"(found {report['pages']}). Rebuild it first.",
+                        f"(found {report['pages']}) and embed the supplied tuned figure. {report.get('error', '')} Rebuild it first.",
             }]}
         try:
+            if (not set(args) <= {"pdf_path", "printer", "copies"} or not isinstance(args.get("printer"), str)
+                    or not args["printer"].strip() or type(args.get("copies", 1)) is not int or args.get("copies", 1) != 1):
+                raise ValueError("An exact printer, one copy, and no extra submission arguments are required")
             approved = _approval_key(report["sha256"], args)
         except (TypeError, ValueError):
             return {"outcome": "no_tool", "dialogue": [{
                 "role": "executor",
-                "text": f"No tool ran: copies must be a whole number, not {args.get('copies')!r}.",
+                "text": "No tool ran: supply an exact printer, one integer copy, and only the supported arguments.",
             }]}
         args.update(pdf_path=str(report_path), printer=approved["printer"], copies=approved["copies"])
-        if state.get("approval") != approved:
-            printer = approved["printer"] or "the default printer"
-            return {
-                "outcome": "needs_print_approval",
-                "report": report,
-                "pending_print": {"args": args, "report_sha256": approved["report_sha256"]},
-                "dialogue": [{
-                    "role": "executor",
-                    "text": f"Requesting human approval to print {report_path} on "
-                            f"{printer}, {approved['copies']} copies.",
-                }],
-            }
-        job_id = state.get("active_job_id")
-        job_state = _latest_job_state(state, job_id)
-        if job_id and job_state not in LOST_JOB_STATES:
-            return {"outcome": "no_tool", "dialogue": [{
+        # Every submission is handled by the graph's persisted intent node.
+        # Even a supplied approval never lets this model turn execute printing.
+        return {
+            "outcome": "needs_print_approval",
+            "report": report,
+            "pending_print": {"args": args, "report_sha256": approved["report_sha256"]},
+            "dialogue": [{
                 "role": "executor",
-                "text": f"No tool ran: this report was already submitted as job {job_id} "
-                        f"(last job_status: {job_state or 'not checked yet'}). "
-                        "Call job_status for that job instead of printing again.",
-            }]}
+                "text": f"Requesting human approval to print {report_path} on "
+                        f"{approved['printer']}, {approved['copies']} copies.",
+            }],
+        }
 
     try:
         raw = tool_map[name].invoke(args)
@@ -238,11 +260,15 @@ def report_and_print(
     evidence = json.dumps(result, ensure_ascii=False)
     tool_message = evidence
     if name == "write_and_run":
-        report = inspect_report(report_path)
+        from app.workflow.reporting import inspect_tuned_report
+        figure = state.get("final_figure_metadata")
+        report = inspect_tuned_report(report_path, figure) if figure else inspect_report(report_path)
         if not report["exists"]:
             tool_message += f"\nReport check: {report_path} was not created."
         elif report["pages"] != 1:
             tool_message += f"\nReport check: report.pdf has {report['pages']} pages; it must have exactly one."
+        elif not report.get("figure_embedded"):
+            tool_message += "\nReport check: " + str(report.get("error", "Final tuned PNG must be embedded unchanged."))
 
     recorded = {"tool_name": name, "tool_args": args, "result": result}
     # Preserve the original AIMessage, including its encrypted reasoning content.

@@ -213,12 +213,12 @@ def test_print_confirmation_poll_and_problem(monkeypatch, capsys):
     assert runner.ask_human(recovery) == {"action": "reprint"}
 
 
-@pytest.mark.parametrize("choice", ["printed", "not_printed", "retry", "skip", "stop"])
+@pytest.mark.parametrize("choice", ["printed", "not_printed", "stop"])
 def test_report_print_confirmation_returns_payload_choice_as_action(monkeypatch, choice):
     # Choices belong to the graph's payload, not a second hardcoded runner list.
     payload = {"kind": "report_print_confirmation", "question": "Confirm the report print outcome.",
-               "choices": ["printed", "not_printed", "retry", "skip", "stop"]}
-    answers(monkeypatch, "yes", choice)
+               "choices": ["printed", "not_printed", "stop"]}
+    answers(monkeypatch, "", "yes", choice)
     assert runner.ask_human(payload) == {"action": choice}
 
 

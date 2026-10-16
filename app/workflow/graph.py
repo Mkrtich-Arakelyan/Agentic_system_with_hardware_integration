@@ -9,6 +9,7 @@ from langgraph.graph import END, START, StateGraph
 from langgraph.types import interrupt
 
 from app.workflow.state import State
+import app.workflow.reporting as report_records
 from app.workflow.tuning import (
     TuningSessionError, initialize_tuning_session, load_tuning_session,
     accept_specialist_response, record_print_approval, begin_print_attempt,
@@ -24,7 +25,7 @@ from app.agents.scientist import ExperimentSelection, scientist as run_scientist
 from app.agents.executor import executor as run_executor
 from app.agents.general import general as run_general
 from app.agents.report_and_print import (
-    MAX_HARDWARE_PASSES, _approval_key, _parse_tool_output, inspect_report,
+    MAX_HARDWARE_PASSES, _parse_tool_output,
     report_and_print as run_report_and_print,
 )
 
@@ -146,15 +147,19 @@ def _reading_route(tool_name: str, result: dict) -> str:
         return "report_and_print"
     state = str(result.get("state", "")).lower()
     if tool_name == "job_status":
+        if state == "uncertain" or result.get("confirmed") is False:
+            return "report_print_confirmation"
         if state == "done":
-            return "finish_gate"
+            return "finish_gate" if result.get("confirmed") is True else "report_print_confirmation"
         if state in PROBLEM_JOB_STATES or _has_problem_field(result):
             return "printer_question"
     elif tool_name == "printer_status":
         if state in PROBLEM_PRINTER_STATES or _has_problem_field(result):
             return "printer_question"
-    elif tool_name == "submit_print" and result.get("ok") is False:
-        if "offline" in str(result.get("error", "")).lower():
+    elif tool_name == "submit_print":
+        if result.get("tracked") is False:
+            return "report_print_confirmation"
+        if result.get("ok") is False and "offline" in str(result.get("error", "")).lower():
             return "printer_question"
     return "report_and_print"
 
@@ -201,6 +206,8 @@ def build_graph(
     tuning_print_confirmation: {action: printed}, not_printed, or stop
     tuning_poll: {action: check} or stop (at most three readings per pause)
     tuning_problem: {action: retry}, regenerate (artifact errors), reprint, stop
+    report_print_confirmation: {action: printed}, {action: not_printed}, or
+    {action: stop}. Report submission intent/outcomes persist in report_print.json.
 
     Bare words above abbreviate {action: <word>}. Invalid answers re-interrupt.
     Session operations must be serialized. InMemorySaver is not durable storage.
@@ -372,6 +379,51 @@ def build_graph(
                 return blocked("Session lacks an accepted final round-3 review and complete final mappings")
         except TuningSessionError as error:
             return blocked(str(error))
+        try:
+            journal = report_records.load_record(run_dir)
+            if state.get("experiment_selection") != session["accepted_selection"]:
+                raise ValueError("Graph scientific selection differs from the session's frozen selection/reasons")
+            if not journal["attempts"] and (state.get("active_job_id") or any(
+                    r.get("tool_name") == "submit_print" for r in state.get("execution_results", []))):
+                raise ValueError("Saved report print history has no durable report-print journal; reconcile the prior job before printing")
+            status = report_records.print_state(journal)
+            if status == "stopped":
+                return {"route": "end", "stop_reason": "stopped_by_human", "print_outcome": "stopped"}
+            if status == "uncertain" and not journal.get("skip"):
+                return {"route": "report_print_confirmation"}
+            figure, changed = report_records.prepare_figure(
+                state.get("tuning_session_path", run_dir / "tuning_session.json"), session, run_dir)
+            state = {**state, "final_figure_path": figure["figure_path"], "final_figure_metadata": figure}
+            artifact_update = {"final_figure_path": figure["figure_path"], "final_figure_metadata": figure}
+            if changed:
+                state.update(pending_print={}, approval={}, print_outcome="", report={})
+                artifact_update.update(pending_print={}, approval={}, print_outcome="", report={})
+            current = report_records.inspect_tuned_report(run_dir / "report.pdf", figure)
+            state["report"] = current
+            artifact_update["report"] = current
+            if journal.get("skip") == {"report_sha256": current.get("sha256"), "figure_sha256": figure["figure_sha256"],
+                                      "inputs_sha256": figure["inputs_sha256"]} and current.get("figure_embedded"):
+                return {**artifact_update, "route": "finish_gate", "report": current, "print_outcome": "skipped"}
+            if status == "uncertain":
+                return {**artifact_update, "route": "report_print_confirmation"}
+            if status == "printed":
+                report = current
+                attempt = journal["attempts"][-1]
+                if report_records.attempt_matches(attempt, report, figure):
+                    return {**artifact_update, "route": "finish_gate", "report": report, "print_outcome": "printed"}
+            if status == "pending":
+                job = journal["attempts"][-1]["result"]["job_id"]
+                state["active_job_id"] = job
+                artifact_update["active_job_id"] = job
+            elif status == "failed":
+                return {**artifact_update, "route": "printer_question", "last_printer_reading": {
+                    "tool_name": "job_status", "result": journal["attempts"][-1]["readings"][-1]
+                    if journal["attempts"][-1]["readings"] else journal["attempts"][-1]["result"]}}
+            else:
+                state["active_job_id"] = None
+                artifact_update["active_job_id"] = None
+        except (OSError, ValueError, KeyError) as error:
+            return report_blocked(str(error))
         error = _selection_error(state.get("experiment_selection") or {}, state)
         if error:
             return {"route": "orchestrator", "dialogue": [{
@@ -381,39 +433,59 @@ def build_graph(
         if passes > MAX_HARDWARE_PASSES:
             return {
                 "hardware_passes": passes,
-                "route": "orchestrator",
+                "route": "printer_question",
                 "dialogue": [{
                     "role": "system",
-                    "text": f"The {MAX_HARDWARE_PASSES}-pass hardware limit was reached; "
-                            "back to the orchestrator.",
+                    "text": f"The {MAX_HARDWARE_PASSES}-pass report limit was reached; "
+                            "human recovery is required.",
                 }],
             }
 
         result = run_report_and_print(state, llm, report_tools, run_dir)
-        update = {key: result[key] for key in REPORT_STATE_KEYS if key in result}
+        update = {**artifact_update, **{key: result[key] for key in REPORT_STATE_KEYS if key in result}}
         update["hardware_passes"] = passes
         outcome = result["outcome"]
         if outcome == "tool_ran":
             reading = result["result"]
-            active_id = update.get("active_job_id", state.get("active_job_id"))
+            active_id = state.get("active_job_id")
             read_id = None
             if result["tool_name"] == "job_status":
                 tool_args = result["execution_results"][0].get("tool_args") or {}
                 read_id = (reading.get("job_id") if isinstance(reading, dict) else None) \
                     or tool_args.get("job_id")
-            # Only the current print job may finish the run: on Windows a job that
-            # left the queue reads as done, so a wrong id would look printed.
-            if result["tool_name"] == "job_status" and read_id != active_id:
+            # Only a matching current-job reading may affect completion. A job
+            # leaving the queue is uncertain, never evidence of a printed report.
+            if result["tool_name"] == "job_status" and active_id and tool_args.get("job_id") == active_id \
+                    and reading.get("ok") is False and reading.get("job_id") in (None, active_id):
+                report_records.record_status_error(run_dir, active_id, reading)
+                update.update(report_print_route())
+            elif result["tool_name"] == "job_status" and (not active_id or read_id != active_id
+                    or tool_args.get("job_id") != active_id or reading.get("job_id") != active_id):
                 update["route"] = "report_and_print"
                 update["dialogue"] = update.get("dialogue", []) + [{
                     "role": "system",
                     "text": f"job_status was read for {read_id}, but the current print job is "
                             f"{active_id or 'none'}; check job_status for the current job.",
                 }]
+            elif result["tool_name"] == "job_status":
+                report_records.record_outcome(run_dir, journal["attempts"][-1]["attempt_id"], reading, reading=True)
+                update.update(report_print_route())
+            elif result["tool_name"] == "submit_print":
+                return report_blocked("Report executor unexpectedly submitted outside the approval/intent node")
             else:
                 update.update(_route_update(result["tool_name"], reading))
         elif outcome == "needs_print_approval":
-            update["route"] = "print_approval"
+            if status == "pending":
+                update.update(route="report_and_print", pending_print={}, dialogue=[{
+                    "role": "system", "text": "Report already submitted; check the active job instead."}])
+            else:
+                try:
+                    report = report_records.inspect_tuned_report(run_dir / "report.pdf", figure)
+                    pending = report_records.pending_request(run_dir, result["pending_print"]["args"], report, figure)
+                    update.update(route="print_approval", pending_print=pending, report=report)
+                except (OSError, ValueError, KeyError) as error:
+                    update.update(route="report_and_print", pending_print={}, dialogue=[{
+                        "role": "system", "text": "Report approval refused: " + str(error)}])
         elif outcome == "needs_information":
             update["route"] = "orchestrator"
         else:
@@ -430,43 +502,15 @@ def build_graph(
             "pages": report.get("pages"),
             "printer": args.get("printer"),
             "copies": args.get("copies", 1),
+            "pdf_sha256": pending.get("report_sha256"),
             "question": "Print this report? Type yes, or describe what to change.",
         })
         text = str(reply).strip()
 
         if _first_word(text) in ("yes", "y", "approve"):
-            # The file must still be the version the human was shown.
-            current = inspect_report(args.get("pdf_path", ""))
-            if not pending or current.get("sha256") != pending.get("report_sha256"):
-                return {
-                    "pending_print": {},
-                    "hardware_passes": 0,
-                    "report": current,
-                    "route": "report_and_print",
-                    "dialogue": [
-                        {"role": "human", "text": text},
-                        {"role": "system", "text": "Print not submitted: report.pdf changed "
-                                                   "after approval was requested."},
-                    ],
-                }
-            result = _invoke_printer("submit_print", args)
-            update = {
-                "pending_print": {},
-                "hardware_passes": 0,
-                "approval": _approval_key(pending["report_sha256"], args),
-                "execution_results": [
-                    {"tool_name": "submit_print", "tool_args": args, "result": result}
-                ],
-                "dialogue": [
-                    {"role": "human", "text": text},
-                    {"role": "executor", "text": "Human approved. submit_print result: "
-                                                 + json.dumps(result, ensure_ascii=False)},
-                ],
-            }
-            if result.get("ok") is not False and result.get("job_id"):
-                update["active_job_id"] = result["job_id"]
-            update.update(_route_update("submit_print", result))
-            return update
+            # No non-idempotent action is performed inside an interrupt node.
+            return {"route": "report_submit", "hardware_passes": 0,
+                    "dialogue": [{"role": "human", "text": text}]}
 
         # No limit on change rounds: the human decides when to approve.
         return {
@@ -475,6 +519,91 @@ def build_graph(
             "route": "report_and_print",
             "dialogue": [{"role": "human", "text": "Change request for the report: " + text}],
         }
+
+    def report_blocked(message):
+        return {"route": "end", "stop_reason": "report_blocked", "dialogue": [{
+            "role": "system", "text": "Report blocked: " + message}]}
+
+    def report_print_route():
+        journal = report_records.load_record(run_dir)
+        status = report_records.print_state(journal)
+        attempt = journal["attempts"][-1]
+        result = attempt["result"] or {}
+        update = {"active_job_id": result.get("job_id"), "pending_print": {}, "approval": {}}
+        if status == "printed":
+            return {**update, "route": "finish_gate", "print_outcome": "printed"}
+        if status == "uncertain":
+            return {**update, "route": "report_print_confirmation", "print_outcome": "uncertain"}
+        if status == "failed":
+            return {**update, "route": "printer_question", "last_printer_reading": {
+                "tool_name": "job_status", "result": (attempt["readings"] or [result])[-1]}}
+        if status == "stopped":
+            return {**update, "route": "end", "stop_reason": "stopped_by_human", "print_outcome": "stopped"}
+        return {**update, "route": "report_and_print"}
+
+    def report_submit_node(state):
+        pending = state.get("pending_print") or {}
+        try:
+            journal = report_records.load_record(run_dir)
+            existing = next((a for a in journal["attempts"] if a["attempt_id"] == pending.get("attempt_id")), None)
+            if existing:
+                if any(existing[k] != pending.get(k) for k in ("args", "report_sha256", "figure_sha256", "inputs_sha256")):
+                    return report_blocked("Conflicting replay of a report submission attempt")
+                return report_print_route()
+            session = load_tuning_session(state["tuning_session_path"])
+            if not tuning_completed(session) or state.get("experiment_selection") != session["accepted_selection"]:
+                return report_blocked("Completed tuning is required before report submission")
+            figure, changed = report_records.prepare_figure(state["tuning_session_path"], session, run_dir)
+            current = report_records.inspect_tuned_report(run_dir / "report.pdf", figure)
+            if changed:
+                raise ValueError("Final figure changed; rebuild the report and request fresh approval")
+            attempt, new = report_records.start_submission(run_dir, pending, current, figure)
+        except (OSError, ValueError, KeyError) as error:
+            return {"route": "report_and_print", "pending_print": {}, "approval": {},
+                    "dialogue": [{"role": "system", "text": "Print not submitted: " + str(error)}]}
+        if not new:
+            return report_print_route()
+        try:
+            # Invoke ONLY the model's saved, human-approved exact arguments.
+            result = _parse_tool_output(printer_map["submit_print"].invoke(attempt["args"]))
+            report_records.record_outcome(run_dir, attempt["attempt_id"], result)
+        except Exception as error:
+            # Persisted intent survives lost responses, exceptions, or a failed
+            # outcome write. Never send another copy to find out what happened.
+            try:
+                record = report_records.load_record(run_dir)
+                record["attempts"][-1]["submission_error"] = {"type": type(error).__name__, "message": str(error)}
+                report_records.save_record(run_dir, record)
+            except (OSError, ValueError):
+                pass  # The already-persisted intent remains the recovery boundary.
+            return {"route": "report_print_confirmation", "print_outcome": "uncertain", "pending_print": {}}
+        return {**report_print_route(), "execution_results": [{"tool_name": "submit_print",
+                "tool_args": attempt["args"], "result": result}]}
+
+    def report_print_confirmation_node(state):
+        journal = report_records.load_record(run_dir)
+        if not journal["attempts"]:
+            return report_blocked("No report submission attempt to confirm")
+        attempt = journal["attempts"][-1]
+        if attempt["resolution"]:
+            return report_print_route()
+        result = attempt["result"] or {}
+        reply = interrupt({"kind": "report_print_confirmation", "job_id": result.get("job_id"),
+            "reading": {"submission": attempt["result"], "latest_job_reading": (attempt["readings"] or [None])[-1],
+                        "attempt_id": attempt["attempt_id"], "submission_intent_recorded": True,
+                        "pdf_path": attempt["args"]["pdf_path"], "pdf_sha256": attempt["report_sha256"],
+                        "printer": attempt["args"]["printer"], "copies": attempt["args"]["copies"],
+                        "submission_error": attempt.get("submission_error"), "status_error": attempt.get("status_error")},
+            "question": "Check the printer tray. Did this exact report print? Choose printed, not_printed, or stop.",
+            "choices": ["printed", "not_printed", "stop"]})
+        choice = reply.get("action") if isinstance(reply, dict) else None
+        if choice not in ("printed", "not_printed", "stop"):
+            return {"route": "report_print_confirmation"}
+        report_records.resolve_attempt(run_dir, choice)
+        if choice == "not_printed":
+            return {"route": "report_and_print", "approval": {}, "pending_print": {}, "active_job_id": None,
+                    "print_outcome": "", "hardware_passes": 0}
+        return report_print_route()
 
     def printer_question_node(state: State) -> dict:
         reply = interrupt({
@@ -486,6 +615,10 @@ def build_graph(
         })
         update = {"dialogue": [{"role": "human", "text": str(reply)}], "hardware_passes": 0}
         if _first_word(reply) != "skip":
+            journal = report_records.load_record(run_dir)
+            if report_records.print_state(journal) == "failed":
+                report_records.resolve_attempt(run_dir, "not_printed", source="human_retry_after_failure")
+                update.update(approval={}, pending_print={}, active_job_id=None, print_outcome="")
             update["route"] = "report_and_print"
             return update
 
@@ -508,24 +641,49 @@ def build_graph(
                 "text": f"Printing skipped; cancel_job {job_id}: "
                         + json.dumps(result, ensure_ascii=False),
             })
+        try:
+            journal = report_records.load_record(run_dir)
+            figure = journal["figure"]
+            report = report_records.inspect_tuned_report(run_dir / "report.pdf", figure)
+            report_records.require_report(report)
+            journal["skip"] = {"report_sha256": report["sha256"], "figure_sha256": figure["figure_sha256"],
+                               "inputs_sha256": figure["inputs_sha256"]}
+            report_records.save_record(run_dir, journal)
+        except (OSError, ValueError, KeyError, TypeError) as error:
+            return report_blocked(str(error))
         update.update(print_outcome="skipped", route="finish_gate")
         return update
 
     def finish_gate_node(state: State) -> dict:
         missing = []
+        try:
+            session = load_tuning_session(state["tuning_session_path"])
+            if not tuning_completed(session) or state.get("experiment_selection") != session["accepted_selection"]:
+                return report_blocked("Tuning is not successfully completed")
+            figure, changed = report_records.prepare_figure(state["tuning_session_path"], session, run_dir)
+            report = report_records.inspect_tuned_report(run_dir / "report.pdf", figure)
+            report_records.require_report(report)
+            journal = report_records.load_record(run_dir)
+            skip = {"report_sha256": report["sha256"], "figure_sha256": figure["figure_sha256"],
+                    "inputs_sha256": figure["inputs_sha256"]}
+            valid_print = (report_records.print_state(journal) == "printed" and journal["attempts"]
+                           and report_records.attempt_matches(journal["attempts"][-1], report, figure))
+            if changed or not (valid_print or journal.get("skip") == skip):
+                return report_blocked("Report printing is unresolved or belongs to different report/figure bytes")
+        except (OSError, ValueError, KeyError, TypeError) as error:
+            return report_blocked(str(error))
         selection_error = _selection_error(state.get("experiment_selection") or {}, state)
         if selection_error:
             missing.append("a valid frozen scientist selection: " + selection_error)
         count = _count_successful_focusing_results(state)
         if count < MIN_EXPERIMENTS:
             missing.append(f"{MIN_EXPERIMENTS} successful focusing experiments (found {count})")
-        report = state.get("report") or {}
         if not report.get("exists") or report.get("pages") != 1:
             missing.append("a one-page report.pdf")
-        if state.get("print_outcome") not in ("printed", "skipped"):
-            missing.append("a printed or human-skipped print job")
         if not missing:
-            return {"stop_reason": "finished", "route": "end"}
+            return {"stop_reason": "finished", "route": "end", "report": report,
+                    "final_figure_path": figure["figure_path"], "final_figure_metadata": figure,
+                    "print_outcome": "skipped" if journal.get("skip") == skip else "printed"}
         return {
             "route": "orchestrator",
             "dialogue": [{"role": "system", "text": "Finish refused; missing: " + "; ".join(missing) + "."}],
@@ -858,6 +1016,8 @@ def build_graph(
     builder.add_node("executor", lambda state: run_executor(state, llm, focusing_tool))
     builder.add_node("report_and_print", report_and_print_node)
     builder.add_node("print_approval", print_approval_node)
+    builder.add_node("report_submit", report_submit_node)
+    builder.add_node("report_print_confirmation", report_print_confirmation_node)
     builder.add_node("printer_question", printer_question_node)
     builder.add_node("budget_summary", budget_summary_node)
     builder.add_node("budget_review", budget_review_node)
@@ -896,13 +1056,21 @@ def build_graph(
         "printer_question": "printer_question", "finish_gate": "finish_gate",
         "orchestrator": "orchestrator",
         "tuning_route": "tuning_route", "end": END,
+        "report_print_confirmation": "report_print_confirmation",
     })
     builder.add_conditional_edges("print_approval", route, {
         "report_and_print": "report_and_print", "printer_question": "printer_question",
         "finish_gate": "finish_gate", "orchestrator": "orchestrator",
+        "report_submit": "report_submit",
     })
+    for name in ("report_submit", "report_print_confirmation"):
+        builder.add_conditional_edges(name, route, {
+            "report_and_print": "report_and_print", "report_print_confirmation": "report_print_confirmation",
+            "printer_question": "printer_question", "finish_gate": "finish_gate", "end": END,
+        })
     builder.add_conditional_edges("printer_question", route, {
         "report_and_print": "report_and_print", "finish_gate": "finish_gate",
+        "end": END,
     })
     builder.add_conditional_edges("finish_gate", route, {
         "orchestrator": "orchestrator", "end": END,

@@ -40,6 +40,7 @@ class TuningFlowTests(unittest.TestCase):
     def setUp(self):
         self.root, self.path = self.fixture.root, self.fixture.path
         self.path.write_bytes(self.initial)
+        (self.root / "report_print.json").unlink(missing_ok=True)
         self.crop = self.root / "flow-crop.png"
         Image.new("RGB", (3, 2), (90, 80, 70)).save(self.crop)
         self.scans, self.stages, self.submissions = [], [], []
@@ -158,9 +159,15 @@ class TuningFlowTests(unittest.TestCase):
 
     def report_result(self, *args):
         self.assertEqual(self.session()["status"], "completed")
-        return {"outcome": "tool_ran", "tool_name": "job_status", "result": {"ok": True, "job_id": "report", "state": "done"},
-                "report": {"exists": True, "pages": 1}, "active_job_id": "report", "dialogue": [],
-                "execution_results": [{"tool_name": "job_status", "tool_args": {"job_id": "report"}, "result": {"state": "done", "job_id": "report"}}]}
+        import pymupdf
+        state = args[0]
+        report = self.root / "report.pdf"
+        with pymupdf.open() as document:
+            page = document.new_page(width=595.276, height=841.89)
+            page.insert_image(pymupdf.Rect(30, 70, 565, 700), filename=state["final_figure_path"])
+            document.save(report)
+        return {"outcome": "needs_print_approval", "pending_print": {"args": {
+            "pdf_path": str(report), "printer": "Offline", "copies": 1}}, "dialogue": []}
 
     def session(self):
         return load_tuning_session(self.path)
@@ -195,8 +202,8 @@ class TuningFlowTests(unittest.TestCase):
             self.assertEqual(self.kind(result), "tuning_scan")
             self.assertEqual(result["__interrupt__"][0].value["suggested_scan_directory"], str(self.root / "scans" / f"round_{number}"))
             result = self.resume("scan", scan_paths=[f"phone/round-{number}.pdf"])
-        self.assertNotIn("__interrupt__", result)
-        self.assertEqual(result["stop_reason"], "finished")
+        self.assertEqual(self.kind(result), "print_approval")
+        self.assertTrue(result["report"]["figure_embedded"])
         self.assertEqual(self.stages, ["propose_gamma", "review_gamma", "review_gray_levels", "review_steps"])
         self.assertEqual(len(self.submissions), 3)
         self.assertEqual(self.session()["status"], "completed")
@@ -207,7 +214,7 @@ class TuningFlowTests(unittest.TestCase):
                 self.assertNotIn("candidates", record["result"])
                 self.assertNotIn("measurements", json.dumps(record["result"]))
                 self.assertIn("candidate_columns", record["result"])
-        self.assertNotIn("base64", json.dumps(result))
+        self.assertNotIn("base64", json.dumps({k: v for k, v in result.items() if k != "__interrupt__"}))
         self.assertEqual(self.scans, [[str(self.root / "phone" / f"round-{n}.pdf")] for n in range(1, 4)])
 
     def test_invalid_approval_and_stop_never_print(self):

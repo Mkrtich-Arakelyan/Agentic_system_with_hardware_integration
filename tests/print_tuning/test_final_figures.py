@@ -118,7 +118,7 @@ def spies(monkeypatch):
         drawn.append(np.array(values))
         return real_imshow(self, values, *args, **kwargs)
 
-    monkeypatch.setattr(final_figures, "apply_mapping", apply_spy)
+    monkeypatch.setattr("app.print_tuning.final_figures.apply_mapping", apply_spy)
     monkeypatch.setattr(matplotlib.axes.Axes, "imshow", imshow_spy)
     return mapped, drawn
 
