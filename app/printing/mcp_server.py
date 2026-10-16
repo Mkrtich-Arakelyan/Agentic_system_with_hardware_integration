@@ -111,7 +111,9 @@ def submit_print(pdf_path: str, printer: str, copies: int = 1) -> dict:
     pdf_path: path of the one-page PDF report.
     printer: the exact printer name.
     copies: must be 1.
-    Returns {"ok": true, "job_id", "printer", "file"} or {"ok": false, "error"}.
+    Returns {"ok": true, "job_id", "printer", "file", "tracked"} or {"ok": false, "error"}.
+    tracked false (with a job_id containing "-untracked-" and a message) means the job was
+    never seen in the queue: do NOT print again; the human must check the printer tray.
     """
     if copies != 1:
         return {"ok": False, "error": f"only 1 copy can be printed, not {copies}"}
@@ -138,7 +140,9 @@ def submit_trial_print(pdf_path: str, printer: str) -> dict:
     sheet is measured in mm on the scan. Then read job_status with the returned job_id.
     pdf_path: path of the trial sheet PDF (2 pages for 4 experiments).
     printer: the exact printer name.
-    Returns {"ok": true, "job_id", "printer", "file"} or {"ok": false, "error"}.
+    Returns {"ok": true, "job_id", "printer", "file", "tracked"} or {"ok": false, "error"}.
+    tracked false (with a job_id containing "-untracked-" and a message) means the job was
+    never seen in the queue: do NOT print again; the human must check the printer tray.
     """
     pdf = Path(pdf_path)
     if not TRIAL_PDF_NAME.match(pdf.name):
@@ -172,8 +176,9 @@ def cancel_job(job_id: str) -> dict:
     Only used when the human skips printing; never cancel a job the human wants printed.
     job_id: the job_id returned by submit_print or submit_trial_print.
     Returns {"ok": true, "job_id", "state", "message"}: state is failed with message
-    "cancelled", or done if the job was already printed. {"ok": false, "error"} for an
-    unknown job.
+    "cancelled", or done if the job was already printed, or uncertain (with confirmed
+    false and reason) if the job cannot be tracked and so could not be cancelled.
+    {"ok": false, "error"} for a job id that was never issued.
     """
     return _call(connector.cancel_job, job_id)
 
@@ -183,9 +188,13 @@ def job_status(job_id: str) -> dict:
     """Reading: the state of one print job.
 
     job_id: the job_id returned by submit_print or submit_trial_print.
-    Returns {"ok": true, "job_id", "state", "message"}, where state is one of
-    waiting, printing, done, failed, unknown. A waiting job that is stuck on a
-    printer problem also has a "problem" field, such as out_of_paper.
+    Returns {"ok": true, "job_id", "state", "confirmed", "message"}, where state is one
+    of waiting, printing, done, failed, uncertain. done always means a confirmed print.
+    uncertain (confirmed false) means nobody can tell whether the page printed; its
+    "reason" is untracked_submission, left_queue or not_found. Never treat uncertain as
+    printed and never print again on your own: the human must check the printer tray.
+    A waiting job that is stuck on a printer problem also has a "problem" field, such
+    as out_of_paper.
     """
     return _call(connector.job_status, job_id)
 

@@ -10,7 +10,7 @@ or manifest paths; both come from the run folder the tools were made for.
     read_scan(scan_paths)               measures the scan of the session's active trial
     prepare_specialist_previews(...)    plain function, before round 1: previews and limits
     summarize_scan_result(result)       plain function: a short read_scan result for the executor model
-                                        (the specialist gets the full one); see docs/tuning_tool_results.md
+                                        (the specialist gets the full one)
 
 read_scan's "ok" result: contract_version, status, session_id, trial_id, round_id, evaluation_path,
 scan_quality, pages, candidates, printer_response, measurement_docs and scan_files, all taken from

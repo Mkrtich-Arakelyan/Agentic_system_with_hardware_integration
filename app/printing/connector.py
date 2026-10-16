@@ -15,13 +15,26 @@ cancel_job removes a job that has not printed yet.
 
 Set PRINTER_MODE=fake to use a pretend printer called Office_Printer instead of real
 commands. Set FAKE_PRINTER_PROBLEM=out_of_paper (or offline, paper_jam) to make the
-fake printer report that problem.
+fake printer report that problem, =untracked to make a submission that is never seen in
+the queue, or =lost to make jobs leave the queue without a confirmed print.
 
 Printer states: idle, printing, stopped, offline, out_of_paper, paper_jam, error, unknown.
-Job states:     waiting, printing, done, failed, unknown.
+Job states:     waiting, printing, done, failed, uncertain.
+                Every job_status result has "confirmed": true when the state was read from the
+                printer system, false when it is uncertain. done is only returned when the print
+                is confirmed (the lp completed list, a Windows job still listed as printed or
+                complete, or the fake printer's done); it is never guessed.
+                uncertain means nobody can tell whether the page printed. It has a "reason":
+                  untracked_submission  the job was never seen in the queue after submitting,
+                  left_queue            the job was seen, then left the queue unconfirmed,
+                  not_found             the job is in neither the queue nor the completed list,
+                and a message asking the human to check the printer tray.
                 A waiting job that is stuck on a printer problem also has a "problem" field
                 (for example out_of_paper). A cancelled job is failed, with message "cancelled".
-Job ids look like "<printer>-<number>", e.g. Office_Printer-1.
+Submissions return "tracked": true, or false with an untracked job id when the job was never
+seen in the queue: then do not print again automatically, ask the human instead.
+Job ids look like "<printer>-<number>", e.g. Office_Printer-1, and untracked ones like
+"<printer>-untracked-<timestamp>".
 """
 import json
 import os
@@ -33,7 +46,15 @@ from pathlib import Path
 
 FAKE_PRINTER = "Office_Printer"
 FAKE_JOBS_FILE = Path(os.environ.get("FAKE_PRINTER_FILE", Path(__file__).resolve().parents[2] / "fake_printer_jobs.json"))
-FAKE_PROBLEMS = ("out_of_paper", "offline", "paper_jam")
+FAKE_PROBLEMS = ("out_of_paper", "offline", "paper_jam")     # printer problems
+FAKE_JOB_PROBLEMS = ("untracked", "lost")                    # submissions we cannot confirm
+UNTRACKED = "-untracked-"          # in the job id of a submission that was never seen in the queue
+CHECK_TRAY = "Could not confirm that the page printed. Please check the printer tray."
+UNCERTAIN_DETAILS = {
+    "untracked_submission": "The print command ran, but the job was never seen in the queue.",
+    "left_queue": "The job left the queue without a printed status (printed, deleted or failed).",
+    "not_found": "The job is in neither the queue nor the completed list.",
+}
 FAKE_QUEUE_SECONDS = 1.0   # a fake job waits this long, then prints
 FAKE_PRINT_SECONDS = 3.0   # a fake job is done this long after submission
 
@@ -94,6 +115,26 @@ def _printer_state(text):
     return "unknown"
 
 
+def _uncertain(job_id, reason):
+    """A job_status result for a job whose print nobody can confirm."""
+    return {"job_id": job_id, "state": "uncertain", "confirmed": False, "reason": reason,
+            "message": f"{CHECK_TRAY} {UNCERTAIN_DETAILS[reason]}"}
+
+
+def _untracked_id(printer):
+    return f"{printer}{UNTRACKED}{int(time.time() * 1000)}"
+
+
+def _is_untracked(job_id):
+    return re.search(re.escape(UNTRACKED) + r"\d+$", job_id) is not None
+
+
+def _untracked_submission(printer, pdf):
+    return {"job_id": _untracked_id(printer), "printer": printer, "file": str(pdf), "tracked": False,
+            "message": f"{CHECK_TRAY} {UNCERTAIN_DETAILS['untracked_submission']} Do not print again "
+                       "automatically."}
+
+
 def _job_state(text):
     """Turn a Windows job status into (job state, printer problem or None).
 
@@ -126,14 +167,17 @@ def _fake_load():
 
 
 def _fake_job_state(job, problem):
-    """A job sent during a problem never prints; a problem that starts later stops unfinished jobs."""
+    """A job sent during a problem never prints; a problem that starts later stops unfinished jobs.
+
+    A "lost" job leaves the queue when it would be done, without a confirmed print: uncertain.
+    """
     age = time.time() - job["submitted"]
     if job.get("cancelled"):
         return "failed"
     if job.get("problem"):
         return "failed"
     if age >= FAKE_PRINT_SECONDS:
-        return "done"
+        return "uncertain" if job.get("lost") else "done"
     if problem:
         return "failed"
     return "waiting" if age < FAKE_QUEUE_SECONDS else "printing"
@@ -149,15 +193,23 @@ def _fake_check(printer):
         raise PrinterError(f"unknown printer: {printer} (the fake printer is {FAKE_PRINTER})")
 
 
+def _fake_job_problem():
+    problem = os.environ.get("FAKE_PRINTER_PROBLEM", "").lower()
+    return problem if problem in FAKE_JOB_PROBLEMS else None
+
+
 def _fake_submit(pdf, printer, **extra):
-    """Add a job to the fake jobs file and return its id."""
+    """Add a job to the fake jobs file and return the submission result."""
     _fake_check(printer)
+    if _fake_job_problem() == "untracked":       # the job is never seen, so nothing is recorded
+        return _untracked_submission(printer, pdf)
     data = _fake_load()
     job_id = f"{printer}-{data['next_id']}"
     data["next_id"] += 1
-    data["jobs"][job_id] = {"file": str(pdf), "submitted": time.time(), "problem": _fake_problem(), **extra}
+    data["jobs"][job_id] = {"file": str(pdf), "submitted": time.time(), "problem": _fake_problem(),
+                            "lost": _fake_job_problem() == "lost", **extra}
     FAKE_JOBS_FILE.write_text(json.dumps(data, indent=2))
-    return job_id
+    return {"job_id": job_id, "printer": printer, "file": str(pdf), "tracked": True}
 
 
 # ---------- shared by the two print functions ----------
@@ -180,17 +232,16 @@ def _windows_submit(printer, pdf, print_command):
             break
         time.sleep(0.5)
     else:
-        # Raising would make the agent print again; job_status reads "-0" as done.
-        return {"job_id": f"{printer}-0", "printer": printer, "file": str(pdf),
-                "message": "print command ran, but the job left the queue before it was seen"}
-    return {"job_id": f"{printer}-{max(new, key=int)}", "printer": printer, "file": str(pdf)}
+        # Raising would make the agent print again, and nothing confirms it printed: untracked.
+        return _untracked_submission(printer, pdf)
+    return {"job_id": f"{printer}-{max(new, key=int)}", "printer": printer, "file": str(pdf), "tracked": True}
 
 
 def _lp_submit(printer, pdf, options=()):
     match = re.search(r"request id is (\S+)", _run(["lp", "-d", printer, *options, str(pdf)]))
     if not match:
         raise PrinterError("lp did not return a job id")
-    return {"job_id": match.group(1), "printer": printer, "file": str(pdf)}
+    return {"job_id": match.group(1), "printer": printer, "file": str(pdf), "tracked": True}
 
 
 # ---------- the connector functions ----------
@@ -223,10 +274,10 @@ def printer_status(printer):
 
 
 def submit_print(pdf_path, printer):
-    """Send a PDF to the printer. Return {"job_id", "printer", "file"}."""
+    """Send a PDF to the printer. Return {"job_id", "printer", "file", "tracked"} (and "message" if untracked)."""
     pdf = _existing_pdf(pdf_path)
     if _fake():
-        return {"job_id": _fake_submit(pdf, printer), "printer": printer, "file": str(pdf)}
+        return _fake_submit(pdf, printer)
     if _windows():
         def print_command():
             if os.environ.get("SUMATRA_PATH"):
@@ -242,7 +293,7 @@ def submit_trial_print(pdf_path, printer):
     """Send a trial sheet PDF: 1 copy, A4, grayscale, one-sided, 100% size. Same result as submit_print."""
     pdf = _existing_pdf(pdf_path)
     if _fake():
-        return {"job_id": _fake_submit(pdf, printer, kind="trial"), "printer": printer, "file": str(pdf)}
+        return _fake_submit(pdf, printer, kind="trial")
     if _windows():
         sumatra = os.environ.get("SUMATRA_PATH")
         if not sumatra:
@@ -254,7 +305,11 @@ def submit_trial_print(pdf_path, printer):
 
 
 def job_status(job_id):
-    """Return {"job_id", "state", "message"}: state is waiting, printing, done, failed or unknown."""
+    """Return {"job_id", "state", "confirmed", "message"}: state is waiting, printing, done, failed or
+    uncertain. done only when the print is confirmed; uncertain (confirmed false) also has a "reason".
+    """
+    if _is_untracked(job_id):          # never seen in the queue: there is nothing to ask the printer
+        return _uncertain(job_id, "untracked_submission")
     printer, _, number = job_id.rpartition("-")
     if _fake():
         job = _fake_load()["jobs"].get(job_id)
@@ -262,45 +317,59 @@ def job_status(job_id):
             raise PrinterError(f"unknown job: {job_id}")
         problem = job.get("problem") or _fake_problem()
         state = _fake_job_state(job, problem)
+        if state == "uncertain":
+            return _uncertain(job_id, "left_queue")
         if job.get("cancelled"):
             message = "cancelled"
         else:
             message = f"printer reports {problem}" if state == "failed" else f"fake job is {state}"
-        return {"job_id": job_id, "state": state, "message": message}
+        return {"job_id": job_id, "state": state, "confirmed": True, "message": message}
     if _windows():
         out = _ps(f"$j = Get-PrintJob -PrinterName {_quote(printer)} | Where-Object Id -eq {int(number)}; "
                   "if ($j) { 'found: ' + $j.JobStatus } else { 'gone' }")
-        if out == "gone":
-            return {"job_id": job_id, "state": "done", "message": "job left the queue (assumed printed)"}
+        if out == "gone":              # deleted, failed or printed: Windows does not say which
+            return _uncertain(job_id, "left_queue")
         state, problem = _job_state(out)
-        result = {"job_id": job_id, "state": state, "message": out}
+        result = {"job_id": job_id, "state": state, "confirmed": True, "message": out}
         if problem:
             result["problem"] = problem
         return result
     if any(line.split()[0] == job_id for line in _run(["lpstat", "-o", printer]).splitlines()):
         status = printer_status(printer)
         state = "printing" if f"now printing {job_id}" in status["message"] else "waiting"
-        result = {"job_id": job_id, "state": state, "message": f"printer is {status['state']}"}
+        result = {"job_id": job_id, "state": state, "confirmed": True, "message": f"printer is {status['state']}"}
         if status["state"] in ("stopped", "offline", "out_of_paper", "paper_jam", "error"):
             result["problem"] = status["state"]
         return result
     if any(line.split()[0] == job_id for line in _run(["lpstat", "-W", "completed", "-o", printer]).splitlines()):
-        return {"job_id": job_id, "state": "done", "message": "job is in the completed list"}
-    return {"job_id": job_id, "state": "unknown", "message": "job not found in the queue or completed list"}
+        return {"job_id": job_id, "state": "done", "confirmed": True, "message": "job is in the completed list"}
+    return _uncertain(job_id, "not_found")
+
+
+def _cannot_cancel(status):
+    """cancel_job's answer for an uncertain job: nothing was cancelled, and that is said plainly."""
+    return status | {"message": "Could not cancel the job because it cannot be tracked. " + status["message"]}
 
 
 def cancel_job(job_id):
     """Cancel a job that has not printed yet. Return {"job_id", "state", "message"}.
 
-    A job that is already done stays done. An unknown job raises PrinterError.
+    A job that is already done stays done. An uncertain or untracked job cannot be cancelled: it
+    returns state uncertain (with confirmed false and reason) instead of raising. A fake job id that
+    was never issued raises PrinterError.
     """
+    if _is_untracked(job_id):
+        return _cannot_cancel(_uncertain(job_id, "untracked_submission"))
     if _fake():
         data = _fake_load()
         job = data["jobs"].get(job_id)
         if job is None:
             raise PrinterError(f"unknown job: {job_id}")
-        if _fake_job_state(job, job.get("problem") or _fake_problem()) == "done":
+        state = _fake_job_state(job, job.get("problem") or _fake_problem())
+        if state == "done":
             return {"job_id": job_id, "state": "done", "message": "job was already printed; nothing to cancel"}
+        if state == "uncertain":
+            return _cannot_cancel(_uncertain(job_id, "left_queue"))
         job["cancelled"] = True
         FAKE_JOBS_FILE.write_text(json.dumps(data, indent=2))
         return {"job_id": job_id, "state": "failed", "message": "cancelled"}
@@ -308,8 +377,8 @@ def cancel_job(job_id):
     status = job_status(job_id)
     if status["state"] == "done":
         return {"job_id": job_id, "state": "done", "message": "job was already printed; nothing to cancel"}
-    if status["state"] == "unknown":
-        raise PrinterError(f"unknown job: {job_id}")
+    if status["state"] == "uncertain":
+        return _cannot_cancel(status)
     if _windows():
         printer, _, number = job_id.rpartition("-")
         if not number.isdigit():
