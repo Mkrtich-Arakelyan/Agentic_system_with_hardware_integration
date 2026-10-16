@@ -9,7 +9,10 @@ import pytest
 
 from app.print_tuning.tuning_tools import create_tuning_tools
 from app.workflow import runner
-from app.workflow.tuning import load_tuning_session, record_scan_for_executor
+from app.workflow.tuning import (
+    begin_print_attempt, load_tuning_session, record_print_approval,
+    record_scan_for_executor, record_stop,
+)
 from tests.workflow import test_tuning_flow   # module import: its TestCase is not collected here again
 
 
@@ -222,6 +225,38 @@ def test_report_print_confirmation_returns_payload_choice_as_action(monkeypatch,
     assert runner.ask_human(payload) == {"action": choice}
 
 
+def test_report_workflow_recovery_and_exact_pdf_display(monkeypatch, capsys):
+    payload = {"kind": "report_workflow_problem", "message": "Executor did not request submit_print.",
+               "question": "Retry workflow or stop?", "choices": ["retry", "stop"]}
+    answers(monkeypatch, "yes", "retry")
+    assert runner.ask_human(payload) == {"action": "retry"}
+    assert "submit_print" in capsys.readouterr().out
+    answers(monkeypatch, "retry")
+    assert runner.ask_human({"kind": "print_approval", "pdf_path": "report.pdf", "printer": "ir2425",
+                             "pages": 1, "copies": 1, "pdf_sha256": "a" * 64}) == "retry"
+    out = capsys.readouterr().out
+    assert "a" * 64 in out and "ir2425" in out and "report.pdf" in out
+
+
+def test_resume_discards_approval_and_report_visit_state_without_changing_records(tmp_path):
+    state = {"dialogue": [], "execution_results": [], "report": {"sha256": "pdf"},
+             "approval": {"approved": True}, "pending_print": {"attempt_id": "pending"},
+             "report_request_passes": 2, "report_workflow_failure": "stalled",
+             "experiment_selection": {"selections": ["frozen"]}, "active_job_id": "existing-job"}
+    (tmp_path / "state.json").write_text(json.dumps(state))
+    (tmp_path / "config.json").write_text(json.dumps({"bench": {}, "request": "saved", "fake_printer": False,
+                                                    "printer_name": "ir2425"}))
+    # An intent with unknown outcome is kept byte-for-byte for graph reconciliation.
+    (tmp_path / "report_print.json").write_text('{"attempts": [{"result": null}]}')
+    before = {p.name: p.read_bytes() for p in tmp_path.iterdir()}
+    resumed, config = runner.load_resume(tmp_path, 10)
+    assert not any(k in resumed for k in ("approval", "pending_print", "report_request_passes", "report_workflow_failure"))
+    assert resumed["report"] == state["report"] and resumed["experiment_selection"] == state["experiment_selection"]
+    assert resumed["active_job_id"] == "existing-job"
+    assert config["printer_name"] == "ir2425" and config["fake_printer"] is False
+    assert {p.name: p.read_bytes() for p in tmp_path.iterdir()} == before
+
+
 def test_unknown_kinds_and_the_old_kinds(monkeypatch):
     answers(monkeypatch, "maybe", "b")
     assert runner.ask_human({"kind": "something_new", "question": "?", "choices": ["a", "b"]}) == {"action": "b"}
@@ -365,3 +400,126 @@ def test_resume_awaiting_review_reviews_once_without_reprinting(flow, tmp_path):
     assert len(flow.submissions) == 1
     session = load_tuning_session(flow.path)
     assert session["rounds"]["1"]["trial_result"]["trial_id"] == trial_id and session["active_round"] == 2
+
+
+def stopped_run(flow):
+    record_stop(flow.path, "Human stopped print tuning")
+    state = {**flow.state, "stop_reason": "stopped_by_human"}
+    (flow.root / "state.json").write_text(json.dumps(state), encoding="utf-8")
+    (flow.root / "config.json").write_text(json.dumps({"bench": {}, "request": "r"}), encoding="utf-8")
+    return load_tuning_session(flow.path)
+
+
+def test_ordinary_resume_respects_tuning_stop_and_describes_it_correctly(flow):
+    flow.path.write_bytes(flow.printable)
+    stopped_run(flow)
+    before = flow.path.read_bytes()
+    resumed, _ = runner.load_resume(flow.root, 10)
+    result = flow.build().invoke(resumed, flow.config)
+    assert result["stop_reason"] == "stopped_by_human"
+    assert flow.path.read_bytes() == before and flow.submissions == []
+    message = runner.human_stop_message(result, flow.root)
+    assert "Print tuning was stopped" in message and "budget check" not in message
+    assert "--resume-stopped-tuning" in message
+
+
+@pytest.mark.parametrize("phase", ["initial", "proposal", "trial", "evaluation"])
+def test_explicit_recovery_derives_progress_and_preserves_json_history(flow, phase):
+    if phase in ("trial", "evaluation"):
+        flow.path.write_bytes(flow.printable)
+    elif phase == "proposal":
+        flow.fixture.propose()
+    if phase == "evaluation":
+        record_scan_for_executor(flow.path, flow.read_scan(["phone.pdf"]), record_id="saved-evaluation")
+    before = stopped_run(flow)
+    originals = {p.relative_to(flow.root): p.read_bytes() for p in flow.root.rglob("*.json")
+                 if "recovery_backups" not in p.relative_to(flow.root).parts}
+    resumed, _ = runner.load_resume(flow.root, 10, resume_stopped_tuning=True)
+    recovered = load_tuning_session(flow.path)
+    expected = {"initial": "awaiting_gamma_proposal", "proposal": "ready_for_trial",
+                "trial": "awaiting_scan", "evaluation": "awaiting_review"}[phase]
+    assert recovered["status"] == "active" and recovered["phase"] == expected
+    audit = recovered["recoveries"][-1]
+    assert audit["source"] == "--resume-stopped-tuning" and audit["stop"] == before["outcomes"][-1]
+    backup = Path(audit["backup_path"])
+    assert all((backup / name).read_bytes() == content for name, content in originals.items())
+    for key in before.keys() - {"status", "phase", "revision", "updated_at"}:
+        assert recovered[key] == before[key]
+    if phase == "trial":
+        result = flow.build().invoke(resumed, flow.config)
+        assert flow.kind(result) == "trial_print_approval"
+        assert payload(result)["trial_id"] == before["active_trial_id"]
+        flow.tools[0].func.assert_not_called()  # The existing trial is reused.
+    assert flow.submissions == []
+
+
+@pytest.mark.parametrize("missing_outcome", [False, True])
+def test_recovery_never_duplicates_recorded_or_uncertain_submission(flow, missing_outcome):
+    if missing_outcome:
+        flow.path.write_bytes(flow.printable)
+        session = load_tuning_session(flow.path)
+        record_print_approval(flow.path, approval_id="approved", trial_id=session["active_trial_id"],
+            pdf_sha256=flow.trial["pdf_sha256"], printer="Offline", print_settings={"copies": 1}, approved_by="test")
+        begin_print_attempt(flow.path, approval_id="approved", attempt_id="intent-without-result")
+    else:
+        flow.printed()
+        assert flow.kind(flow.resume("reprint")) == "trial_print_approval"
+        assert flow.kind(flow.resume("approve")) == "tuning_scan"
+        assert load_tuning_session(flow.path)["rounds"]["1"]["retries"]["reprints"] == 1
+    before = stopped_run(flow)
+    submissions = len(flow.submissions)
+    resumed, _ = runner.load_resume(flow.root, 10, resume_stopped_tuning=True)
+    result = flow.build().invoke(resumed, flow.config)
+    assert flow.kind(result) == ("tuning_print_confirmation" if missing_outcome else "tuning_scan")
+    assert len(flow.submissions) == submissions
+    after = load_tuning_session(flow.path)
+    assert after["rounds"]["1"]["print_attempts"] == before["rounds"]["1"]["print_attempts"]
+    assert after["rounds"]["1"]["retries"] == before["rounds"]["1"]["retries"]
+
+
+def test_recovery_rejects_changed_trial_without_reopening_or_resetting_limits(flow):
+    flow.path.write_bytes(flow.printable)
+    stopped_run(flow)
+    before = flow.path.read_bytes()
+    pdf = Path(flow.trial["pdf_path"])
+    original = pdf.read_bytes()
+    try:
+        pdf.write_bytes(original + b"changed")
+        with pytest.raises(ValueError, match="hash"):
+            runner.load_resume(flow.root, 10, resume_stopped_tuning=True)
+        assert flow.path.read_bytes() == before
+    finally:
+        pdf.write_bytes(original)
+
+
+def test_explicit_recovery_rejects_non_stopped_sessions(flow):
+    (flow.root / "state.json").write_text(json.dumps(flow.state))
+    (flow.root / "config.json").write_text(json.dumps({"bench": {}, "request": "r"}))
+    before = flow.path.read_bytes()
+    with pytest.raises(ValueError, match="human-stopped"):
+        runner.load_resume(flow.root, 10, resume_stopped_tuning=True)
+    assert flow.path.read_bytes() == before
+
+
+@pytest.mark.parametrize("round_id", [2, 3])
+def test_recovery_keeps_later_round_winners_and_remaining_limits(flow, round_id):
+    flow.printed()
+    result = flow.resume("scan", scan_paths=["phone/round-1.pdf"])
+    if round_id == 3:
+        flow.resume("approve")
+        result = flow.resume("scan", scan_paths=["phone/round-2.pdf"])
+    assert payload(result)["round_id"] == round_id
+    before = stopped_run(flow)
+    resumed, _ = runner.load_resume(flow.root, 10, resume_stopped_tuning=True)
+    recovered = load_tuning_session(flow.path)
+    assert recovered["active_round"] == round_id and recovered["phase"] == "awaiting_scan"
+    assert recovered["accepted_settings"] == before["accepted_settings"]
+    assert recovered["rounds"] == before["rounds"] and recovered["retry_limits"] == before["retry_limits"]
+    submissions = len(flow.submissions)
+    result = flow.build().invoke(resumed, flow.config)
+    assert flow.kind(result) == "trial_print_approval" and len(flow.submissions) == submissions
+
+
+def test_budget_and_report_stops_have_distinct_messages(tmp_path):
+    assert "budget check" in runner.human_stop_message({}, tmp_path)
+    assert "Final-report printing" in runner.human_stop_message({"print_outcome": "stopped"}, tmp_path)

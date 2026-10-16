@@ -303,9 +303,103 @@ class ReportIntegrationTests(unittest.TestCase):
         self.start()
         self.reading = {"ok": True, "job_id": "Wrong-9", "state": "done", "confirmed": True}
         result = self.resume("yes")
-        self.assertEqual(self.kind(result), "printer_problem")
+        self.assertEqual(self.kind(result), "report_workflow_problem")
         self.assertEqual(reporting.print_state(reporting.load_record(self.root)), "pending")
         self.assertNotEqual(result.get("print_outcome"), "printed")
+
+    def ready_state(self):
+        self.start()
+        state = dict(self.graph.get_state(self.config).values)
+        state["execution_results"] = [*state["execution_results"], {
+            "tool_name": "printer_status", "tool_args": {"printer": "Offline"},
+            "result": {"ok": True, "printer": "Offline", "state": "idle"}}]
+        return state
+
+    def test_valid_report_idle_printer_requests_approval_without_conversational_yes(self):
+        state = self.ready_state()
+        original = (self.root / "report.pdf").read_bytes()
+        self.model.bind_tools.reset_mock()
+        self.build()
+        self.config["configurable"]["thread_id"] = uuid4().hex
+        result = self.graph.invoke({**state, "dialogue": [{"role": "human", "text": "retry"}]}, self.config)
+        self.assertEqual(self.kind(result), "print_approval")
+        call = self.model.bind_tools.call_args
+        self.assertEqual([t.name for t in call.args[0]], ["submit_print"])
+        self.assertEqual(call.kwargs, {"tool_choice": "submit_print", "parallel_tool_calls": False})
+        self.assertFalse(self.submitted)
+        self.assertEqual((self.root / "report.pdf").read_bytes(), original)
+        pending = result["pending_print"]
+        payload = result["__interrupt__"][0].value
+        self.assertEqual(payload["pdf_sha256"], pending["report_sha256"])
+        self.assertEqual(payload["printer"], pending["args"]["printer"])
+        self.assertEqual(self.kind(self.resume("retry")), "print_approval")
+        self.assertFalse(self.submitted)
+        self.assertFalse(reporting.load_record(self.root)["attempts"])
+
+    def test_noncompliant_status_loop_has_bounded_workflow_recovery(self):
+        state = self.ready_state()
+        calls = []
+        def status(printer: str) -> dict:
+            calls.append(printer)
+            return {"ok": True, "printer": printer, "state": "idle"}
+        self.printers.append(StructuredTool.from_function(status, name="printer_status", description="Offline status"))
+        self.requests = [("printer_status", {"printer": "Offline"})] * 12
+        self.build()
+        self.config["configurable"]["thread_id"] = uuid4().hex
+        result = self.graph.invoke(state, self.config)
+        self.assertEqual(self.kind(result), "report_workflow_problem")
+        self.assertEqual(result["report_request_passes"], 2)
+        self.assertFalse(calls)  # Reject disallowed calls even if the provider ignores tool_choice.
+        self.assertFalse(self.submitted)
+        self.assertIn("submit_print", result["__interrupt__"][0].value["message"])
+        self.requests = []
+        self.assertEqual(self.kind(self.resume({"action": "retry"})), "print_approval")
+        self.assertFalse(self.submitted)
+
+    def test_repeated_unready_status_reads_pause_as_workflow_failure(self):
+        state = self.ready_state()
+        state["execution_results"][-1]["result"]["state"] = "printing"
+        def busy(printer: str) -> dict:
+            return {"ok": True, "printer": printer, "state": "printing"}
+        self.printers.append(StructuredTool.from_function(busy, name="printer_status", description="Offline busy"))
+        self.requests = [("printer_status", {"printer": "Offline"})] * 10
+        self.build()
+        self.config["configurable"]["thread_id"] = uuid4().hex
+        result = self.graph.invoke(state, self.config)
+        self.assertEqual(self.kind(result), "report_workflow_problem")
+        self.assertLess(result["hardware_passes"], 12)
+        self.assertFalse(self.submitted)
+
+    def test_report_pass_exhaustion_is_not_a_printer_fault(self):
+        state = self.ready_state()
+        update = self.nodes["report_and_print"]({**state, "hardware_passes": 12})
+        self.assertEqual(update["route"], "report_workflow_problem")
+        self.assertNotIn("last_printer_reading", update)
+        self.assertIn("No hardware fault", update["report_workflow_failure"])
+        self.assertFalse(self.submitted)
+
+    def test_busy_to_idle_after_repeated_readings_advances_to_approval(self):
+        state = self.ready_state()
+        state["execution_results"][-1]["result"]["state"] = "printing"
+        state["execution_results"].append(deepcopy(state["execution_results"][-1]))
+        def idle(printer: str) -> dict:
+            return {"ok": True, "printer": printer, "state": "idle"}
+        self.printers.append(StructuredTool.from_function(idle, name="printer_status", description="Offline idle"))
+        self.requests = [("printer_status", {"printer": "Offline"})]
+        self.build()
+        self.config["configurable"]["thread_id"] = uuid4().hex
+        result = self.graph.invoke(state, self.config)
+        self.assertEqual(self.kind(result), "print_approval")
+        self.assertFalse(self.submitted)
+
+    def test_report_change_can_revise_before_request_phase(self):
+        state = self.ready_state()
+        self.requests = [("request_information", {"missing": "scientific review", "human_request": "change claim"})]
+        update = report_and_print({**state, "report_revision_pending": True}, self.model,
+                                  [self.code, *self.printers, self.information], self.root)
+        self.assertEqual(update["outcome"], "needs_information")
+        self.assertEqual(self.model.bind_tools.call_args.kwargs["tool_choice"], "any")
+        self.assertFalse(self.submitted)
 
     def test_executor_never_executes_submit_even_when_state_claims_approval(self):
         result = self.start()

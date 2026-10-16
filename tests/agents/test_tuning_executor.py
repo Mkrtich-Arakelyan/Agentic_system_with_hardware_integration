@@ -109,13 +109,41 @@ class TuningExecutorTests(unittest.TestCase):
         update, model = self.execute("printer_status", {"printer": "Office"}, printer="Office")
         self.assertEqual(update["outcome"], "tool_ran")
         for binding in model.bind_tools.call_args_list:
-            self.assertEqual({t.name for t in binding.args[0]}, TUNING_TOOLS)
-        self.assertEqual([c.kwargs["tool_choice"] for c in model.bind_tools.call_args_list], ["any", "none"])
+            self.assertEqual([t.name for t in binding.args[0]], ["printer_status"])
+        self.assertEqual([c.kwargs["tool_choice"] for c in model.bind_tools.call_args_list],
+                         [{"type": "function", "function": {"name": "printer_status"}}, "none"])
         for name in ("cancel_job", "submit_print", "write_and_run", "run_focusing_experiment", "shell"):
             model = self.model(call(name, {}))
             update = tuning_executor(model, self.tools, self.path, TuningTask("printer_status", printer="Office"))
             self.assertEqual(update["outcome"], "tool_failed")
             self.spies[name].assert_not_called()
+
+    def test_each_action_binds_only_requested_tool_and_rejects_mismatched_response(self):
+        self.recorded_job()
+        before = self.path.read_bytes()
+        tasks = (
+            TuningTask("make_trial_sheet"),
+            TuningTask("read_scan", scan_paths=("human.png",)),
+            TuningTask("printer_status", printer="Office"),
+            TuningTask("submit_trial_print", printer="Office"),
+            TuningTask("job_status", job_id="Office-1"),
+        )
+        self.assertEqual({task.action for task in tasks}, TUNING_TOOLS)
+        for task in tasks:
+            with self.subTest(action=task.action):
+                wrong_action = "make_trial_sheet" if task.action == "printer_status" else "printer_status"
+                model = self.model(call(wrong_action, {}))
+                update = tuning_executor(model, self.tools, self.path, task)
+                self.assertEqual([tool.name for tool in model.bind_tools.call_args.args[0]], [task.action])
+                self.assertEqual(model.bind_tools.call_args.kwargs["tool_choice"],
+                                 {"type": "function", "function": {"name": task.action}})
+                self.assertEqual(update["outcome"], "tool_failed")
+                self.assertEqual(update["error_code"], "request_invalid")
+                self.assertIn("differs from the workflow's single action", update["message"])
+                self.assertFalse(update["tool_executed"])
+                self.assertEqual(model.bind_tools.return_value.invoke.call_count, 1)
+                self.assertEqual(self.path.read_bytes(), before)
+        self.assertTrue(all(not spy.called for spy in self.spies.values()))
 
     def test_trial_creation_runs_once_and_uses_existing_recorder(self):
         self.path.write_bytes(self.ready)
@@ -189,6 +217,144 @@ class TuningExecutorTests(unittest.TestCase):
         self.spies["submit_trial_print"].assert_not_called()
         self.assertEqual(before, self.path.read_bytes())
         self.assertEqual(model.bind_tools.return_value.invoke.call_count, 1)
+
+    def test_responses_api_requires_named_function_and_handles_response_blocks_offline(self):
+        import httpx
+        from langchain_openai import ChatOpenAI
+
+        args = {"pdf_path": self.trial["pdf_path"], "printer": "Office"}
+        function = {"type": "function_call", "id": "fc-offline", "call_id": "call-offline",
+                    "name": "submit_trial_print", "arguments": json.dumps(args), "status": "completed"}
+        cases = (
+            ([function], "completed", None, "needs_trial_print_approval", "function_call"),
+            ([dict(function, arguments="{broken-json")], "completed", None, "tool_failed", "function_call"),
+            ([{"type": "message", "id": "msg-offline", "role": "assistant", "status": "completed",
+               "content": [{"type": "refusal", "refusal": "Unable to perform the requested action."}]}],
+             "completed", None, "no_tool", "refusal"),
+            ([{"type": "reasoning", "id": "rs-offline", "summary": []}],
+             "incomplete", {"reason": "max_messages"}, "tool_failed", "reasoning"),
+        )
+        before = self.path.read_bytes()
+        for output, status, incomplete, expected, block_type in cases:
+            with self.subTest(block_type=block_type, expected=expected):
+                payloads = []
+
+                def respond(request):
+                    payload = json.loads(request.content)
+                    payloads.append(payload)
+                    return httpx.Response(200, json={
+                        "id": "resp-offline", "object": "response", "created_at": 0,
+                        "status": status, "error": None, "incomplete_details": incomplete,
+                        "model": "gpt-6-luna", "output": output, "usage": None,
+                        "metadata": {}, "instructions": None, "parallel_tool_calls": True,
+                        "tool_choice": payload["tool_choice"], "tools": payload["tools"],
+                        "temperature": 1, "top_p": 1, "text": {"format": {"type": "text"}},
+                    })
+
+                with httpx.Client(transport=httpx.MockTransport(respond)) as client:
+                    model = ChatOpenAI(model="gpt-6-luna", api_key="offline-test-key", http_client=client,
+                                       use_responses_api=True, output_version="responses/v1", max_retries=0,
+                                       reasoning={"effort": "medium"}, include=["reasoning.encrypted_content"])
+                    with patch.object(mode, "_response_diagnostics", wraps=mode._response_diagnostics) as diagnose:
+                        update = tuning_executor(model, self.tools, self.path,
+                                                 TuningTask("submit_trial_print", printer="Office"))
+                self.assertEqual(len(payloads), 2 if incomplete else 1)
+                self.assertEqual(model.reasoning, {"effort": "medium"})
+                self.assertEqual(model.include, ["reasoning.encrypted_content"])
+                for payload in payloads:
+                    self.assertEqual([tool["name"] for tool in payload["tools"]], ["submit_trial_print"])
+                    self.assertEqual(payload["tool_choice"], {"type": "function", "name": "submit_trial_print"})
+                    self.assertEqual(payload["reasoning"], {"effort": "none"})
+                    self.assertEqual(payload["include"], [])
+                self.assertEqual(update["outcome"], expected)
+                self.assertFalse(update["tool_executed"])
+                if expected == "needs_trial_print_approval":
+                    self.assertEqual(update["pending_trial_print"]["pdf_sha256"], self.trial["pdf_sha256"])
+                    diagnose.assert_not_called()
+                else:
+                    actual = diagnose.call_args.args[0]
+                    self.assertEqual(actual.content[0]["type"], block_type)
+                    self.assertEqual(bool(actual.invalid_tool_calls), block_type == "function_call")
+                    self.assertEqual(update["model_response"]["content_blocks"][0]["type"], block_type)
+                    self.assertIn("Model response diagnostics", update["dialogue"][0]["text"])
+                    if incomplete:
+                        self.assertEqual(update["error_code"], "model_incomplete")
+                        self.assertEqual(update["model_response"]["incomplete_reason"], "max_messages")
+                        self.assertEqual(len(update["model_generation_history"]), 2)
+                self.assertEqual(self.path.read_bytes(), before)
+        self.assertTrue(all(not spy.called for spy in self.spies.values()))
+
+    def test_incomplete_generation_recovers_once_before_requesting_approval(self):
+        incomplete = AIMessage(content=[{"type": "reasoning", "encrypted_content": "PRIVATE_REASONING"}],
+            response_metadata={"status": "incomplete", "incomplete_details": {"reason": "max_messages"}})
+        request = AIMessage(content="", tool_calls=[call("submit_trial_print",
+            {"pdf_path": self.trial["pdf_path"], "printer": "Office"})])
+        model = self.model()
+        model.model_name = "gpt-6-luna"
+        model.bind_tools.return_value.invoke.side_effect = [incomplete, request]
+        before = self.path.read_bytes()
+        update = tuning_executor(model, self.tools, self.path, TuningTask("submit_trial_print", printer="Office"))
+        self.assertEqual(update["outcome"], "needs_trial_print_approval")
+        self.assertEqual(model.bind_tools.return_value.invoke.call_count, 2)
+        for binding in model.bind_tools.call_args_list:
+            self.assertEqual([tool.name for tool in binding.args[0]], ["submit_trial_print"])
+            self.assertEqual(binding.kwargs["reasoning"], {"effort": "none"})
+        retried_messages = model.bind_tools.return_value.invoke.call_args.args[0]
+        self.assertIn("requests approval only", retried_messages[-1].content)
+        self.assertNotIn("PRIVATE_REASONING", str(retried_messages))
+        self.assertEqual(self.path.read_bytes(), before)
+        self.assertTrue(all(not spy.called for spy in self.spies.values()))
+
+    def test_incomplete_partial_call_never_dispatches_or_retries(self):
+        request = AIMessage(content="", tool_calls=[call("printer_status", {"printer": "Office"})],
+                            response_metadata={"status": "incomplete"})
+        model = self.model(response=request)
+        update = tuning_executor(model, self.tools, self.path, TuningTask("printer_status", printer="Office"))
+        self.assertEqual(update["error_code"], "model_incomplete")
+        self.assertEqual(model.bind_tools.return_value.invoke.call_count, 1)
+        self.assertTrue(all(not spy.called for spy in self.spies.values()))
+
+    def test_reasoning_only_without_incomplete_status_is_bounded_generation_failure(self):
+        model = self.model()
+        model.bind_tools.return_value.invoke.side_effect = [
+            AIMessage(content=[{"type": "reasoning", "encrypted_content": "PRIVATE_REASONING"}])
+            for _ in range(2)]
+        update = tuning_executor(model, self.tools, self.path, TuningTask("printer_status", printer="Office"))
+        self.assertEqual(update["error_code"], "model_generation_failed")
+        self.assertEqual(model.bind_tools.return_value.invoke.call_count, 2)
+        self.assertNotIn("PRIVATE_REASONING", json.dumps(update))
+        self.assertTrue(all(not spy.called for spy in self.spies.values()))
+
+    def test_action_reasoning_options_do_not_assume_unknown_models_support_them(self):
+        for name, expected in (("gpt-6-luna", "none"), ("gpt-5-nano", "low"),
+                               ("gpt-6-astra", "low"), ("unknown-injected-model", None)):
+            with self.subTest(model=name):
+                model = self.model()
+                model.model_name = name
+                model.reasoning = {"effort": "medium"}
+                options = mode._action_model_options(model)
+                self.assertEqual(options.get("reasoning"), {"effort": expected} if expected else None)
+                self.assertEqual(model.reasoning, {"effort": "medium"})
+
+    def test_unparsed_content_is_diagnostic_only_and_never_a_print_fallback(self):
+        response = AIMessage(content=[{"type": "function_call", "name": "submit_trial_print",
+            "call_id": "not-parsed", "arguments": "PRIVATE_ARGUMENT_PAYLOAD"},
+            {"type": "image_url", "image_url": {"url": "data:image/png;base64,PRIVATE_IMAGE_PAYLOAD"}}])
+        model = self.model(response=response)
+        update = tuning_executor(model, self.tools, self.path, TuningTask("submit_trial_print", printer="Office"))
+        self.assertEqual(update["outcome"], "no_tool")
+        self.assertNotIn("pending_trial_print", update)
+        self.assertNotIn("PRIVATE_", json.dumps(update))
+        self.assertTrue(all(not spy.called for spy in self.spies.values()))
+
+    def test_invalid_call_alongside_valid_call_cannot_dispatch(self):
+        response = AIMessage(content="", tool_calls=[call("printer_status", {"printer": "Office"})],
+            invalid_tool_calls=[{"type": "invalid_tool_call", "name": "printer_status", "args": "{",
+                                 "id": "bad-call", "error": "Invalid JSON"}])
+        update = tuning_executor(self.model(response=response), self.tools, self.path,
+                                 TuningTask("printer_status", printer="Office"))
+        self.assertEqual(update["error_code"], "arguments_invalid")
+        self.spies["printer_status"].assert_not_called()
 
     def test_missing_or_changed_artifacts_cannot_be_approved(self):
         for field in ("pdf_path", "manifest_path"):

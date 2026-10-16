@@ -120,6 +120,20 @@ def test_rescan_keeps_the_first_evaluation(run, tmp_path):
     assert not set(map(str, _evaluation_files(second))) & set(map(str, files))
 
 
+def test_bilevel_scan_preserves_pixels_and_reports_tonal_evidence_limit(run, tmp_path):
+    scans = fake_scan(run["trial"]["pdf_path"], tmp_path / "bilevel")
+    for path in scans:
+        with Image.open(path) as source:
+            binary = source.convert("1")
+        binary.save(path, dpi=(300, 300))
+    before = _hashes(scans)
+    result = run["read_scan"].invoke({"scan_paths": scans})
+    assert result["status"] == "ok", result
+    assert all(any("bilevel (1-bit)" in issue for issue in page["issues"]) for page in result["pages"])
+    assert all("bilevel_scan_indices" in file for file in result["scan_files"])
+    assert _hashes(scans) == before
+
+
 def test_fake_scan_refuses_overwrite_and_bad_arguments(run, tmp_path):
     pdf = run["trial"]["pdf_path"]
     fake_scan(pdf, tmp_path)

@@ -15,6 +15,7 @@ from app.agents.common import _messages, _summarize
 # Counts report_and_print passes since the last human answer;
 # app/workflow/graph.py resets the counter to 0 after every human answer.
 MAX_HARDWARE_PASSES = 12
+MAX_SUBMISSION_REQUEST_PASSES = 2
 
 
 # Legacy state labels retained for existing public exports. The graph, never
@@ -74,7 +75,59 @@ ratio, fully inside the one A4 portrait page, at least 25% of page width and
 height. The application checks the actual embedded pixels before approval.
 Scientific findings and selection reasons come from the scientific evidence;
 gamma/endpoints/steps are presentation and print adjustments, not new findings.
+
+Layout: create a polished scientific brief suitable for grayscale printing.
+Use a white background, black text and restrained gray accents, with approximately
+12-15 mm margins. Use Times New Roman or an available equivalent serif font
+consistently. Aim for a 17-20 pt title, 11-12 pt headings, 10-11 pt body and table
+text, and readable captions. Shorten wording instead of shrinking text to fit.
+Use whitespace and thin dividing rules; avoid heavy boxes, large shaded areas,
+decorative graphics, excessive bold and long paragraphs.
+
+Arrange the page in this reading order:
+1. A compact title and a one-sentence research question.
+2. Two or three short sentences stating the main scientific finding.
+3. The supplied final tuned heatmap figure as the dominant visual, with a short
+   caption identifying Initial/Final panels and the experiment labels.
+4. A compact four-row comparison table immediately below the figure. Match its
+   experiment labels and frozen order exactly. Include the varied parameter and
+   final enhancement; include computational cost only where actually recorded,
+   naming its measure and units (for example iterations or camera shots). Mark
+   unavailable entries as not recorded rather than estimating them.
+5. A concise verdict stating the trade-off, relevant comparison limitations and
+   the recommended next experiment. Briefly define enhancement using the existing
+   recorded metric, and use appropriate units and sensible numeric precision.
+
+Budget the page around the supplied image's actual dimensions and aspect ratio:
+the current four-experiment figure is approximately 180 x 200 mm before placement
+and already contains small raster labels. Keep the prose near 100-140 words where
+feasible, excluding the table, rather than adding lengthy sections. Combine the
+existing fairness, performance-versus-cost and explanation requirements into the
+finding and verdict. Measure text/table bounds and reserve their space before
+placing the largest figure that fits legibly. Maintain its aspect ratio and keep
+all content within the margins, without overlaps or clipping. Do not use
+bbox_inches='tight' to change the A4 page size. Check readability at actual print
+size; do not satisfy the minimum figure-size check by making labels unreadable.
+Embed the original PNG directly and unchanged: no cropping, recoloring,
+resampling, redrawing or replacement, including removal of its internal whitespace.
+If its existing labels limit readability, state the limitation rather than alter
+the image or scientific content. These layout targets do not relax PDF validation.
+
+Use only recorded results. Do not invent runtime, uncertainty estimates or
+conclusions. Explain briefly that grayscale tuning changes presentation, not the
+underlying scientific measurements. If reliable provenance explicitly supplied
+by the workflow identifies synthetic scans, label the run as a simulation and do
+not claim physical printer quality was validated. Do not infer scan provenance
+from filenames or fake-printer mode. Without reliable evidence, make no claim
+that the print quality has been physically validated.
+
 submit_print is always an approval REQUEST here, never an immediate submission.
+Emitting its tool call REQUESTS the application's exact-PDF approval interrupt.
+Do not wait for conversational approval before calling it. Once the report is
+valid and the printer is ready, request submit_print immediately. The application
+blocks physical submission until the human explicitly approves that interrupt.
+Neither human "retry" nor executor prose is approval. Reuse a valid report;
+do not rebuild it merely to request approval or recover from a workflow limit.
 An uncertain/untracked job, unconfirmed reading, or submission exception needs
 human resolution. Never resubmit an uncertain print or claim it printed.
 """
@@ -158,6 +211,28 @@ def _latest_job_state(state: dict, job_id: str | None) -> str | None:
     return None
 
 
+def submission_request_ready(state: dict) -> bool:
+    """Use validated artifact and structured readings, never dialogue as approval."""
+    report = state.get("report") or {}
+    if (state.get("active_job_id") or state.get("report_revision_pending")
+            or not report.get("exists") or report.get("pages") != 1
+            or not report.get("figure_embedded") or report.get("error")):
+        return False
+    for record in reversed(state.get("execution_results", [])):
+        name = record.get("tool_name")
+        if name in ("write_and_run", "submit_print"):
+            return False  # Check readiness again after changing a PDF or submitting.
+        if name == "printer_status":
+            result = record.get("result") or {}
+            printer = (record.get("tool_args") or {}).get("printer")
+            return (result.get("ok") is True and result.get("state") == "idle"
+                    and bool(printer) and result.get("printer", printer) == printer
+                    and (not state.get("tuning_printer") or printer == state["tuning_printer"])
+                    and not any(result.get(k) and str(result[k]).lower() != "none"
+                                for k in ("problem", "problems", "alerts")))
+    return False
+
+
 def report_and_print(
     state: dict, llm: BaseChatModel, tools: list[BaseTool], run_dir: str | Path
 ) -> dict:
@@ -172,12 +247,19 @@ def report_and_print(
         "active_job_id": state.get("active_job_id"),
         "final_figure_path": state.get("final_figure_path"),
         "final_figure_metadata": state.get("final_figure_metadata"),
+        "phase": "request_submission" if submission_request_ready(state) else "prepare_or_track",
+        "report_revision_pending": state.get("report_revision_pending", False),
     }
     messages = _messages(
         state, REPORT_AND_PRINT_PROMPT,
         extra="Report-and-print context:\n" + json.dumps(context, ensure_ascii=False),
     )
-    request = llm.bind_tools(tools, tool_choice="any").invoke(messages)
+    requesting = submission_request_ready(state)
+    available = [tool_map["submit_print"]] if requesting else tools
+    # ChatOpenAI accepts a tool name and translates it for the Responses API.
+    # The model still supplies the action and arguments; we never fabricate a call.
+    options = {"tool_choice": "submit_print", "parallel_tool_calls": False} if requesting else {"tool_choice": "any"}
+    request = llm.bind_tools(available, **options).invoke(messages)
     if len(request.tool_calls) != 1:
         return {"outcome": "no_tool", "dialogue": [{
             "role": "executor",
@@ -186,6 +268,10 @@ def report_and_print(
 
     call = request.tool_calls[0]
     name, args = call["name"], dict(call["args"])
+    if requesting and name != "submit_print":
+        return {"outcome": "no_tool", "dialogue": [{"role": "system", "text":
+            "Submission-request phase stalled: emit submit_print to open human approval. "
+            "No printer call ran; conversational approval is not required to request the interrupt."}]}
     if name not in tool_map:
         return {"outcome": "no_tool", "dialogue": [{
             "role": "executor", "text": f"No tool ran: the tool {name!r} is unavailable."

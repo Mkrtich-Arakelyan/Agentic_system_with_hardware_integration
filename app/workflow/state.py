@@ -18,6 +18,9 @@ class State(TypedDict, total=False):
     print_outcome: str
     active_job_id: str | None
     hardware_passes: int
+    report_request_passes: int
+    report_workflow_failure: str
+    report_revision_pending: bool
     budget_summary: str
     last_printer_reading: dict
     scientist_response: dict

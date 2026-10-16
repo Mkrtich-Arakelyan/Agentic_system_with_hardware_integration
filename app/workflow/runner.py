@@ -6,8 +6,10 @@ import importlib.util
 import json
 import os
 from pathlib import Path
+import shutil
 import sys
 import traceback
+from uuid import uuid4
 
 BASE_DIR = Path(__file__).resolve().parents[2]
 REQUIRED_DEPENDENCIES = {
@@ -46,6 +48,7 @@ DEFAULT_PAPER_WORDS = {"white", "plain white", "default"}
 RESUME_DROPPED_KEYS = (
     "pending_print", "pending_trial_print", "route", "hardware_passes", "last_printer_reading",
     "tuning_action", "tuning_failure", "tuning_failures", "tuning_polls",
+    "report_request_passes", "report_workflow_failure", "approval", "trial_approval",
 )
 SCAN_ROUNDS = (1, 2, 3)
 DEFAULT_SCAN_FORMATS = ("pdf", "png", "jpg", "jpeg")
@@ -79,7 +82,20 @@ def write_experiments_table(state: dict, run_dir: Path) -> None:
     (run_dir / "experiments_table.md").write_text("\n".join(rows) + "\n", encoding="utf-8")
 
 
-def load_resume(run_dir: Path, initial_decisions: int) -> tuple[dict, dict]:
+def backup_run_json(run_dir: Path) -> Path:
+    """Copy every existing JSON record before explicit recovery; never overwrite backups."""
+    root = run_dir.resolve()
+    records = [p for p in root.rglob("*.json") if "recovery_backups" not in p.relative_to(root).parts]
+    backup = root / "recovery_backups" / (datetime.now().strftime("%Y%m%d_%H%M%S") + "_" + uuid4().hex[:8])
+    backup.mkdir(parents=True, exist_ok=False)
+    for record in records:
+        destination = backup / record.relative_to(root)
+        destination.parent.mkdir(parents=True, exist_ok=True)
+        shutil.copy2(record, destination)
+    return backup
+
+
+def load_resume(run_dir: Path, initial_decisions: int, *, resume_stopped_tuning: bool = False) -> tuple[dict, dict]:
     """Restore a saved run and discard an orchestrator action that never completed."""
     state = json.loads((run_dir / "state.json").read_text(encoding="utf-8"))
     config = json.loads((run_dir / "config.json").read_text(encoding="utf-8"))
@@ -89,6 +105,17 @@ def load_resume(run_dir: Path, initial_decisions: int) -> tuple[dict, dict]:
         state.get("execution_results"), list
     ):
         raise ValueError("Saved state needs dialogue and execution_results lists.")
+    if resume_stopped_tuning:
+        from app.workflow.tuning import load_tuning_session, recover_stopped_tuning
+        session_path = (run_dir / "tuning_session.json").resolve()
+        if Path(state.get("tuning_session_path", session_path)).resolve() != session_path:
+            raise ValueError("Saved tuning session must belong to the resumed run")
+        session = load_tuning_session(session_path)
+        if state.get("experiment_selection") != session["accepted_selection"]:
+            raise ValueError("Saved scientific selection differs from the tuning session")
+        backup = backup_run_json(run_dir)
+        recover_stopped_tuning(session_path, backup_path=backup)
+        state["tuning_session_path"] = str(session_path)
     # Failure and budget notices can follow the last unexecuted decision.
     for index in range(len(state["dialogue"]) - 1, -1, -1):
         turn = state["dialogue"][index]
@@ -107,6 +134,22 @@ def load_resume(run_dir: Path, initial_decisions: int) -> tuple[dict, dict]:
     state.setdefault("decision_budget", state.get("decision_count", 0) + initial_decisions)
     state["stop_reason"] = "running"
     return state, config
+
+
+def human_stop_message(state: dict, run_dir: Path) -> str:
+    """Distinguish the authoritative tuning stop from budget/report stops."""
+    session_path = state.get("tuning_session_path")
+    if session_path:
+        from app.workflow.tuning import load_tuning_session
+        session = load_tuning_session(session_path)
+        if session["status"] == "stopped":
+            return ("Print tuning was stopped by the human. Ordinary --resume keeps it stopped. "
+                    "To explicitly reopen it: python main.py --resume "
+                    f'"{run_dir}" --resume-stopped-tuning')
+    if state.get("print_outcome") == "stopped":
+        return "Final-report printing was stopped by the human; no printed completion is claimed."
+    return ("Stopped by the human at a budget check. Continue with: "
+            f'python main.py --resume "{run_dir}"')
 
 
 def save_run(state: dict, run_dir: Path) -> None:
@@ -334,7 +377,7 @@ def ask_human(payload: dict, default_printer: str | None = None) -> str | dict:
     if kind == "print_approval":
         print(f"Report: {payload.get('pdf_path')}\nPages: {payload.get('pages')}\n"
               f"Printer: {payload.get('printer') or 'the default printer'}\n"
-              f"Copies: {payload.get('copies')}")
+              f"Copies: {payload.get('copies')}\nPDF sha256: {payload.get('pdf_sha256')}")
         allowed = None
     elif kind == "printer_problem":
         print("Printer reading:\n" + json.dumps(payload.get("reading"), indent=2, ensure_ascii=False))
@@ -368,6 +411,8 @@ def main() -> int:
     parser.add_argument("--model", help="Override the configured model.")
     parser.add_argument("--request", help="Override the autonomous request for a new run.")
     parser.add_argument("--resume", type=Path, metavar="RUN_DIR", help="Continue a saved run in the same folder.")
+    parser.add_argument("--resume-stopped-tuning", action="store_true",
+                        help="With --resume, back up JSON records and explicitly reopen human-stopped tuning.")
     parser.add_argument("--initial-decisions", type=positive_int, metavar="N",
                         help="Orchestrator decisions before the first check-in (default 10).")
     parser.add_argument("--extra-decisions", type=positive_int, metavar="N",
@@ -382,6 +427,8 @@ def main() -> int:
                         help='Paper color to print on, e.g. "light yellow" (default: plain white; '
                              "asked at the start of a new run if not given).")
     args = parser.parse_args()
+    if args.resume_stopped_tuning and not args.resume:
+        parser.error("--resume-stopped-tuning requires --resume RUN_DIR.")
     if args.resume and args.request is not None:
         parser.error("--request cannot change the request of a resumed run.")
     if args.resume and args.paper_color is not None:
@@ -430,7 +477,8 @@ def main() -> int:
     if args.resume:
         run_dir = args.resume.resolve()
         try:
-            state, saved_config = load_resume(run_dir, initial_decisions)
+            state, saved_config = load_resume(run_dir, initial_decisions,
+                                              resume_stopped_tuning=args.resume_stopped_tuning)
         except (OSError, ValueError, KeyError, TypeError) as error:
             parser.error(f"Cannot resume {run_dir}: {error}")
         args.request = saved_config["request"]
@@ -651,8 +699,7 @@ def main() -> int:
         print(f"Report: {(state.get('report') or {}).get('path', run_dir / 'report.pdf')}")
         print(f"Print outcome: {state.get('print_outcome')}")
     elif state["stop_reason"] == "stopped_by_human":
-        print("Stopped by the human at a budget check. Continue with: "
-              f"python main.py --resume {run_dir}")
+        print(human_stop_message(state, run_dir))
     else:
         print("The workflow ended without an evidence-backed finish.")
 

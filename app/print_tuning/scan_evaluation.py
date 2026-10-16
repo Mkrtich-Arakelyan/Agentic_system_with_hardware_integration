@@ -18,6 +18,13 @@ whether a new scan would help.
 
 Command line:
     python -m app.print_tuning.scan_evaluation SCAN_FILE [MORE_PAGES ...] MANIFEST [--out DIR]
+
+Offline diagnostic overlays (no session writes):
+    diagnose_scan_alignment(scan_paths, manifest_path, diagnostic_directory)
+
+Detection tolerates halftone/bilevel markers using local contrast and square
+geometry. Bilevel source pages are explicitly flagged in scan-quality issues:
+successful alignment cannot recover tone information discarded by a scanner.
 """
 import argparse
 import hashlib
@@ -30,7 +37,7 @@ from pathlib import Path, PureWindowsPath
 
 import numpy as np
 import pymupdf
-from PIL import Image, ImageOps
+from PIL import Image, ImageDraw, ImageFont, ImageOps
 
 SCHEMA_VERSION = "scan_eval/2"
 CONTRACT_VERSION = 1
@@ -42,6 +49,8 @@ MAX_FIT_ERROR_MM = 1.0
 DARK = 0.5                         # a pixel below this gray counts as ink
 CORNER_SEARCH_MM = 45              # markers are searched this far from each image corner
 COARSE_PX_PER_MM = 2               # resolution of the first, rough marker search
+MIN_MARKER_CONTRAST = 0.15         # marker versus its local paper moat, not absolute black
+MARKER_SCALE_RANGE = (0.65, 1.35)  # apparent marker side / printed side, allowing skew and scaling
 NEAR_PAPER, NEAR_BLACK = 0.04, 0.04  # a cell this close to the measured paper / black counts as such
 SAME_GRAY = 0.02                   # printed grays closer than this count as one level
 LEVEL_BINS = 16                    # intended grays are grouped into this many levels
@@ -69,7 +78,7 @@ MEASUREMENT_DOCS = {
     "page_code_read": {"units": "6 bits (0 or 1)", "meaning": "page code squares read from the scan (1 = filled)"},
     "page_code_expected": {"units": "6 bits (0 or 1)", "meaning": "page code the manifest gives this page"},
     "dpi": {"units": "dots per inch", "meaning": "resolution of the scanned page"},
-    "orientation": {"units": "degrees", "meaning": "how far the page was turned in the scan (0 or 180)"},
+    "orientation": {"units": "degrees", "meaning": "clockwise quarter-turn of the page in the scan (0, 90, 180, 270)"},
     "fit_error_mm": {"units": "mm", "meaning": "largest miss between a found corner marker and where the "
                                                "other three markers put it"},
     "paper.gray": {"units": "gray (0 black to 1 white)", "meaning": "mean gray of the blank paper areas"},
@@ -162,12 +171,10 @@ def _pdf_page_dpi(page) -> float:
 
 
 def _estimate_dpi(gray: np.ndarray) -> float:
-    """dpi from the image size, assuming it shows one A4 page in portrait."""
+    """dpi from the short/long image sides; quarter-turns are resolved by page code."""
     height, width = gray.shape
-    if width > height:
-        raise ScanError("scan_unreadable",
-                        f"a scanned page is landscape ({width} x {height} px); scan the sheet in portrait")
-    return min(width / (PAGE_W / MM_PER_INCH), height / (PAGE_H / MM_PER_INCH))
+    short, long = sorted((height, width))
+    return min(short / (PAGE_W / MM_PER_INCH), long / (PAGE_H / MM_PER_INCH))
 
 
 def _gray_and_rgb(image: Image.Image) -> tuple[np.ndarray, np.ndarray]:
@@ -193,6 +200,9 @@ def _read_scan(scan_path, accepted: list[str]) -> tuple[list[tuple[np.ndarray, n
             if suffix == "pdf":
                 with pymupdf.open(path) as document:
                     for page in document:
+                        if any(info.get("bpc") == 1 and pymupdf.Rect(info["bbox"]).get_area() > .5 * page.rect.get_area()
+                               for info in page.get_image_info()):
+                            files[-1].setdefault("bilevel_scan_indices", []).append(len(pages))
                         pixmap = page.get_pixmap(dpi=PDF_DPI, colorspace=pymupdf.csRGB, alpha=False)
                         image = Image.frombytes("RGB", (pixmap.width, pixmap.height), pixmap.samples,
                                                 "raw", "RGB", pixmap.stride)
@@ -200,6 +210,8 @@ def _read_scan(scan_path, accepted: list[str]) -> tuple[list[tuple[np.ndarray, n
                         pages.append((gray, rgb, min(_pdf_page_dpi(page), _estimate_dpi(gray))))
             else:
                 with Image.open(path) as image:
+                    if image.mode == "1":
+                        files[-1].setdefault("bilevel_scan_indices", []).append(len(pages))
                     gray, rgb = _gray_and_rgb(ImageOps.exif_transpose(image))
                 pages.append((gray, rgb, _estimate_dpi(gray)))
         except ScanError:
@@ -220,12 +232,15 @@ def _box_sum(values: np.ndarray, half: int) -> np.ndarray:
         :values.shape[0], :values.shape[1]]
 
 
-def _find_marker(gray: np.ndarray, corner: str, px_per_mm: float) -> tuple[float, float]:
-    """Centre (x, y) in pixels of the solid 8 mm corner marker nearest this image corner.
+def _marker_candidates(gray: np.ndarray, corner: str, px_per_mm: float, side_mm: float = 8.0) -> list[dict]:
+    """Find isolated filled squares from image evidence in a corner search area.
 
-    A rough search on a 2 px/mm copy scores each spot by how dark a 6 mm square around it is,
-    minus how dark the ring just outside the marker is: only a solid square on white paper
-    scores high, not a dark plot. The centre is then the centroid of the ink around that spot.
+    Area averaging is for geometry detection only: it joins scanner halftone dots
+    without changing measured pixels. Connected components must have the expected
+    size, square aspect, filled interior, unclipped boundary and a light paper moat.
+    The final centre is the ink-weighted centroid of the original pixels. Absolute
+    marker gray is deliberately not required to be near black: real bilevel scans
+    can render a printed black marker as a 50% dotted square.
     """
     height, width = gray.shape
     size = int(CORNER_SEARCH_MM * px_per_mm)
@@ -235,38 +250,77 @@ def _find_marker(gray: np.ndarray, corner: str, px_per_mm: float) -> tuple[float
 
     step = max(1, int(round(px_per_mm / COARSE_PX_PER_MM)))
     rows, cols = region.shape[0] // step, region.shape[1] // step
-    dark = 1 - region[:rows * step, :cols * step].reshape(rows, step, cols, step).mean(axis=(1, 3))
-    mm = px_per_mm / step                                      # coarse pixels per mm
-    inner_h, ring_in, ring_out = (max(1, int(round(r * mm))) for r in (3.0, 5.0, 6.5))
-    inner = _box_sum(dark, inner_h) / (2 * inner_h + 1) ** 2
-    ring = (_box_sum(dark, ring_out) - _box_sum(dark, ring_in)) / ((2 * ring_out + 1) ** 2 - (2 * ring_in + 1) ** 2)
-    score = inner - ring
-    if score.max() < 0.5:
-        raise ScanError("markers_not_found", f"no corner marker found near the {corner.replace('_', ' ')} corner of the scan")
-    # the best score is a plateau about 1 mm wide (the 6 mm square fits anywhere inside the
-    # 8 mm marker): take its middle, not an arbitrary point of it
-    plateau_y, plateau_x = np.nonzero(score >= score.max() - 0.05)
-    x, y = x0 + (plateau_x.mean() + 0.5) * step, y0 + (plateau_y.mean() + 0.5) * step
+    if not rows or not cols:
+        return []
+    coarse = region[:rows * step, :cols * step].reshape(rows, step, cols, step).mean(axis=(1, 3))
+    paper = float(np.quantile(coarse, .85))
+    contrast = paper - float(np.quantile(coarse, .02))
+    mask = paper - coarse > max(.08, .35 * contrast)
+    seen = np.zeros_like(mask)
+    candidates = []
+    for sy, sx in zip(*np.nonzero(mask)):
+        if seen[sy, sx]:
+            continue
+        stack = [(int(sy), int(sx))]
+        seen[sy, sx] = True
+        yy, xx = [], []
+        while stack:
+            y, x = stack.pop()
+            yy.append(y)
+            xx.append(x)
+            for ny, nx in ((y - 1, x), (y + 1, x), (y, x - 1), (y, x + 1)):
+                if 0 <= ny < rows and 0 <= nx < cols and mask[ny, nx] and not seen[ny, nx]:
+                    seen[ny, nx] = True
+                    stack.append((ny, nx))
+        if len(xx) < 4:  # isolated detection-grid specks cannot be an 8 mm marker
+            continue
+        left, right, top, bottom = min(xx), max(xx) + 1, min(yy), max(yy) + 1
+        w, h = (right - left) * step / px_per_mm, (bottom - top) * step / px_per_mm
+        fill = len(xx) / ((right - left) * (bottom - top))
+        reason = "accepted square"
+        if not all(side_mm * MARKER_SCALE_RANGE[0] <= v <= side_mm * MARKER_SCALE_RANGE[1] for v in (w, h)):
+            reason = "rejected: size differs from marker"
+        elif not .75 <= w / h <= 1.33:
+            reason = "rejected: not square"
+        elif fill < .8:
+            reason = "rejected: interior is not filled"
+        elif left == 0 or top == 0 or right == cols or bottom == rows:
+            reason = "rejected: boundary clipped"
+        pad = max(1, round(px_per_mm / step))
+        outer = coarse[max(0, top - pad):min(rows, bottom + pad), max(0, left - pad):min(cols, right + pad)]
+        border = np.ones((bottom - top + 2 * pad, right - left + 2 * pad), bool)
+        border[pad:-pad, pad:-pad] = False
+        ring = float(np.median(outer[border])) if outer.shape == border.shape else paper
+        ink_contrast = ring - float(coarse[top:bottom, left:right].mean())
+        if reason == "accepted square" and ink_contrast < MIN_MARKER_CONTRAST:
+            reason = "rejected: insufficient contrast with paper moat"
+        px, py = x0 + left * step, y0 + top * step
+        window = gray[py:y0 + bottom * step, px:x0 + right * step]
+        weights = np.maximum(ring - window, 0)
+        iy, ix = np.indices(window.shape)
+        total = float(weights.sum())
+        cx = px + float(((ix + .5) * weights).sum() / total) if total else px + window.shape[1] / 2
+        cy = py + float(((iy + .5) * weights).sum() / total) if total else py + window.shape[0] / 2
+        distance = float(np.hypot(cx if corner.endswith("left") else width - cx,
+                                  cy if corner.startswith("top") else height - cy))
+        candidates.append({"box_px": [px, py, window.shape[1], window.shape[0]], "centre_px": [cx, cy],
+                           "width_mm": w, "height_mm": h, "fill": fill, "contrast": ink_contrast,
+                           "reason": reason, "distance_px": distance})
+    return sorted(candidates, key=lambda candidate: candidate["distance_px"])
 
-    # refine at full resolution: centroid of the ink within the marker's reach, re-centred until it
-    # settles, so the window holds the whole marker and none of its neighbours (5.4 mm away and more)
-    reach = 5.2 * px_per_mm
-    for _ in range(4):
-        ys, xs = slice(max(0, int(y - reach)), int(y + reach)), slice(max(0, int(x - reach)), int(x + reach))
-        window = gray[ys, xs]
-        ink_y, ink_x = np.nonzero(window < DARK)
-        if len(ink_x) < 0.5 * (8 * px_per_mm) ** 2:
-            raise ScanError("markers_not_found",
-                            f"the marker near the {corner.replace('_', ' ')} corner is too small or too faint")
-        x, y = xs.start + ink_x.mean() + 0.5, ys.start + ink_y.mean() + 0.5
-    # a marker cut off by the edge of the scan has a shifted centre: refuse it
-    if (xs.start == 0 and ink_x.min() == 0) or (ys.start == 0 and ink_y.min() == 0) or \
-            (xs.start + window.shape[1] == width and ink_x.max() == window.shape[1] - 1) or \
-            (ys.start + window.shape[0] == height and ink_y.max() == window.shape[0] - 1):
-        raise ScanError("markers_not_found",
-                        f"the marker near the {corner.replace('_', ' ')} corner is cut off by the edge of the "
-                        "scan; place the sheet fully on the scanner glass")
-    return x, y
+
+def _find_marker(gray: np.ndarray, corner: str, px_per_mm: float, side_mm: float = 8.0,
+                 diagnostics: list | None = None) -> tuple[float, float]:
+    candidates = _marker_candidates(gray, corner, px_per_mm, side_mm)
+    accepted = [c for c in candidates if c["reason"] == "accepted square"]
+    if diagnostics is not None:
+        diagnostics.extend(candidates)
+    if not accepted:
+        raise ScanError("markers_not_found", f"no isolated, filled corner marker found near the {corner.replace('_', ' ')} corner")
+    if len(accepted) > 1 and accepted[1]["distance_px"] - accepted[0]["distance_px"] < 2 * px_per_mm:
+        raise ScanError("markers_not_found", f"ambiguous square markers near the {corner.replace('_', ' ')} corner")
+    accepted[0]["selected"] = True
+    return tuple(accepted[0]["centre_px"])
 
 
 def _homography(source: np.ndarray, target: np.ndarray) -> np.ndarray:
@@ -340,18 +394,28 @@ def _read_page_code(page: np.ndarray, page_code_regions: list[dict]) -> list[int
     return [int(_region(page, square["box"], 0.7).mean() < DARK) for square in page_code_regions]
 
 
-def _align_page(gray: np.ndarray, rgb: np.ndarray, dpi: float, manifest_pages: list[dict], index: int) -> dict:
-    """Line up one scanned page; try it upside down if its page code matches no manifest page.
+def _align_page(gray: np.ndarray, rgb: np.ndarray, dpi: float, manifest_pages: list[dict], index: int,
+                diagnostics: dict | None = None) -> dict:
+    """Line up one scanned page; resolve quarter-turn orientation from its page code.
 
     The page code holds only the page number and the round, not the trial id: a scan of
     another trial sheet of the same round would also match. Keep scans with their manifest.
     """
     px_per_mm = dpi / MM_PER_INCH
-    found = {corner: _find_marker(gray, corner, px_per_mm) for corner in IMAGE_CORNERS}
     regions = manifest_pages[0]["regions"]                       # markers and code squares sit alike on every page
     marker_mm = {marker["corner"]: _centre(marker["box"]) for marker in regions["markers"]}
+    side_mm = float(np.mean([marker["box"][2] for marker in regions["markers"]]))
+    found = {}
+    for corner in IMAGE_CORNERS:
+        choices = [] if diagnostics is not None else None
+        if diagnostics is not None:
+            diagnostics.setdefault("candidates", {})[corner] = choices
+        found[corner] = _find_marker(gray, corner, px_per_mm, side_mm, choices)
     tried = []
-    for orientation, corner_in_image in ((0, {c: c for c in IMAGE_CORNERS}), (180, UPSIDE_DOWN)):
+    orientations = ((0, {c: c for c in IMAGE_CORNERS}), (180, UPSIDE_DOWN),
+                    (90, dict(zip(IMAGE_CORNERS, ("top_right", "bottom_right", "top_left", "bottom_left")))),
+                    (270, dict(zip(IMAGE_CORNERS, ("bottom_left", "top_left", "bottom_right", "top_right")))))
+    for orientation, corner_in_image in orientations:
         mm_points = np.array([marker_mm[corner] for corner in IMAGE_CORNERS])
         px_points = np.array([found[corner_in_image[corner]] for corner in IMAGE_CORNERS])
         mm_to_px = _homography(mm_points, px_points)
@@ -363,7 +427,7 @@ def _align_page(gray: np.ndarray, rgb: np.ndarray, dpi: float, manifest_pages: l
             break
     else:
         raise ScanError("page_mismatch",
-                        f"scan page {index + 1}: page code {tried[0]} (or {tried[1]} upside down) matches no page "
+                        f"scan page {index + 1}: page codes {tried} at quarter-turn orientations match no page "
                         f"of this trial {[p['page_code'] for p in manifest_pages]}; is it another round's sheet?")
 
     error = _fit_error_mm(mm_points, px_points)
@@ -371,9 +435,38 @@ def _align_page(gray: np.ndarray, rgb: np.ndarray, dpi: float, manifest_pages: l
         raise ScanError("markers_not_found",
                         f"scan page {index + 1}: the corner markers fit only within {error:.2f} mm "
                         f"(limit {MAX_FIT_ERROR_MM} mm); rescan the page flat and straight")
-    if any(_region(page, marker["box"], 1.0).mean() > 0.35 for marker in matches[0]["regions"]["markers"]):
-        raise ScanError("markers_not_found",
-                        f"scan page {index + 1}: the markers are not dark where the manifest expects them")
+    basis = np.array([(px_points[1] - px_points[0]) / np.linalg.norm(mm_points[1] - mm_points[0]),
+                      (px_points[2] - px_points[0]) / np.linalg.norm(mm_points[2] - mm_points[0])])
+    scales = np.linalg.norm(basis, axis=1) / px_per_mm
+    if (np.linalg.det(basis) <= 0 or not all(MARKER_SCALE_RANGE[0] <= scale <= MARKER_SCALE_RANGE[1] for scale in scales)
+            or abs(np.dot(*basis) / np.prod(np.linalg.norm(basis, axis=1))) > .2):
+        raise ScanError("markers_not_found", f"scan page {index + 1}: implausible marker scale, reflection or shear")
+    marker_contrasts = []
+    for marker in matches[0]["regions"]["markers"]:
+        x, y, w, h = marker["box"]
+        inner = _region(page, marker["box"], 1.0)
+        outer = _region(page, [x - 1, y - 1, w + 2, h + 2], 0)
+        border = np.ones(outer.shape, bool)
+        border[PX_PER_MM:-PX_PER_MM, PX_PER_MM:-PX_PER_MM] = False
+        contrast = float(np.median(outer[border]) - inner.mean())
+        marker_contrasts.append(contrast)
+        if contrast < MIN_MARKER_CONTRAST:
+            raise ScanError("markers_not_found",
+                            f"scan page {index + 1}: aligned {marker['corner']} marker lacks contrast with its paper moat")
+    # Do not silently fill clipped measurement regions with _warp's white padding.
+    for group in matches[0]["regions"].values():
+        for region in group if isinstance(group, list) else [group] if isinstance(group, dict) else []:
+            if "box" not in region:
+                continue
+            x, y, w, h = region["box"]
+            corners = mm_to_px @ np.array([[x, x + w, x + w, x], [y, y, y + h, y + h], [1, 1, 1, 1]])
+            corners = corners[:2] / corners[2]
+            if (corners.min() < 0 or corners[0].max() > gray.shape[1] or corners[1].max() > gray.shape[0]):
+                raise ScanError("markers_not_found", f"scan page {index + 1}: a required manifest region is clipped")
+    if diagnostics is not None:
+        diagnostics.update(mm_to_px=mm_to_px.tolist(), page_number=matches[0]["page_number"],
+                           orientation=orientation, fit_error_mm=error, scale=scales.tolist(),
+                           marker_contrasts=marker_contrasts, page_code_read=code)
     return {"image": page, "rgb": _warp(rgb, mm_to_px), "manifest_page": matches[0], "scan_index": index,
             "dpi": dpi, "orientation": orientation, "fit_error_mm": error, "page_code_read": code}
 
@@ -605,6 +698,70 @@ def _png_name(*parts) -> str:
 
 # ---------------------------------------------------------------- main
 
+def diagnose_scan_alignment(scan_path, manifest_path, out_dir) -> dict:
+    """Save candidate/geometry overlays and JSON without updating a session.
+
+    Orange boxes are nominal manifest positions at scan DPI; cyan boxes are the
+    accepted geometric transform. Green candidates were selected, blue are other
+    valid squares, and red candidates were rejected. Candidate IDs refer to the
+    JSON's corner lists, which retain size/fill/contrast rejection reasons.
+    Detection and alignment use the same helpers as evaluate_scan().
+    """
+    manifest = json.loads(Path(manifest_path).read_text(encoding="utf-8"))
+    scanned, files = _read_scan(scan_path, manifest["config"]["scan"]["accepted_formats"])
+    output = Path(out_dir).resolve() / f"alignment_{manifest['trial_id'][:8]}_{uuid.uuid4().hex[:8]}"
+    output.mkdir(parents=True)
+    records = []
+    for index, (gray, rgb, dpi) in enumerate(scanned):
+        record = {"scan_index": index, "dpi": dpi, "width_px": gray.shape[1], "height_px": gray.shape[0],
+                  "candidates": {c: _marker_candidates(gray, c, dpi / MM_PER_INCH) for c in IMAGE_CORNERS}}
+        try:
+            aligned = _align_page(gray, rgb, dpi, manifest["pages"], index, record)
+            record["status"] = "ok"
+            record["legacy_marker_mean_gray"] = [float(_region(aligned["image"], m["box"], 1).mean())
+                                                  for m in aligned["manifest_page"]["regions"]["markers"]]
+        except ScanError as error:
+            record.update(status="error", error_code=error.code, message=str(error))
+        # Put explanations beside the scan so annotations do not obscure evidence.
+        source = Image.fromarray(rgb)
+        image = Image.new("RGB", (source.width + 850, source.height), "white")
+        image.paste(source, (0, 0))
+        draw = ImageDraw.Draw(image)
+        font = ImageFont.load_default(size=22)
+        draw.text((source.width + 20, 25), "Orange: nominal; cyan: fitted manifest", fill="black", font=font)
+        draw.text((source.width + 20, 60), "Green: selected; blue: valid; red: rejected", fill="black", font=font)
+        legend_y = 110
+        for marker in manifest["pages"][0]["regions"]["markers"]:
+            x, y, w, h = np.asarray(marker["box"]) * dpi / MM_PER_INCH
+            draw.rectangle((x, y, x + w, y + h), outline="orange", width=4)
+            if "mm_to_px" in record:
+                x, y, w, h = marker["box"]
+                points = np.asarray(record["mm_to_px"]) @ np.array(
+                    [[x, x + w, x + w, x], [y, y, y + h, y + h], [1, 1, 1, 1]])
+                points = (points[:2] / points[2]).T
+                draw.line([tuple(p) for p in points] + [tuple(points[0])], fill="cyan", width=4)
+        for corner, candidates in record["candidates"].items():
+            short = "".join(word[0].upper() for word in corner.split("_"))
+            draw.text((source.width + 20, legend_y), corner, fill="black", font=font)
+            legend_y += 32
+            for number, candidate in enumerate(candidates):
+                x, y, w, h = candidate["box_px"]
+                color = "green" if candidate.get("selected") else "blue" if candidate["reason"] == "accepted square" else "red"
+                draw.rectangle((x, y, x + w, y + h), outline=color, width=3)
+                label = f"{short}{number}"
+                draw.text((x, max(0, y - 25)), label, fill=color, font=font)
+                draw.text((source.width + 20, legend_y), label + ": " + candidate["reason"], fill=color, font=font)
+                legend_y += 30
+        path = output / f"scan_{index + 1}_overlay.png"
+        image.save(path)
+        record["overlay_path"] = str(path)
+        records.append(record)
+    report = {"trial_id": manifest["trial_id"], "manifest_path": str(Path(manifest_path).resolve()),
+              "scan_files": files, "pages": records, "diagnostic_path": str(output / "alignment.json")}
+    Path(report["diagnostic_path"]).write_text(json.dumps(report, indent=2, allow_nan=False), encoding="utf-8")
+    return report
+
+
 def evaluate_scan(scan_path, manifest_path, out_dir=None) -> dict:
     """Line up the scan with the trial manifest, measure every patch and tile, save and return the result.
 
@@ -643,10 +800,13 @@ def evaluate_scan(scan_path, manifest_path, out_dir=None) -> dict:
     json_path, tile_dir = _new_output(out_dir, record["round_id"], record["trial_id"])
     tile_dir.mkdir()
     page_records, found = [], {}                # found: (item_id, variation_id) -> tile crop and its panels
+    bilevel_pages = {index for file in files for index in file.get("bilevel_scan_indices", [])}
     with np.load(cells_path) as cells:
         for page in pages:
             regions, number = page["manifest_page"]["regions"], page["manifest_page"]["page_number"]
             page_record = _page_record(page, _printer_response(page, regions))
+            if page["scan_index"] in bilevel_pages:
+                page_record["issues"].append("bilevel (1-bit) scan: scanner thresholding/halftoning limits grayscale-tone evidence")
             page_records.append(page_record)
             paper = page_record["paper"]["gray"] if page_record["paper"] else None
             black = page_record["black"]["gray"] if page_record["black"] else None

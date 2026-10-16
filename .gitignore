@@ -14,3 +14,5 @@ runs/*/print_tuning/
 *.zip
 runs/
 .DS_Store
+# Local scan diagnostics contain real scan crops; tests use generated fixtures.
+/tmp/scan_alignment_diagnostics/

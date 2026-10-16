@@ -717,3 +717,76 @@ def record_stop(session_path: str | Path, reason: str, *, error: bool = False, m
     session["outcomes"].append({"outcome": outcome, "recorded_at": _now()})
     session.update(status=outcome["status"], phase=outcome["status"])
     return _write(path, session)
+
+
+def recover_stopped_tuning(session_path: str | Path, *, backup_path: str | Path) -> dict:
+    """Explicitly reopen a human stop after backing up the run's JSON records.
+
+    Derive the phase from durable progress, never from transient graph actions.
+    Existing graph routing resolves print intents/jobs and asks for fresh approval;
+    recovery itself performs no submission, regeneration, or counter reset.
+    Callers serialize operations and supply the backup directory for the audit.
+    """
+    path = Path(session_path).resolve()
+    session = load_tuning_session(path)
+    _need(session["status"] == "stopped", "Only a human-stopped tuning session can be reopened")
+    stop = session["outcomes"][-1] if session["outcomes"] else {}
+    _need(stop.get("outcome", {}).get("status") == "stopped"
+          and stop["outcome"].get("reason") == "Human stopped print tuning",
+          "Recovery requires a recorded human tuning stop")
+    backup = Path(backup_path).resolve()
+    _need((backup / path.name).is_file() and _sha(backup / path.name) == _sha(path),
+          "Recovery needs an unchanged backup of the stopped session")
+    number = session["active_round"]
+    _need(type(number) is int and number in (1, 2, 3), "Invalid active tuning round")
+    entry = session["rounds"][str(number)]
+    _need(entry["winners"] is None and (entry.get("review") or {}).get("assessment") in (None, "needs_rescan"),
+          "The active round already has an accepted outcome requiring a different recovery")
+    for n in range(1, number):
+        previous = session["rounds"][str(n)]
+        _need((previous.get("review") or {}).get("assessment") == "usable" and bool(previous["winners"]),
+              "An earlier round has no accepted usable review")
+        _need(session["rounds"][str(n + 1)]["reference_settings"] == previous["winners"],
+              "Round references differ from earlier accepted winners")
+    _need(not any(session["rounds"][str(n)]["proposal"] or session["rounds"][str(n)]["trials"]
+                  for n in range(number + 1, 4)), "Future-round progress conflicts with the active round")
+    session["status"] = "active"  # Local copy only, to reuse identity-checked readers.
+    if entry["proposal"] is None:
+        _need(number == 1 and not entry["trials"] and not entry["print_attempts"]
+              and session["active_trial_id"] is None, "Missing proposal conflicts with recorded progress")
+        phase = "awaiting_gamma_proposal"
+    else:
+        _need(entry["reference_settings"] == session["accepted_settings"], "Current references differ from accepted settings")
+        from app.print_tuning.schemas import GammaProposalResponse, GammaReviewResponse, GrayLevelsReviewResponse
+        model = {1: GammaProposalResponse, 2: GammaReviewResponse, 3: GrayLevelsReviewResponse}[number]
+        proposal = model.model_validate(entry["proposal"])
+        if number == 1:
+            validate_response(proposal, _context(session, "propose_gamma"))
+        else:
+            previous = session["rounds"][str(number - 1)]
+            _need(entry["proposal"] == previous["review"], "Next proposal differs from accepted review")
+            previous_manifest = _trial_manifest(session, previous["trial_result"], previous)
+            validate_response(proposal, _context(session, _REVIEW_STAGES[number - 1], previous_manifest))
+        if entry["trial_result"] is None:
+            _need(not entry["trials"] and not entry["print_attempts"] and not entry["approvals"]
+                  and not entry["evaluations"] and session["active_trial_id"] is None,
+                  "Missing active trial conflicts with recorded artifacts/actions")
+            phase = "ready_for_trial"
+        else:
+            _identity(session, entry["trial_result"])
+            _bound_trial(session, session["active_trial_id"])
+            _trial_manifest(session, entry["trial_result"], entry)
+            phase = "awaiting_scan"
+            if entry["active_evaluation_id"]:
+                _, result, _ = _load_active_evaluation(session)
+                _need(result["status"] in ("ok", "needs_rescan"), "Active evaluation is an operational failure")
+                reviewed = [r for r in entry["reviews"] if r["evaluation_record_id"] == entry["active_evaluation_id"]]
+                _need(not reviewed or all(r["response"]["assessment"] == "needs_rescan" for r in reviewed),
+                      "Accepted review conflicts with the stopped active round")
+                if not reviewed:
+                    phase = "awaiting_review"
+    session["phase"] = phase
+    session.setdefault("recoveries", []).append({"recorded_at": _now(), "source": "--resume-stopped-tuning",
+        "stop": deepcopy(stop), "backup_path": str(backup), "restored_phase": phase,
+        "round_id": number, "trial_id": session["active_trial_id"]})
+    return _write(path, session)

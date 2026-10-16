@@ -25,7 +25,7 @@ from app.agents.scientist import ExperimentSelection, scientist as run_scientist
 from app.agents.executor import executor as run_executor
 from app.agents.general import general as run_general
 from app.agents.report_and_print import (
-    MAX_HARDWARE_PASSES, _parse_tool_output,
+    MAX_HARDWARE_PASSES, MAX_SUBMISSION_REQUEST_PASSES, submission_request_ready, _parse_tool_output,
     report_and_print as run_report_and_print,
 )
 
@@ -431,22 +431,23 @@ def build_graph(
             }]}
         passes = state.get("hardware_passes", 0) + 1
         if passes > MAX_HARDWARE_PASSES:
-            return {
-                "hardware_passes": passes,
-                "route": "printer_question",
-                "dialogue": [{
-                    "role": "system",
-                    "text": f"The {MAX_HARDWARE_PASSES}-pass report limit was reached; "
-                            "human recovery is required.",
-                }],
-            }
+            return workflow_failure(f"The {MAX_HARDWARE_PASSES}-pass report workflow limit was reached.")
+
+        requesting = submission_request_ready(state)
+        requests = state.get("report_request_passes", 0) + 1 if requesting else 0
+        if requests > MAX_SUBMISSION_REQUEST_PASSES:
+            return workflow_failure("The executor did not request submit_print within two submission-request passes.")
 
         result = run_report_and_print(state, llm, report_tools, run_dir)
         update = {**artifact_update, **{key: result[key] for key in REPORT_STATE_KEYS if key in result}}
         update["hardware_passes"] = passes
+        update["report_request_passes"] = requests
         outcome = result["outcome"]
         if outcome == "tool_ran":
             reading = result["result"]
+            if result["tool_name"] == "write_and_run" and result.get("report", {}).get("figure_embedded") \
+                    and not result["report"].get("error"):
+                update["report_revision_pending"] = False
             active_id = state.get("active_job_id")
             read_id = None
             if result["tool_name"] == "job_status":
@@ -474,6 +475,18 @@ def build_graph(
                 return report_blocked("Report executor unexpectedly submitted outside the approval/intent node")
             else:
                 update.update(_route_update(result["tool_name"], reading))
+                # Repeated readiness reads with no action are a workflow stall,
+                # not evidence that the printer has failed.
+                if result["tool_name"] == "printer_status" and update["route"] == "report_and_print":
+                    previous = []
+                    for record in reversed(state.get("execution_results", [])):
+                        if record.get("tool_name") != "printer_status":
+                            break
+                        previous.append(record)
+                    advanced_to_request = submission_request_ready({**state, "execution_results": [
+                        *state.get("execution_results", []), *result.get("execution_results", [])]})
+                    if len(previous) >= 2 and not advanced_to_request:
+                        update.update(workflow_failure("Repeated printer_status calls made no report workflow progress."))
         elif outcome == "needs_print_approval":
             if status == "pending":
                 update.update(route="report_and_print", pending_print={}, dialogue=[{
@@ -492,6 +505,27 @@ def build_graph(
             update["route"] = "report_and_print"
         return update
 
+    def workflow_failure(message):
+        recovery = (message + " No hardware fault is established. Retry resumes the executor with the existing "
+                    "validated report and requests a separate exact-PDF approval; retry never approves printing. "
+                    "If this repeats, stop, inspect the executor/provider tool-call configuration, then restart "
+                    "with --resume after the process exits. Keep report_print.json and all print history intact.")
+        return {"route": "report_workflow_problem", "report_workflow_failure": recovery,
+                "dialogue": [{"role": "system", "text": recovery}]}
+
+    def report_workflow_problem_node(state):
+        reply = interrupt({"kind": "report_workflow_problem", "message": state.get("report_workflow_failure"),
+            "question": "Report workflow stalled. Retry the approval-request workflow, or stop for application recovery.",
+            "choices": ["retry", "stop"]})
+        choice = reply.get("action") if isinstance(reply, dict) else str(reply).strip().lower()
+        if choice == "stop":
+            return {"route": "end", "stop_reason": "stopped_by_human", "print_outcome": "stopped"}
+        if choice != "retry":
+            return {"route": "report_workflow_problem"}
+        return {"route": "report_and_print", "hardware_passes": 0, "report_request_passes": 0,
+                "approval": {}, "pending_print": {},
+                "dialogue": [{"role": "human", "text": "Retry report workflow; this is not approval to print."}]}
+
     def print_approval_node(state: State) -> dict:
         pending = state.get("pending_print") or {}
         args = dict(pending.get("args", {}))
@@ -507,15 +541,21 @@ def build_graph(
         })
         text = str(reply).strip()
 
-        if _first_word(text) in ("yes", "y", "approve"):
+        if text.lower() in ("yes", "y", "approve"):
             # No non-idempotent action is performed inside an interrupt node.
             return {"route": "report_submit", "hardware_passes": 0,
                     "dialogue": [{"role": "human", "text": text}]}
+
+        if text.lower() == "retry":
+            return {"route": "print_approval", "dialogue": [{"role": "system", "text":
+                "Retry is not approval. Review the exact PDF, printer and hash, then explicitly approve."}]}
 
         # No limit on change rounds: the human decides when to approve.
         return {
             "pending_print": {},
             "hardware_passes": 0,
+            "report_request_passes": 0,
+            "report_revision_pending": True,
             "route": "report_and_print",
             "dialogue": [{"role": "human", "text": "Change request for the report: " + text}],
         }
@@ -1016,6 +1056,7 @@ def build_graph(
     builder.add_node("executor", lambda state: run_executor(state, llm, focusing_tool))
     builder.add_node("report_and_print", report_and_print_node)
     builder.add_node("print_approval", print_approval_node)
+    builder.add_node("report_workflow_problem", report_workflow_problem_node)
     builder.add_node("report_submit", report_submit_node)
     builder.add_node("report_print_confirmation", report_print_confirmation_node)
     builder.add_node("printer_question", printer_question_node)
@@ -1057,11 +1098,16 @@ def build_graph(
         "orchestrator": "orchestrator",
         "tuning_route": "tuning_route", "end": END,
         "report_print_confirmation": "report_print_confirmation",
+        "report_workflow_problem": "report_workflow_problem",
     })
     builder.add_conditional_edges("print_approval", route, {
         "report_and_print": "report_and_print", "printer_question": "printer_question",
         "finish_gate": "finish_gate", "orchestrator": "orchestrator",
         "report_submit": "report_submit",
+        "print_approval": "print_approval",
+    })
+    builder.add_conditional_edges("report_workflow_problem", route, {
+        "report_workflow_problem": "report_workflow_problem", "report_and_print": "report_and_print", "end": END,
     })
     for name in ("report_submit", "report_print_confirmation"):
         builder.add_conditional_edges(name, route, {
