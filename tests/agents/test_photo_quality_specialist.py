@@ -208,6 +208,19 @@ class SpecialistTests(unittest.TestCase):
         messages = prepare_specialist_messages(context, replace(evidence, images=evidence.images[:-1], missing_images=[missing]))
         self.assertIn("Crop was unavailable", messages[1].content[0]["text"])
 
+    def test_scan_definitions_and_provenance_are_validated_before_model_calls(self):
+        context, evidence = self.inputs("review_gamma")
+        source = {"path": "scan.png", "sha256": "a" * 64}
+        for data in (replace(evidence, measurement_docs={"contrast": {"units": "gray"}}),
+                     replace(evidence, measurement_docs={"contrast": {"units": "", "meaning": "contrast"}}),
+                     replace(evidence, scan_files=[{"path": "scan.png", "sha256": "wrong"}]),
+                     replace(evidence, scan_files=[source, source]),
+                     replace(evidence, scan_quality={"usable": True, "issues": "not a list"})):
+            model = self.model()
+            with self.assertRaises(SpecialistInputError):
+                photo_quality_specialist(model, context, data)
+            model.with_structured_output.assert_not_called()
+
     def test_complete_scan_pages_are_supported(self):
         context, evidence = self.inputs("review_gamma")
         pages = [ImageAttachment(ImageLabel("scan_page", page_number=p["page_number"]), self.path)

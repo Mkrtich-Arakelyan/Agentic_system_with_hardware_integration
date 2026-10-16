@@ -105,6 +105,8 @@ class PhotoQualitySpecialistError(ValueError):
 
 @dataclass(frozen=True)
 class ImageLabel:
+    """A scanned_candidate with panel=None is the producer's whole-tile crop."""
+
     purpose: Literal["source_preview", "scanned_candidate", "scan_page"]
     experiment_id: str | None = None
     panel: str | None = None
@@ -159,6 +161,9 @@ class SpecialistEvidence:
     round_id: int | None = None
     calibration_session_id: str | None = None
     prior_settings: Mapping[str, Mapping[str, Any]] | None = None
+    measurement_docs: Mapping[str, Mapping[str, str]] | None = None
+    scan_files: Sequence[Mapping[str, str]] = ()
+    scan_quality: Mapping[str, Any] | None = None
 
 
 def _require(condition: bool, message: str) -> None:
@@ -215,7 +220,7 @@ def prepare_specialist_messages(
     except TuningValidationError as error:
         raise SpecialistInputError(str(error)) from None
     _require(isinstance(evidence, SpecialistEvidence), "evidence: SpecialistEvidence required")
-    for name in ("images", "candidate_measurements", "page_measurements", "missing_images", "issues"):
+    for name in ("images", "candidate_measurements", "page_measurements", "missing_images", "issues", "scan_files"):
         value = getattr(evidence, name)
         _require(isinstance(value, Sequence) and not isinstance(value, (str, bytes)), f"{name}: a sequence is required")
     _require(isinstance(prior_decisions, Sequence) and not isinstance(prior_decisions, (str, bytes)), "prior_decisions: parsed response sequence required")
@@ -246,6 +251,26 @@ def prepare_specialist_messages(
     else:
         _require(evidence.trial_id is None and evidence.round_id is None and not evidence.candidate_measurements,
                  "propose_gamma: no physical trial or candidate measurements exist yet")
+        _require(evidence.measurement_docs is None and not evidence.scan_files and evidence.scan_quality is None,
+                 "propose_gamma: no physical scan metadata exists yet")
+    if evidence.measurement_docs is not None:
+        _require(isinstance(evidence.measurement_docs, Mapping), "measurement_docs: measurement definitions required")
+        for name, definition in evidence.measurement_docs.items():
+            _require(_text(name) and isinstance(definition, Mapping)
+                     and _text(definition.get("units")) and _text(definition.get("meaning")),
+                     "measurement_docs: each named definition needs nonblank units and meaning")
+    scan_paths = set()
+    for source in evidence.scan_files:
+        _require(isinstance(source, Mapping) and _text(source.get("path"))
+                 and isinstance(source.get("sha256"), str) and re.fullmatch(r"[0-9a-fA-F]{64}", source["sha256"]) is not None,
+                 "scan_files: each source needs path and SHA-256 provenance")
+        _require(source["path"] not in scan_paths, "scan_files: duplicate source path")
+        scan_paths.add(source["path"])
+    if evidence.scan_quality is not None:
+        _require(isinstance(evidence.scan_quality, Mapping) and type(evidence.scan_quality.get("usable")) is bool
+                 and isinstance(evidence.scan_quality.get("issues"), Sequence)
+                 and not isinstance(evidence.scan_quality["issues"], (str, bytes)),
+                 "scan_quality: usable boolean and issues sequence required")
     _require(isinstance(evidence.normalization_limits, Mapping) and set(evidence.normalization_limits) == set(ids),
              "normalization_limits: require exactly the frozen experiments")
     for experiment, limits in evidence.normalization_limits.items():
@@ -272,18 +297,20 @@ def prepare_specialist_messages(
                      and label.candidate_id is None and label.variation_id is None, "scan_page: valid manifest page_number and no candidate identity required")
             return
         _require(isinstance(label.experiment_id, str) and label.experiment_id in panels, "attachment.experiment_id: not frozen")
-        _require(isinstance(label.panel, str) and label.panel in panels[label.experiment_id], "attachment.panel: not an experiment panel")
         if label.purpose == "source_preview":
+            _require(isinstance(label.panel, str) and label.panel in panels[label.experiment_id], "attachment.panel: not an experiment panel")
             _require(label.candidate_id is None and label.variation_id is None and label.page_number is None, "source_preview: candidate/variation/page IDs must be omitted")
         else:
             _require(label.purpose == "scanned_candidate" and review, "attachment.purpose: invalid for the active stage")
+            _require(label.panel is None or isinstance(label.panel, str) and label.panel in panels[label.experiment_id],
+                     "attachment.panel: expected a named panel or None for a whole tile")
             identity = lookup.get((label.experiment_id, label.candidate_id)) if isinstance(label.candidate_id, str) else None
             _require(identity is not None and label.variation_id == identity.variation_id, "attachment: candidate label/variation_id does not match shared correspondence")
             if label.page_number is not None:
                 _require(type(label.page_number) is int and label.page_number in page_numbers, "attachment.page_number: absent from manifest")
                 locations = [p["page_number"] for p in manifest["pages"]
                              if any(plot.get("item_id") == identity.item_id and plot.get("variation_id") == identity.variation_id
-                                    and plot.get("panel") == label.panel for plot in p["regions"]["plots"])]
+                                    and (label.panel is None or plot.get("panel") == label.panel) for plot in p["regions"]["plots"])]
                 _require(locations == [label.page_number], "attachment.page_number: candidate/panel is printed on a different or ambiguous page")
 
     labels, missing = [], []
@@ -300,7 +327,8 @@ def prepare_specialist_messages(
         expected = {ImageLabel("source_preview", e, panel) for e in ids for panel in ("Initial", "Final")}
         _require(set(labels) == expected and not missing, "propose_gamma: labelled Initial/Final source previews required for all four experiments")
     else:
-        supplied = {(l.experiment_id, l.candidate_id, l.panel) for l in labels + missing if l.purpose == "scanned_candidate"}
+        supplied = {(l.experiment_id, l.candidate_id, l.panel) for l in labels + missing
+                    if l.purpose == "scanned_candidate" and l.panel is not None}
         expected = {(c.experiment_id, c.candidate_id, p) for c in correspondence for p in panels[c.experiment_id]}
         complete_pages = bool(page_numbers) and {l.page_number for l in labels if l.purpose == "scan_page"} == page_numbers
         _require(supplied == expected or complete_pages or _text(evidence.incomplete_evidence_reason),
@@ -330,6 +358,8 @@ def prepare_specialist_messages(
         "candidate_correspondence": [asdict(c) for c in correspondence],
         "candidate_measurements": [asdict(m) for m in evidence.candidate_measurements],
         "page_measurements": evidence.page_measurements, "printer_response": evidence.printer_response,
+        "measurement_docs": evidence.measurement_docs, "scan_files": evidence.scan_files,
+        "scan_quality": evidence.scan_quality,
         "missing_images": [asdict(m) for m in evidence.missing_images],
         "incomplete_evidence_reason": evidence.incomplete_evidence_reason, "issues": evidence.issues,
     }

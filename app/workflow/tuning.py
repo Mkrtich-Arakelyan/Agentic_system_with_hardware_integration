@@ -22,6 +22,7 @@ from app.print_tuning.grayscale_render import load_config, starting_mapping
 from app.print_tuning.tuning_tools import (
     OUTPUT_FOLDER, SESSION_FILE, _ToolError, _load_selection, _round_tests,
     _session_inputs, _variations, prepare_specialist_previews,
+    summarize_scan_result,
 )
 from app.print_tuning.validation import (
     Response, Stage, TuningValidationError, ValidationContext,
@@ -241,6 +242,8 @@ def initialize_tuning_session(
         session = _write(path, session)
         preview = prepare_specialist_previews(path, root / OUTPUT_FOLDER / "previews" / session["session_id"] /
                                                str(len(session["initialization"]["attempts"])))
+        for attachment in preview["previews"]:
+            attachment["sha256"] = _sha(attachment["path"])
         _need(preview["reference_mappings"] == defaults and set(preview["normalization_limits"]) == set(ids), "Preview metadata disagrees with frozen references/selection")
         for experiment in session["selected_experiments"]:
             experiment["limits"] = preview["normalization_limits"][experiment["experiment_id"]]
@@ -356,11 +359,18 @@ def record_trial_result(session_path: str | Path, result: dict) -> dict:
     return _write(path, session)
 
 
-def _bound_trial(session: dict, trial_id: str) -> tuple[dict, dict]:
+def _bound_trial_identity(session: dict, trial_id: str) -> tuple[dict, dict]:
+    """Bind even an operational failure to a recorded trial, without reading its files."""
     entry = _active(session)
     _need(session["active_trial_id"] == trial_id and entry["trial_result"] is not None
           and entry["trial_result"]["trial_id"] == trial_id, "Stale or missing active trial")
-    artifact = next(t for t in entry["trials"] if t["result"]["trial_id"] == trial_id)
+    matches = [t for t in entry["trials"] if t["result"]["trial_id"] == trial_id]
+    _need(len(matches) == 1, "Missing/ambiguous recorded trial artifact")
+    return entry, matches[0]
+
+
+def _bound_trial(session: dict, trial_id: str) -> tuple[dict, dict]:
+    entry, artifact = _bound_trial_identity(session, trial_id)
     _need(_sha(artifact["result"]["manifest_path"]) == artifact["manifest_sha256"], "Recorded manifest changed")
     return entry, artifact
 
@@ -375,7 +385,10 @@ def record_scan_result(session_path: str | Path, result: dict, *, record_id: str
     path = Path(session_path)
     session = load_tuning_session(path)
     _identity(session, result)
-    entry, artifact = _bound_trial(session, result.get("trial_id"))
+    # An error such as manifest_missing must itself be recordable. It is never
+    # accepted as review evidence; successes/rescans still verify the manifest.
+    bind = _bound_trial_identity if result.get("status") == "error" else _bound_trial
+    entry, artifact = bind(session, result.get("trial_id"))
     _need(session["phase"] in ("awaiting_scan", "awaiting_review"), "Scan result out of order")
     key = record_id or result.get("evaluation_path") or _digest(result)
     _need(isinstance(key, str) and bool(key.strip()), "Evaluation record ID required")
@@ -408,6 +421,76 @@ def record_scan_result(session_path: str | Path, result: dict, *, record_id: str
     entry["active_evaluation_id"] = key
     session["phase"] = "awaiting_review" if status == "ok" and result["scan_quality"]["usable"] else "awaiting_scan"
     return _write(path, session)
+
+
+def _load_active_evaluation(session: dict) -> tuple[str, dict, dict | None]:
+    entry, artifact = _bound_trial(session, session["active_trial_id"])
+    key = entry["active_evaluation_id"]
+    matches = [e for e in entry["evaluations"] if e["record_id"] == key]
+    _need(isinstance(key, str) and len(matches) == 1, "No unique active evaluation is recorded")
+    record = matches[0]
+    result = record["result"]
+    _identity(session, result)
+    _need(result.get("trial_id") == session["active_trial_id"], "Active evaluation belongs to a stale trial")
+    evaluation = None
+    if result.get("status") == "ok":
+        _need(bool(record["evaluation_sha256"]), "Active evaluation has no recorded artifact hash")
+    if record["evaluation_sha256"]:
+        _need(_sha(result["evaluation_path"]) == record["evaluation_sha256"], "Recorded evaluation changed")
+        evaluation = _read(result["evaluation_path"])
+        _identity(session, evaluation)
+        _need(evaluation.get("trial_id") == session["active_trial_id"], "Evaluation file belongs to a stale trial")
+        _need(evaluation.get("scan_quality") == result.get("scan_quality"), "Evaluation quality differs from recorded result")
+        if "manifest_path" in evaluation:
+            _need(Path(evaluation["manifest_path"]).resolve() == Path(artifact["result"]["manifest_path"]).resolve(),
+                  "Evaluation refers to a different manifest")
+    return key, deepcopy(result), evaluation
+
+
+def record_scan_for_executor(session_path: str | Path, result: dict, *, record_id: str | None = None) -> dict:
+    """Application handoff: record the FULL read_scan result, return its model summary.
+
+    Future executor code uses this return value in ToolMessage/dialogue, never the
+    raw result. The specialist reloads the hash-bound full evaluation separately.
+    This plain function executes no tools/models and activates no graph routing.
+    Do not pass summarize_scan_result output as input: needs_rescan summaries have
+    lost scan_quality, and success summaries lack the full numerical evidence.
+
+    A tool error before a trial was known may lack identities. Return its exact
+    documented short error without guessing an association or changing a session.
+    Errors with full identity are recorded by the ordinary scan-result recorder.
+    """
+    _need(isinstance(result, dict) and type(result.get("contract_version")) is int
+          and result["contract_version"] == 1, "Expected a full read_scan contract-version-1 result")
+    _need(result.get("status") in ("ok", "needs_rescan", "error"), "Unknown read_scan status")
+    if result["status"] == "ok":
+        _need(isinstance(result.get("candidates"), list) and isinstance(result.get("pages"), list),
+              "Pass the full read_scan result, not its executor summary")
+        _need(isinstance(result.get("evaluation_path"), str), "Full scan result needs evaluation_path")
+        evaluation = _read(result["evaluation_path"])
+        for name in ("pages", "candidates", "printer_response", "measurement_docs", "scan_files"):
+            if name in result:
+                _need(result[name] == evaluation.get(name), f"Full scan {name} differs from saved evaluation")
+    summary = summarize_scan_result(result)
+    _need(summary.get("error_code") != "summary_failed", f"Cannot prepare executor scan summary: {summary.get('message')}")
+    if result["status"] == "error":
+        _need(isinstance(result.get("error_code"), str) and bool(result["error_code"].strip())
+              and isinstance(result.get("message"), str) and bool(result["message"].strip()),
+              "Scan error requires error_code and message")
+        if not all(k in result for k in ("session_id", "trial_id", "round_id")):
+            return _clone(summary)
+    record_scan_result(session_path, result, record_id=record_id)
+    return _clone(summary)
+
+
+def load_tuning_evaluation(session_path: str | Path) -> tuple[str, dict, dict | None]:
+    """Read the active evaluation after trial/hash/identity checks; never write.
+
+    Returns (record_id, recorded tool-result summary, loaded scan JSON). A recorded
+    needs_rescan/error may have no JSON artifact, so the third element is None.
+    Callers must serialize session access, as with the other session functions.
+    """
+    return _load_active_evaluation(load_tuning_session(session_path))
 
 
 def accept_specialist_response(
@@ -467,11 +550,9 @@ def accept_specialist_response(
     else:
         _need(session["active_trial_id"] == trial_id, "Stale reviewed trial")
         _need(session["phase"] in ("awaiting_review", "awaiting_scan"), "Review out of order")
-        evaluation = next(e for e in entry["evaluations"] if e["record_id"] == evaluation_record_id)
+        _, recorded_result, _ = _load_active_evaluation(session)
         if response.assessment != "needs_rescan":
-            _need(evaluation["result"]["status"] == "ok" and evaluation["result"]["scan_quality"]["usable"], "Usable evidence required before accepting winners/contrast judgment")
-        if evaluation["evaluation_sha256"]:
-            _need(_sha(evaluation["result"]["evaluation_path"]) == evaluation["evaluation_sha256"], "Recorded evaluation changed")
+            _need(recorded_result["status"] == "ok" and recorded_result["scan_quality"]["usable"], "Usable evidence required before accepting winners/contrast judgment")
         # Full response validation above includes next proposals against resolved
         # winners. Resolve only now, never accepting a valid winner alone.
         winners = resolve_review_winners(response, context)
