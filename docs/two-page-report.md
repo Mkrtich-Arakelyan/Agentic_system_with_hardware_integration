@@ -1,9 +1,10 @@
-# Two-page final report (report/2)
+# Final report (report/4; three-page default)
 
-`app/report_policy.py` centralizes the final-report page count (two) and the
-zero-based comparison page (1). Trial-sheet page counts remain manifest-owned.
-The MCP report action rejects other counts before printer access. The graph
-validates both A4 portrait pages and the exact comparison image on page 2;
+`app/report_policy.py` centralizes the final-report page policy (three by default;
+two permitted only when readable) and zero-based comparison page (1).
+Trial-sheet page counts remain manifest-owned. The MCP report action rejects
+other counts before printer access. The graph validates A4 portrait pages and
+the exact comparison image on page 2;
 SHA-256 approval covers all PDF bytes. Existing submission intent, replay,
 uncertainty, reprint and journal checks remain in `workflow/reporting.py`.
 
@@ -16,11 +17,28 @@ than silently shrinking. The scientific chart uses separate categorical bars
 for E1-E4, not a continuous trend through incompatible conditions. Full IDs,
 source results, reasons and paths live in `report_inputs_v2.json`.
 
-Page 2 embeds `render_report_comparison`'s exact PNG. Both columns use the same
-original **Final camera** arrays, shapes, frozen normalization limits and
-nearest-neighbor rendering. Left uses the actual round-1 reference; right uses
-the complete final accepted mappings. E1-E4 and column labels are PDF text.
-The old Initial/Final figure function remains for legacy tuning clients.
+Page 2 embeds `render_report_comparison`'s exact grayscale PNG at the full 180 mm
+usable width. Frozen experiment order is labeled E1-E4. Each row has four equal
+panel boxes: scientific Initial/Final under **Before printer tuning**, then
+Initial/Final under **After printer tuning**, separated by a larger gap.
+Before uses each experiment's original cycle-1 step-1 reference mapping; After
+uses its final accepted step-3 mapping from the last completed cycle. The SAME
+original Initial/Final numerical arrays are reused across both groups, with one
+frozen normalization range per experiment, native aspect ratios, preserved
+annotations, and nearest-neighbor rendering. No scan crops or panel-specific
+auto-normalization are used. Group headings, column headings and compact E1-E4
+labels are part of the figure, at 10 pt when printed. The caption explains that
+only print-rendering parameters differ. The legacy two-panel
+`render_final_heatmaps` function remains available for tuning clients.
+
+Figure contract `scientific-print-pairs/2` records both mappings and provenance.
+The application fingerprint includes the renderer hash, version, original
+baseline, final mappings, frozen data/order/limits and configuration. Old layouts
+are regenerated without overwriting history and invalidate pending approval.
+PDF validation rejects stale contracts, changed image pixels, incorrect placement,
+aspect distortion and shrinking below full usable width (apart from raster rounding).
+The default remains three pages. A two-page request that cannot fit fails rather
+than shrinking the figure or its labels.
 
 Only the existing executor receives `build_final_report`. It supplies optional
 structured scientific findings, not page coordinates. No independent report

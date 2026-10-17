@@ -16,7 +16,7 @@ import numpy as np
 import pymupdf as fitz
 
 from app.report_policy import REPORT_VERSION, REPORT_PAGES
-from app.print_tuning.final_figures import render_report_comparison
+from app.print_tuning.final_figures import comparison_metadata, render_report_comparison
 from app.print_tuning.readability import METHOD, measure_session, method_settings
 from app.print_tuning.progress import measure_history, render_progress, describe_history
 
@@ -228,20 +228,16 @@ def render_document(inputs, figure, target):
 
         p = Page(doc, 2)
         p.text("Experiment images", 21, color=GREEN, gap=7)
-        p.text("Scientific Initial and Final arrays; both columns use the final accepted mapping.", 10)
-        for column, label in enumerate(("Initial", "Final")):
-            p.page.insert_text((MARGIN + (47 + column * 76) * MM, p.y + 10), label, fontsize=11, fontname="tiro")
-        p.y += 15
-        image_height = 178 * MM if inputs.get("presentation", {}).get("pages", 3) == 3 else 135 * MM
+        p.text("Each pair shows scientific Initial and Final camera data. The arrays are unchanged between Before and After printer tuning; only print-rendering parameters differ. All four panels of each experiment share frozen normalization limits and annotations.", 10)
+        image_height = figure["height_mm"] * MM
         rect = fitz.Rect(MARGIN, p.y, WIDTH - MARGIN, p.y + image_height)
         p.page.insert_image(rect, filename=figure["figure_path"], keep_proportion=True)
-        for i in range(4):
-            p.page.insert_text((MARGIN + 5, p.y + (i + .5) * image_height / 4), f"E{i + 1}", fontsize=11, fontname="tiro")
         p.y = rect.y1 + 5
         mappings = [[row["label"], *[_number(row["mapping"][key]) for key in ("gamma", "dark_level", "light_level", "steps")]]
                     for row in figure["experiments"]]
         p.table(["ID", "Final gamma", "Dark", "Light", "Steps (0=smooth)"], mappings, [30, 105, 105, 105, 165], row_height=14)
-        p.text("Frozen normalization and annotations preserve scientific differences. Print tuning does not change scientific enhancement.", 10)
+        p.text("Before: original cycle 1, step 1 reference. After: accepted step 3 mapping from cycle " +
+               str(figure["mapping_sources"]["after"]["cycle_id"]) + ". Final settings are listed above; scientific enhancement is unchanged.", 10)
 
         if inputs.get("presentation", {}).get("pages", 3) == 3:
             p = Page(doc, 3)
@@ -314,6 +310,9 @@ def build_report(run_dir, output_dir, *, findings=None, method=None, figure=None
         raise ValueError("Output bundle exists with different inputs; choose a new output directory")
     if pdf.exists() or data_path.exists():
         raise ValueError("Partial report bundle exists; choose a new output directory")
+    expected = comparison_metadata(session)
+    if figure is not None and any(figure.get(key) != value for key, value in expected.items()):
+        raise ValueError("Stale comparison figure; prepare the current four-panel figure before building")
     comparison = figure or render_report_comparison(session_path, out)
     comparison = {**comparison, "inputs_sha256": fingerprint}
     inputs = {"schema_version": REPORT_VERSION, "fingerprint": fingerprint, "dependencies": dependencies,

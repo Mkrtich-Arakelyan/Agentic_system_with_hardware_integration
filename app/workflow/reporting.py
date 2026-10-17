@@ -5,7 +5,7 @@ never modified here. Atomic writes persist print intent BEFORE external I/O;
 an intent without an outcome is uncertain after process restart. Callers MUST
 serialize operations per run. This is not a persistent LangGraph checkpointer.
 PDF validation requires the supplied PNG's exact decoded pixels to be painted
-on the hardware-results page, fully inside it at a useful size. Human approval still
+on the experiment-images page, fully inside it at full usable width. Human approval still
 checks layout, occlusion, and scientific wording; this is not a semantic audit.
 """
 
@@ -20,7 +20,7 @@ from uuid import uuid4
 
 from PIL import Image
 
-from app.print_tuning.final_figures import render_report_comparison as render_final_heatmaps
+from app.print_tuning.final_figures import comparison_metadata, render_report_comparison as render_final_heatmaps
 from app.report_policy import REPORT_PAGES, REPORT_ALLOWED_PAGES, REPORT_VERSION, COMPARISON_VERSION, COMPARISON_PAGE
 from app.print_tuning.tuning_tools import _load_selection, _session_inputs
 
@@ -84,24 +84,25 @@ def prepare_figure(session_path, session, run_dir):
     for item in selection["items"]:
         for panel in item["panels"]:
             _need(sha(panel["data_path"]) == panel["sha256"], "Original scientific array changed after selection")
-    fingerprint = _digest({"report_version": REPORT_VERSION, "reference_settings": session.get("rounds", {}).get("1", {}).get("reference_settings"),
+    expected = comparison_metadata(session)
+    from app.print_tuning import final_figures
+    fingerprint = _digest({"report_version": REPORT_VERSION, "comparison": expected,
+        "renderer_sha256": sha(final_figures.__file__),
         "session_id": session["session_id"], "run_id": session["run_id"],
         "selection_sha256": session["selection_sha256"], "config": session["config_snapshot"],
         "selected_experiments": session["selected_experiments"], "final_settings": session["final_settings"]})
     record = load_record(run_dir)
     old = record["figure"]
-    expected = [{"experiment_id": e["experiment_id"], "mapping": session["final_settings"][e["experiment_id"]],
-                 "limits": e["limits"]} for e in session["selected_experiments"]]
     if old and old.get("comparison_version") == COMPARISON_VERSION and old["inputs_sha256"] == fingerprint and Path(old["figure_path"]).is_file() \
             and sha(old["figure_path"]) == old["figure_sha256"] and old.get("session_id") == session["session_id"] \
-            and [{k: row.get(k) for k in ("experiment_id", "mapping", "limits")} for row in old.get("experiments", [])] == expected:
+            and all(old.get(key) == value for key, value in expected.items()):
         return deepcopy(old), False
     previous = sum(f["inputs_sha256"] == fingerprint for f in record["figure_history"])
     _need(previous < 3, "Final figure regeneration limit reached; inspect the artifacts before retrying")
     result = render_final_heatmaps(session_path, Path(run_dir) / "print_tuning")
     _need(result.get("status") == "ok" and sha(result["figure_path"]) == result["figure_sha256"],
           "Renderer returned an invalid final figure")
-    _need([{k: row[k] for k in ("experiment_id", "mapping", "limits")} for row in result["experiments"]] == expected,
+    _need(all(result.get(key) == value for key, value in expected.items()),
           "Rendered figure differs from frozen experiment order/settings/limits")
     figure = {**result, "inputs_sha256": fingerprint, "session_id": session["session_id"]}
     record.update(figure=figure, pending=None, skip=None)
@@ -114,7 +115,7 @@ def inspect_tuned_report(path, figure):
     """Inspect real painted images, not PDF filenames, metadata, or prompt claims.
 
     Require exact RGB pixels, unchanged aspect ratio, full page containment,
-    and >=25% page width and height. Reject recompression/resampling. The report
+    and full 180 mm figure width (10 pt labels). Reject recompression/resampling. The report
     script should insert the original PNG directly (or use interpolation='none').
     """
     from app.agents.report_and_print import inspect_report
@@ -124,6 +125,11 @@ def inspect_tuned_report(path, figure):
     report.update(figure_embedded=False, figure_sha256=figure["figure_sha256"],
                   inputs_sha256=figure["inputs_sha256"])
     try:
+        _need(figure.get("comparison_version") == COMPARISON_VERSION
+              and figure.get("groups") == ["Before printer tuning", "After printer tuning"]
+              and figure.get("columns") == ["Initial", "Final", "Initial", "Final"]
+              and figure.get("minimum_font_pt", 0) >= 10,
+              "Stale comparison layout; regenerate the four-panel figure")
         _need(sha(figure["figure_path"]) == figure["figure_sha256"], "Final figure changed")
         _need(report["exists"] and report["pages"] in REPORT_ALLOWED_PAGES, "report.pdf must have 2 or 3 pages")
         with Image.open(figure["figure_path"]) as source:
@@ -139,7 +145,8 @@ def inspect_tuned_report(path, figure):
                 if not image.get("xref") or (image["width"], image["height"]) != size:
                     continue
                 box = pymupdf.Rect(image["bbox"])
-                if (not page.rect.contains(box) or box.width < page.rect.width * .25
+                # Subpixel rounding at 300 dpi changes the fitted width by <0.5 pt.
+                if (not page.rect.contains(box) or box.width < figure["width_mm"] * 72 / 25.4 - .5
                         or box.height < page.rect.height * .25
                         or abs(box.width / box.height - size[0] / size[1]) > .01):
                     continue

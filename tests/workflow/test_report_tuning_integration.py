@@ -206,6 +206,33 @@ class ReportIntegrationTests(unittest.TestCase):
         self.assertNotEqual(figure["inputs_sha256"], "stale")
         self.assertEqual(self.path.read_bytes(), before)
 
+    def test_old_two_column_cache_regenerates_and_cannot_use_previous_approval(self):
+        self.start()
+        snapshot = dict(self.graph.get_state(self.config).values)
+        from app.print_tuning.final_figures import render_final_heatmaps
+        legacy = render_final_heatmaps(self.path, self.root / "legacy_figure")
+        record = reporting.load_record(self.root)
+        legacy.update(inputs_sha256=record["figure"]["inputs_sha256"],
+                      session_id=record["figure"]["session_id"],
+                      comparison_version="scientific-pairs/1", columns=["Initial", "Final"])
+        record["figure"] = legacy
+        record["figure_history"].append(deepcopy(legacy))
+        reporting.save_record(self.root, record)
+        self.make_pdf(legacy["figure_path"])
+        old_pdf, scientific_record = (self.root / "report.pdf").read_bytes(), self.path.read_bytes()
+        figure, changed = reporting.prepare_figure(self.path, load_tuning_session(self.path), self.root)
+        self.assertTrue(changed)
+        self.assertNotEqual(figure["figure_path"], legacy["figure_path"])
+        self.assertEqual(figure["columns"], ["Initial", "Final", "Initial", "Final"])
+        self.assertIn(legacy, reporting.load_record(self.root)["figure_history"])
+        self.assertIsNone(reporting.load_record(self.root)["pending"])
+        self.assertEqual((self.root / "report.pdf").read_bytes(), old_pdf)
+        self.assertEqual(self.path.read_bytes(), scientific_record)
+        self.assertTrue(reporting.inspect_tuned_report(self.root / "report.pdf", legacy).get("error"))
+        update = self.nodes["report_submit"](snapshot)
+        self.assertEqual(update["route"], "report_and_print")
+        self.assertFalse(self.submitted)
+
     def test_pdf_must_contain_actual_unchanged_figure_at_useful_size(self):
         result = self.start()
         figure = result["final_figure_metadata"]

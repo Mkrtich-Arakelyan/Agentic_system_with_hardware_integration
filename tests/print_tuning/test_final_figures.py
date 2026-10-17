@@ -131,19 +131,96 @@ def test_session_has_different_final_settings(completed):
     assert {(final[e]["dark_level"], final[e]["light_level"]) for e in IDS} == {(0.06, 0.95)}
 
 
-def test_report_pairs_use_initial_and_final_arrays_with_same_final_mapping(completed, spies, tmp_path):
+def test_report_pairs_use_both_arrays_with_original_and_final_mappings(completed, spies, tmp_path):
     path, session = completed
     mapped, drawn = spies
     result = final_figures.render_report_comparison(path, tmp_path)
-    assert result["columns"] == ["Initial", "Final"]
+    assert result["columns"] == ["Initial", "Final", "Initial", "Final"]
+    assert result["groups"] == ["Before printer tuning", "After printer tuning"]
     assert [row["label"] for row in result["experiments"]] == ["E1", "E2", "E3", "E4"]
-    assert len(mapped) == 8
+    assert len(mapped) == 16
     for i, eid in enumerate(IDS):
-        for stage in (0, 1):
-            assert np.array_equal(mapped[2*i+stage]["data"], _camera(i, bool(stage)))
-            assert mapped[2*i+stage]["mapping"] == session["final_settings"][eid]
+        for group, mapping in enumerate((session["rounds"]["1"]["reference_settings"][eid], session["final_settings"][eid])):
+            for stage in (0, 1):
+                call = mapped[4*i+2*group+stage]
+                assert np.array_equal(call["data"], _camera(i, bool(stage)))
+                assert call["mapping"] == mapping
+                assert call["limits"] == session["selected_experiments"][i]["limits"]
     panels = [values for values in drawn if values.shape == SHAPE]
-    assert len(panels) == 8 and all(np.array_equal(v, call["grays"]) for v, call in zip(panels, mapped))
+    assert len(panels) == 16 and all(np.array_equal(v, call["grays"]) for v, call in zip(panels, mapped))
+
+
+def test_report_uses_first_cycle_baseline_and_last_cycle_accepted_settings(completed, spies, tmp_path):
+    from copy import deepcopy
+    path, original = completed
+    session = deepcopy(original)
+    first = deepcopy(session["rounds"])
+    # Distinct second-cycle reference: it MUST NOT become the Before mapping.
+    latest = deepcopy(first)
+    latest["1"]["reference_settings"] = deepcopy(session["final_settings"])
+    final = deepcopy(session["final_settings"])
+    for i, eid in enumerate(IDS):
+        final[eid]["gamma"] = .9 + .1 * i
+    latest["3"]["winners"] = deepcopy(final)
+    session.update(contract_version=2, active_cycle=2, rounds=latest,
+                   final_settings=final,
+                   original_settings=deepcopy(first["1"]["reference_settings"]),
+                   cycles={"1": {"steps": first}, "2": {"steps": latest}})
+    copy = tmp_path / "tuning_session.json"
+    copy.write_text(json.dumps(session), encoding="utf-8")
+    result = final_figures.render_report_comparison(copy, tmp_path)
+    assert result["mapping_sources"]["before"]["cycle_id"] == 1
+    assert result["mapping_sources"]["after"]["cycle_id"] == 2
+    for row in result["experiments"]:
+        eid = row["experiment_id"]
+        assert row["before_mapping"] == first["1"]["reference_settings"][eid]
+        assert row["before_mapping"] != latest["1"]["reference_settings"][eid]
+        assert row["after_mapping"] == latest["3"]["winners"][eid]
+    session["final_settings"][IDS[0]]["gamma"] = .7
+    copy.write_text(json.dumps(session), encoding="utf-8")
+    with pytest.raises(ValueError, match="last completed cycle"):
+        final_figures.render_report_comparison(copy, tmp_path)
+
+
+@pytest.mark.parametrize("rectangular", [False, True])
+def test_comparison_layout_keeps_labels_panels_aspects_and_annotations(completed, monkeypatch, tmp_path, rectangular):
+    path, _ = completed
+    marks = []
+    if rectangular:
+        reader = final_figures.load_panel_data
+        monkeypatch.setattr(final_figures, "load_panel_data", lambda *args: np.repeat(reader(*args), 2, axis=1))
+    real = final_figures._draw_box_mark
+    def mark_spy(ax, mark, shape, box):
+        marks.append((dict(mark), shape, box))
+        return real(ax, mark, shape, box)
+    monkeypatch.setattr(final_figures, "_draw_box_mark", mark_spy)
+    # Capture canvas at draw time, before the renderer frees it.
+    real_draw = final_figures.FigureCanvasAgg.draw
+    captured = {}
+    def draw(canvas):
+        real_draw(canvas)
+        captured["texts"] = [(t.get_text(), t.get_fontsize()) for ax in canvas.figure.axes for t in ax.texts]
+        axes = [ax for ax in canvas.figure.axes if ax.images]
+        captured["sizes"] = [(ax.get_position().width, ax.get_position().height) for ax in axes]
+        captured["aspects"] = [ax.get_aspect() for ax in axes]
+        captured["frames"] = [patch.get_bbox().bounds for patch in canvas.figure.axes[0].patches]
+    monkeypatch.setattr(final_figures.FigureCanvasAgg, "draw", draw)
+    final_figures.render_report_comparison(path, tmp_path)
+    selection = json.loads(Path(json.loads(path.read_text())["selection_path"]).read_text())
+    expected_marks = 2 * sum(len(item.get("marks", [])) + len(panel.get("marks", []))
+                             for item in selection["items"] for panel in item["panels"])
+    assert len(marks) == expected_marks > 0
+    assert len(captured["sizes"]) == 16
+    assert np.allclose(captured["sizes"], captured["sizes"][0])
+    w, h = captured["sizes"][0]
+    assert w * 180 / (h * 184) == pytest.approx(2 if rectangular else 1)
+    assert captured["aspects"] == [1.] * 16
+    assert len(captured["frames"]) == 16
+    assert all((w, h) == (37.5, 37.5) for x, y, w, h in captured["frames"])
+    frames = captured["frames"]
+    assert frames[2][0] - frames[1][0] - 37.5 > frames[1][0] - frames[0][0] - 37.5
+    assert all(size >= 10 for _, size in captured["texts"])
+    assert [t for t, _ in captured["texts"] if t.startswith("E")] == ["E1", "E2", "E3", "E4"]
 
 
 def test_figure_uses_exactly_the_saved_settings_and_frozen_limits(completed, spies, tmp_path):

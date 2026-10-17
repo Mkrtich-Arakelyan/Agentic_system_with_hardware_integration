@@ -1,8 +1,9 @@
-"""The final report figure: the selected experiments' heatmaps printed with their tuned gray settings.
+"""Numerical heatmap figures using frozen selection, arrays and normalization.
 
-After round 3 the graph calls render_final_heatmaps(session_path, out_dir); its report step puts
-the PNG into report.pdf. One figure: one row per selected experiment (frozen order), Initial and
-Final side by side, each row with its label and mapping above and a gray scale bar below.
+The report uses render_report_comparison: one E1-E4 row per frozen experiment,
+scientific Initial/Final before tuning and Initial/Final after tuning. Mappings
+come from the original cycle-1 reference and the last completed cycle's winners.
+render_final_heatmaps retains the legacy final-mapping-only view for tuning clients.
 
 The session is read with tuning_tools' key names (_session_inputs, _load_selection). The tuned
 mappings come from the session's final_settings (experiment_id -> complete mapping), read only in
@@ -21,6 +22,7 @@ from matplotlib.figure import Figure
 from matplotlib.patches import Rectangle
 from PIL import Image
 
+from app.report_policy import COMPARISON_VERSION
 from app.print_tuning.grayscale_render import apply_mapping, mapping_label, scale_bar, validate_mapping
 from app.print_tuning.trial_sheet import _check_marks, _draw_box_mark, load_panel_data
 from app.print_tuning.tuning_tools import _load_selection, _session_inputs, _ToolError
@@ -119,6 +121,8 @@ def render_final_heatmaps(session_path, out_dir, *, figsize_mm: tuple[float, flo
     Raises ValueError for a bad session or missing or invalid final settings, and TrialSheetError
     (a ValueError) for bad panel data. Never overwrites an earlier figure.
     """
+    if compact:
+        return render_report_comparison(session_path, out_dir)
     session_path = Path(session_path)
     try:
         session = json.loads(session_path.read_text(encoding="utf-8"))
@@ -156,29 +160,6 @@ def render_final_heatmaps(session_path, out_dir, *, figsize_mm: tuple[float, flo
                            "marks": marks})
         rows.append({"experiment_id": experiment_id, "label": str(item.get("label", item["item_id"])),
                      "panels": panels})
-
-    if compact:
-        fig = Figure(figsize=(180 / 25.4, 196 / 25.4), dpi=DPI, facecolor="white")
-        FigureCanvasAgg(fig)
-        for index, row in enumerate(rows):
-            for column, panel in enumerate(row["panels"]):
-                box = (28 + column * 83, 2 + index * 49, 45, 45)
-                ax = _axes(fig, box, 180, 196)
-                grays = panel["grays"]
-                ax.imshow(grays, cmap="gray", vmin=0, vmax=1, interpolation="nearest", aspect="auto",
-                          extent=(0, grays.shape[1], grays.shape[0], 0))
-                for mark in panel["marks"]:
-                    _draw_box_mark(ax, mark, grays.shape, box)
-        fig.canvas.draw()
-        out_dir = Path(out_dir); out_dir.mkdir(parents=True, exist_ok=True)
-        target = _new_path(out_dir, inputs["session_id"])
-        Image.fromarray(np.asarray(fig.canvas.buffer_rgba())[..., :3]).convert("L").save(target, dpi=(DPI, DPI))
-        return {"contract_version": 1, "status": "ok", "figure_path": str(target),
-            "figure_sha256": hashlib.sha256(target.read_bytes()).hexdigest(), "comparison_version": "scientific-pairs/1",
-            "width_mm": 180, "height_mm": 196, "columns": ["Initial", "Final"],
-            "experiments": [{"experiment_id": row["experiment_id"], "label": f"E{i + 1}",
-                "mapping": mappings[row["experiment_id"]], "limits": limits[row["experiment_id"]]}
-                for i, row in enumerate(rows)]}
 
     # layout in mm: square panels as large as the rows allow, centred
     width_mm, height_mm = (float(v) for v in figsize_mm)
@@ -247,7 +228,124 @@ def render_final_heatmaps(session_path, out_dir, *, figsize_mm: tuple[float, flo
                             for row in rows]}
 
 
+COMPARISON_WIDTH_MM, COMPARISON_HEIGHT_MM = 180., 184.
+COMPARISON_FONT_PT = 10
+COMPARISON_GROUPS = ("Before printer tuning", "After printer tuning")
+COMPARISON_COLUMNS = ["Initial", "Final", "Initial", "Final"]
+
+
+def comparison_metadata(session):
+    """Bind both mappings to recorded history, never the latest cycle's baseline.
+
+    Version 1 sessions have one cycle in rounds; version 2 retains cycle 1 in
+    cycles. Fail closed for absent or conflicting historical settings.
+    """
+    ids = [row["experiment_id"] for row in session["selected_experiments"]]
+    config = session["config_snapshot"]
+    after = _final_settings(session, ids, config)
+    cycle = session.get("active_cycle", 1)
+    if session.get("contract_version") == 2:
+        first = session["cycles"]["1"]["steps"]
+        last = session["cycles"][str(cycle)]["steps"]
+    else:
+        first = last = session["rounds"]
+    before = first["1"].get("reference_settings")
+    if not isinstance(before, dict) or set(before) != set(ids):
+        raise ValueError("Original cycle-1 step-1 reference settings are missing")
+    if session.get("original_settings") is not None and session["original_settings"] != before:
+        raise ValueError("Original baseline differs from cycle-1 step-1 reference")
+    previews = session.get("previews") or {}
+    if previews.get("reference_mappings") is not None and previews["reference_mappings"] != before:
+        raise ValueError("Frozen preview baseline differs from cycle-1 step-1 reference")
+    if last["3"].get("winners") != after:
+        raise ValueError("Final settings differ from the last completed cycle's accepted step-3 mappings")
+    for mapping in before.values():
+        validate_mapping(mapping, config)
+    return {"comparison_version": COMPARISON_VERSION, "groups": list(COMPARISON_GROUPS),
+            "columns": list(COMPARISON_COLUMNS), "minimum_font_pt": COMPARISON_FONT_PT,
+            "width_mm": COMPARISON_WIDTH_MM, "height_mm": COMPARISON_HEIGHT_MM,
+            "mapping_sources": {"before": {"cycle_id": 1, "step_id": 1, "role": "reference"},
+                                "after": {"cycle_id": cycle, "step_id": 3, "role": "accepted"}},
+            "experiments": [{"experiment_id": eid, "label": f"E{i + 1}",
+                "before_mapping": dict(before[eid]), "after_mapping": dict(after[eid]),
+                "mapping": dict(after[eid]),  # compatibility with final-settings consumers
+                "limits": _fixed_limits(row["limits"], eid)}
+                for i, (eid, row) in enumerate(zip(ids, session["selected_experiments"]))]}
+
+
 def render_report_comparison(session_path, out_dir):
-    """Scientific Initial/Final arrays, both using the final accepted mapping."""
-    return render_final_heatmaps(session_path, out_dir, compact=True)
+    """Four panels per experiment from unchanged arrays and frozen limits.
+
+    Two equal-sized Initial/Final pairs use the original and accepted mappings.
+    The PNG owns its labels: embed at full 180 mm width to retain 10 pt text.
+    """
+    session = json.loads(Path(session_path).read_text(encoding="utf-8"))
+    metadata = comparison_metadata(session)
+    inputs = _session_inputs(session, None)
+    selection, item_ids = _load_selection(inputs)
+    items = {item["item_id"]: item for item in selection["items"]}
+    if len(metadata["experiments"]) != 4:
+        raise ValueError("Report comparison requires four frozen experiments")
+    rows = []
+    for row in metadata["experiments"]:
+        item = items[item_ids[row["experiment_id"]]]
+        by_name = {panel["name"]: panel for panel in item["panels"]}
+        arrays = []
+        for name in PANELS:
+            panel = by_name.get(name)
+            if panel is None:
+                raise ValueError(f"Selection item {item['item_id']} has no {name} panel")
+            data = load_panel_data(panel["data_path"], f"item {item['item_id']} panel {name}")
+            if not panel.get("sha256") or hashlib.sha256(Path(panel["data_path"]).read_bytes()).hexdigest() != panel["sha256"]:
+                raise ValueError("Original scientific array changed after selection")
+            marks = _check_marks(item.get("marks"), name, data.shape) + _check_marks(panel.get("marks"), name, data.shape)
+            arrays.append((data, marks))
+        panels = [(apply_mapping(data, row["limits"], mapping), marks)
+                  for mapping in (row["before_mapping"], row["after_mapping"]) for data, marks in arrays]
+        rows.append(panels)
+
+    width, height = metadata["width_mm"], metadata["height_mm"]
+    fig = Figure(figsize=(width / MM_PER_INCH, height / MM_PER_INCH), dpi=DPI, facecolor="white")
+    FigureCanvasAgg(fig)
+    page = _axes(fig, (0, 0, width, height), width, height)
+    page.set_xlim(0, width)
+    page.set_ylim(height, 0)
+    # 2 mm margins, 10 mm label gutter; pair gap > three times inner gap.
+    side, inner_gap, group_gap = 37.5, 3., 10.
+    xs = [12., 12. + side + inner_gap, 12. + 2 * side + inner_gap + group_gap,
+          12. + 3 * side + 2 * inner_gap + group_gap]
+    for i, label in enumerate(COMPARISON_GROUPS):
+        page.text((xs[2*i] + xs[2*i+1] + side) / 2, 3.5, label, fontsize=10,
+                  ha="center", va="center", weight="bold")
+    for x, label in zip(xs, COMPARISON_COLUMNS):
+        page.text(x + side / 2, 10.5, label, fontsize=10, ha="center", va="center")
+    for i, panels in enumerate(rows):
+        y = 16 + i * 41.5
+        page.text(2, y + side / 2, f"E{i + 1}", fontsize=10, va="center", weight="bold")
+        for x, (grays, marks) in zip(xs, panels):
+            box = (x, y, side, side)
+            ax = _axes(fig, box, width, height)
+            nrows, ncols = grays.shape
+            ax.imshow(grays, cmap="gray", vmin=0, vmax=1, interpolation="nearest", aspect="equal",
+                      extent=(0, ncols, nrows, 0))
+            ax.set_xlim(0, ncols)
+            ax.set_ylim(nrows, 0)
+            # Marks retain their geometry even when rectangular data is letterboxed.
+            plot_w, plot_h = (side, side * nrows / ncols) if ncols >= nrows else (side * ncols / nrows, side)
+            for mark in marks:
+                _draw_box_mark(ax, mark, grays.shape, (x, y, plot_w, plot_h))
+            page.add_patch(_frame(box))
+    fig.canvas.draw()
+    # No font shrinking: all text must fit at the declared printed size.
+    renderer = fig.canvas.get_renderer()
+    if any(not fig.bbox.contains(*point) for ax in fig.axes for text in ax.texts
+           for point in text.get_window_extent(renderer).get_points()):
+        raise ValueError("Comparison labels exceed the figure bounds")
+    out = Path(out_dir)
+    out.mkdir(parents=True, exist_ok=True)
+    path = _new_path(out, inputs["session_id"])
+    Image.fromarray(np.asarray(fig.canvas.buffer_rgba())[..., :3]).convert("L").save(path, dpi=(DPI, DPI))
+    fig.clear()
+    return {"contract_version": 2, "status": "ok", "figure_path": str(path),
+            "figure_sha256": hashlib.sha256(path.read_bytes()).hexdigest(), **metadata}
 

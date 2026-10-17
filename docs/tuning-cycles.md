@@ -95,14 +95,25 @@ or trade-off without statistical confidence claims.
 
 ## Report and revision
 
-Policy `report/3` accepts 2 or 3 A4 portrait pages and defaults to 3. Page 1 contains
-scientific results; page 2 contains original scientific Initial/Final arrays BOTH
-rendered with final accepted settings, frozen limits and annotations, plus the
-final-settings table. Page 3 contains the two progress charts, baseline/final table,
+Policy `report/4` accepts 2 or 3 A4 portrait pages and defaults to 3. Page 1 contains
+scientific results; page 2 contains four panels per experiment, in frozen E1-E4
+order: scientific Initial/Final before printer tuning, then Initial/Final after.
+Before uses the original cycle-1 step-1 reference (not the current cycle's reference).
+After uses the last completed cycle's accepted step-3 mapping. Each pair reuses the
+same numerical arrays, frozen limits, annotations and native aspect ratios. Only
+the print-rendering parameters differ. All panel boxes are equal; the gap between
+pairs is wider than the gap within a pair. The figure occupies the full 180 mm
+usable width with 10 pt labels. The final-settings table remains below it.
+Page 3 contains the two progress charts, baseline/final table,
 quantitative interpretation and acquisition/method limitations. The exact comparison
 PNG is validated on page 2. Serif body text remains 11 pt, captions/tables >=10 pt,
 approximately 15 mm margins, page numbers only. A two-page presentation request
 fails if content does not fit; chart labels/fonts are not shrunk to force it.
+The default three-page policy is unchanged; the four-panel figure is never shrunk
+to force a two-page request. Figure contract `scientific-print-pairs/2` records
+both mappings and their cycle/step sources. Old two-column artifacts are
+regenerated, retained in figure history, and cannot satisfy PDF validation or
+reuse a previous print approval. Regeneration never submits a job.
 
 Report revision remains explicit/durable: instructions reach `build_final_report`,
 old PDFs are archived, old approval is invalidated, failures/no-ops stay pending,

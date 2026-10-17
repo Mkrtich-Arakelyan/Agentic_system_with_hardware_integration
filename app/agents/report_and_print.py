@@ -29,8 +29,12 @@ You are the executor in the report-and-print turn. Make exactly one tool call.
 Use build_final_report to generate or revise the report through the reusable Python
 renderer. Default: three A4 pages; two pages are permitted only if readable.
 Page 1: scientific question, controls, comparison chart/table, evidence-supported
-interpretation and next experiment. Page 2: supplied scientific Initial/Final image
-using final accepted tuning mappings, frozen data and normalization, and settings.
+interpretation and next experiment. Page 2: supplied four-panel figure, E1-E4 in
+frozen order. Each row has scientific Initial/Final BEFORE printer tuning, then
+Initial/Final AFTER tuning. The same numerical arrays and frozen limits are used
+in both groups; only print-rendering mappings differ. Before uses cycle 1 step 1
+reference; After uses the last completed cycle's accepted mapping. Embed unchanged
+at full usable width with 10 pt labels, plus the final-settings table.
 Page 3: detail preservation and CNR progress from existing accepted scan evidence.
 No new experiments, tuning rounds, scans, or validation prints are required.
 Do not change scientific numbers, frozen selection or mappings during revisions.

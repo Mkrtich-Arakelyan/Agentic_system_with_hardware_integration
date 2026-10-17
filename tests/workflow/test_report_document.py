@@ -145,11 +145,14 @@ def test_two_page_bundle_legacy_evidence_cache_and_unchanged_source(completed, t
         path.write_text(json.dumps(legacy), encoding="utf-8")
         before = {str(p): digest(p) for p in path.parent.rglob("*") if p.is_file()}
         result = build_report(path.parent, tmp_path / "bundle")
-        assert result["schema_version"] == "report/3" and result["layout"]["pages"] == 3
+        assert result["schema_version"] == "report/4" and result["layout"]["pages"] == 3
         assert "linkage" in result["metrics"]["experiments"][0]["reason"]
         require_report(inspect_tuned_report(result["report_path"], result["figure"]))
         with pymupdf.open(result["report_path"]) as doc:
             assert len(doc) == 3 and "Hardware loop results" in doc[2].get_text()
+            assert "arrays are unchanged" in " ".join(doc[1].get_text().split())
+            image = doc[1].get_image_info()[0]
+            assert image["bbox"][2] - image["bbox"][0] >= 180 * 72 / 25.4 - .5
             for page in doc:
                 for block in page.get_text("dict")["blocks"]:
                     for line in block.get("lines", []):
@@ -177,10 +180,27 @@ def test_page_counts_and_comparison_page_are_enforced(completed, tmp_path):
         with pymupdf.open() as doc:
             for _ in range(count):
                 doc.new_page(width=595.276, height=841.89)
-            doc[location].insert_image(pymupdf.Rect(45, 90, 550, 500), filename=figure["figure_path"])
+            doc[location].insert_image(pymupdf.Rect(42, 90, 553, 650), filename=figure["figure_path"])
             doc.save(target)
         result = inspect_tuned_report(target, figure)
         assert bool(result.get("figure_embedded") and not result.get("error")) == (count in (2, 3) and location == 1)
+
+
+def test_four_panel_figure_cannot_be_shrunk_to_fit_and_old_metadata_is_rejected(completed, tmp_path):
+    path, _ = completed
+    figure = render_report_comparison(path, tmp_path)
+    figure["inputs_sha256"] = "fixture"
+    target = tmp_path / "shrunk.pdf"
+    with pymupdf.open() as doc:
+        for _ in range(3):
+            doc.new_page(width=595.276, height=841.89)
+        doc[1].insert_image(pymupdf.Rect(80, 90, 500, 650), filename=figure["figure_path"])
+        doc.save(target)
+    assert inspect_tuned_report(target, figure).get("error")
+    stale = {**figure, "comparison_version": "scientific-pairs/1"}
+    assert "Stale comparison" in inspect_tuned_report(target, stale)["error"]
+    with pytest.raises(ValueError, match="Stale comparison"):
+        build_report(path.parent, tmp_path / "stale_bundle", figure=stale)
 
 
 def test_executor_report_tool_installs_valid_report_without_print_or_journal_changes(completed, tmp_path):
