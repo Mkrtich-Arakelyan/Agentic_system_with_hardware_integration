@@ -119,9 +119,11 @@ MEASUREMENT_DOCS = {
                                                                                    "intended grays"},
     # candidates
     "mapping.gamma": {"units": "exponent", "meaning": "gamma of the data-to-gray mapping (1 = linear)"},
-    "mapping.dark_level": {"units": "gray (0 black to 1 white)", "meaning": "gray the mapping gives the lowest data"},
-    "mapping.light_level": {"units": "gray (0 black to 1 white)", "meaning": "gray the mapping gives the highest data"},
-    "mapping.steps": {"units": "levels", "meaning": "number of gray steps (below 2 = smooth)"},
+    "mapping.dark_level": {"units": "gray (0 black to 1 white)", "meaning": "gray the mapping gives the lowest "
+                                                                            "data (fixed, not tuned)"},
+    "mapping.light_level": {"units": "gray (0 black to 1 white)", "meaning": "gray the mapping gives the highest "
+                                                                             "data (fixed, not tuned)"},
+    "mapping.steps": {"units": "levels", "meaning": "number of gray steps (below 2 = smooth; fixed, not tuned)"},
     "focus_difference": {"units": "gray (0 black to 1 white)", "meaning": "panel name -> focus.difference of "
                                                                           "that panel"},
 }

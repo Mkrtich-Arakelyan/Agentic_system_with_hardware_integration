@@ -12,9 +12,9 @@ from unittest.mock import Mock, patch
 import numpy as np
 
 from app.print_tuning.final_figures import render_final_heatmaps
-from app.print_tuning.grayscale_render import starting_mapping
+from app.print_tuning.grayscale_render import default_mapping
 from app.print_tuning.tuning_tools import _make_trial_sheet, _session_inputs, _load_selection, create_tuning_tools
-from app.print_tuning.schemas import GammaProposalResponse, GammaReviewResponse, GrayLevelsReviewResponse, StepsReviewResponse
+from app.print_tuning.schemas import GammaFinalReviewResponse, GammaProposalResponse, GammaReviewResponse
 from app.workflow.tuning import (
     TuningSessionError, accept_specialist_response, begin_print_attempt, build_tuning_context,
     initialize_tuning_session, load_tuning_session, record_print_approval, record_print_result,
@@ -22,6 +22,10 @@ from app.workflow.tuning import (
 )
 
 IDS = ("exp/A", "exp-B", "exp-C", "exp-D")
+# The gamma tests printed in each round. Every review picks test_2, so the reference (best gamma so
+# far) is 1.0 in round 1, 0.6 in round 2 and 0.5 in round 3, and the final gamma is 0.46.
+ROUND_GAMMAS = {1: (.4, .6, 1.5, 2.2, 3.), 2: (.45, .5, .7, .8, .9), 3: (.42, .46, .55, .6, .66)}
+FINAL_GAMMA = .46
 
 
 def winner(experiment=None, candidate="reference"):
@@ -29,29 +33,28 @@ def winner(experiment=None, candidate="reference"):
     return result | ({"experiment_id": experiment} if experiment else {})
 
 
-def response(stage, assessment="usable"):
+def gamma_tests(round_id):
+    return [dict(experiment_id=e, tests=[dict(candidate_id=f"test_{i}", gamma=value, reason="Refine tone curve")
+                                         for i, value in enumerate(ROUND_GAMMAS[round_id], 1)]) for e in IDS]
+
+
+def response(stage, assessment="usable", round_id=1):
+    """A valid specialist decision; round_id is the reviewed round (review_gamma reviews round 1 or 2)."""
     if stage == "propose_gamma":
-        return GammaProposalResponse(stage=stage, experiments=[dict(experiment_id=e, tests=[
-            dict(candidate_id=f"test_{i}", gamma=value, reason="Explore tone curve")
-            for i, value in enumerate((.4, .6, 1.5, 2.2, 3.), 1)]) for e in IDS])
+        return GammaProposalResponse(stage=stage, experiments=gamma_tests(1))
     common = dict(stage=stage, assessment=assessment, issues=[] if assessment == "usable" else ["Unreliable image" if assessment == "needs_rescan" else "Low measured contrast"])
     usable = assessment == "usable"
+    winners = [winner(e, "test_2") for e in IDS] if usable else []
     if stage == "review_gamma":
-        return GammaReviewResponse(**common, gamma_winners=[winner(e, "test_2") for e in IDS] if usable else [], endpoint_tests=[
-            dict(candidate_id=f"test_{i}", dark_level=d, light_level=l, reason="Compare endpoints")
-            for i, (d, l) in enumerate(((.02, 1.), (.04, 1.), (.06, .95), (.08, .90), (.1, .85)), 1)] if usable else [])
-    if stage == "review_gray_levels":
-        return GrayLevelsReviewResponse(**common, endpoint_winner=winner(candidate="test_1") if usable else None, step_tests=[
-            dict(experiment_id=e, tests=[dict(candidate_id=f"test_{i}", steps=value, reason="Compare bands")
-                                         for i, value in enumerate((2, 4, 8, 16, 32), 1)]) for e in IDS] if usable else [])
-    return StepsReviewResponse(**common, step_winners=[winner(e) for e in IDS] if usable else [])
+        return GammaReviewResponse(**common, gamma_winners=winners, gamma_tests=gamma_tests(round_id + 1) if usable else [])
+    return GammaFinalReviewResponse(**common, gamma_winners=winners)
 
 
 class SessionTests(unittest.TestCase):
     def setUp(self):
         self.tmp = tempfile.TemporaryDirectory()
         self.addCleanup(self.tmp.cleanup)
-        self.root = Path(self.tmp.name) / "run"
+        self.root = Path(self.tmp.name).resolve() / "run"
         self.root.mkdir()
         self.path = self.root / "tuning_session.json"
         self.results, selections = [], []
@@ -92,7 +95,7 @@ class SessionTests(unittest.TestCase):
         result.update(status=status, scan_quality=quality)
         if status == "ok":
             evaluation_path = self.root / f"{name}_{trial['trial_id']}.json"
-            evaluation = dict(result, schema_version="scan_eval/2", tested_parameter={1: "gamma", 2: "gray_levels", 3: "steps"}[trial["round_id"]],
+            evaluation = dict(result, schema_version="scan_eval/2", tested_parameter="gamma",
                               manifest_path=trial["manifest_path"], pages=[], candidates=[], evaluation_path=str(evaluation_path))
             evaluation_path.write_text(json.dumps(evaluation))
             result.update(evaluation_path=str(evaluation_path), pages=[], candidates=[])
@@ -102,7 +105,8 @@ class SessionTests(unittest.TestCase):
         return session, result
 
     def review(self, stage, name="scan", assessment="usable"):
-        return accept_specialist_response(self.path, response(stage, assessment), build_tuning_context(self.path, stage), evaluation_record_id=name)
+        number = load_tuning_session(self.path)["active_round"]
+        return accept_specialist_response(self.path, response(stage, assessment, number), build_tuning_context(self.path, stage), evaluation_record_id=name)
 
     def round_one(self):
         self.init()
@@ -128,15 +132,15 @@ class SessionTests(unittest.TestCase):
         self.propose()
         self.assertEqual(_session_inputs(load_tuning_session(self.path), 1)["proposal"]["stage"], "propose_gamma")
 
-    def test_colored_paper_presets_match_previews_trials_and_resume(self):
+    def test_paper_color_is_context_only_for_previews_trials_and_resume(self):
         paper = {"paper_session_id": "yellow-stock", "paper_color": "yellow"}
         original = deepcopy(paper)
         session = self.init(paper_session=paper)
-        mapping, preset = starting_mapping(session["config_snapshot"], "yellow")
+        mapping = default_mapping(session["config_snapshot"])      # the color changes no setting
         self.assertEqual(paper, original)
         self.assertEqual(session["paper_color"], "yellow")
         self.assertEqual(session["previews"]["paper_color"], "yellow")
-        self.assertEqual(session["previews"]["paper_preset"], preset)
+        self.assertNotIn("paper_preset", session["previews"])
         self.assertEqual(session["accepted_settings"], {e: mapping for e in IDS})
         self.assertEqual(session["previews"]["reference_mappings"], session["accepted_settings"])
         before = self.path.read_bytes()
@@ -150,7 +154,8 @@ class SessionTests(unittest.TestCase):
         _, trial = self.trial(1)
         manifest = json.loads(Path(trial["manifest_path"]).read_text())
         for entries in manifest["variations"].values():
-            self.assertTrue(all(v["mapping"]["dark_level"] == mapping["dark_level"] for v in entries))
+            self.assertTrue(all((v["mapping"]["dark_level"], v["mapping"]["light_level"], v["mapping"]["steps"])
+                                == (0., 1., 0) for v in entries))
 
     def test_paper_color_argument_and_invalid_metadata(self):
         for value in (False, 12, "", " "):
@@ -236,12 +241,12 @@ class SessionTests(unittest.TestCase):
     def test_all_four_decisions_progress_to_compatible_final_settings(self):
         self.init()
         self.propose()
-        for number, stage in ((1, "review_gamma"), (2, "review_gray_levels"), (3, "review_steps")):
+        for number, stage in ((1, "review_gamma"), (2, "review_gamma"), (3, "review_gamma_final")):
             _, trial = self.trial(number)
             _, result = self.scan(trial, name=f"scan{number}")
             context = build_tuning_context(self.path, stage)
             original = deepcopy(context)
-            decision = response(stage)
+            decision = response(stage, round_id=number)
             session = accept_specialist_response(self.path, decision, context, evaluation_record_id=f"scan{number}")
             self.assertEqual(context, original)
             if number < 3:
@@ -252,9 +257,8 @@ class SessionTests(unittest.TestCase):
                 self.assertEqual(session["status"], "completed")
         self.assertEqual(set(session["rounds"]), {"1", "2", "3"})
         for mapping in session["final_settings"].values():
-            self.assertEqual(mapping["gamma"], .6)
-            self.assertEqual(mapping["dark_level"], .02)
-            self.assertEqual(mapping["steps"], 0)
+            self.assertEqual(mapping["gamma"], FINAL_GAMMA)
+            self.assertEqual((mapping["dark_level"], mapping["light_level"], mapping["steps"]), (0., 1., 0))
         figure = render_final_heatmaps(self.path, self.root / "final")
         self.assertTrue(Path(figure["figure_path"]).is_file())
 
@@ -262,7 +266,7 @@ class SessionTests(unittest.TestCase):
         self.round_one()
         before = self.path.read_bytes()
         decision = response("review_gamma")
-        decision.endpoint_tests[0].dark_level = .9
+        decision.gamma_tests[0].tests[0].gamma = .6       # the winner's own gamma
         with self.assertRaises(TuningSessionError):
             accept_specialist_response(self.path, decision, build_tuning_context(self.path, "review_gamma"), evaluation_record_id="scan")
         self.assertEqual(before, self.path.read_bytes())

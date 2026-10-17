@@ -27,23 +27,25 @@ from typing import Any, Literal, TypeVar, get_args
 from pydantic import ValidationError
 
 from app.print_tuning.grayscale_render import (
-    MAPPING_PARAMETERS, changed_parameters, validate_config, validate_mapping,
+    MAPPING_PARAMETERS, changed_parameters, default_mapping, validate_config, validate_mapping,
 )
 from app.print_tuning.schemas import (
-    GammaProposalResponse, GammaReviewResponse, GrayLevelsReviewResponse,
-    StepsReviewResponse, TestCandidateId, WinnerCandidateId,
+    GammaFinalReviewResponse, GammaProposalResponse, GammaReviewResponse,
+    TestCandidateId, WinnerCandidateId,
 )
 
-Stage = Literal["propose_gamma", "review_gamma", "review_gray_levels", "review_steps"]
-Response = GammaProposalResponse | GammaReviewResponse | GrayLevelsReviewResponse | StepsReviewResponse
+Stage = Literal["propose_gamma", "review_gamma", "review_gamma_final"]
+Response = GammaProposalResponse | GammaReviewResponse | GammaFinalReviewResponse
 ResponseT = TypeVar("ResponseT", bound=Response)
 EffectiveMapping = dict[str, Any]
 TEST_IDS = get_args(TestCandidateId)
 _MODELS = dict(zip(get_args(Stage), (
-    GammaProposalResponse, GammaReviewResponse, GrayLevelsReviewResponse, StepsReviewResponse,
+    GammaProposalResponse, GammaReviewResponse, GammaFinalReviewResponse,
 )))
-_ROUNDS = {"review_gamma": (1, "gamma"), "review_gray_levels": (2, "gray_levels"),
-           "review_steps": (3, "steps")}
+# Review stage -> the physical rounds it may review. Every round tests gamma only.
+_ROUNDS = {"review_gamma": (1, 2), "review_gamma_final": (3,)}
+# Not tuned: always printed with the config defaults (dark 0, light 1, smooth).
+_FIXED = ("dark_level", "light_level", "steps")
 
 
 class TuningValidationError(ValueError):
@@ -125,23 +127,15 @@ def _config(config: dict[str, Any], errors: list[str]) -> None:
                                   ("steps", "int", "per_item"), ("invert", "bool", "per_item")):
             if parameters[name]["type"] != kind or parameters[name]["scope"] != scope:
                 errors.append(f"config.parameters.{name}: expected type={kind}, scope={scope}")
-        for name in ("gamma", "steps"):
-            for key in ("min", "max", "default"):
-                if not _finite(parameters[name][key]):
-                    errors.append(f"config.parameters.{name}.{key}: must be finite")
-        gray = parameters["gray_levels"]
-        for end in ("dark", "light"):
-            for key in ("min", "max", "default"):
-                if not _finite(gray[end][key]):
-                    errors.append(f"config.parameters.gray_levels.{end}.{key}: must be finite")
-        if not _finite(gray["min_gap"]):
-            errors.append("config.parameters.gray_levels.min_gap: must be finite")
-        special = parameters["steps"].get("special_values", {})
-        if not isinstance(special, dict) or any(str(int(key)) != key for key in special):
-            errors.append("config.parameters.steps.special_values: keys must be canonical integer strings")
-        expected = [(1, "gamma"), (2, "gray_levels"), (3, "steps")]
+        for key in ("min", "max", "default"):
+            if not _finite(parameters["gamma"][key]):
+                errors.append(f"config.parameters.gamma.{key}: must be finite")
+        for name in ("gray_levels", "steps"):
+            if parameters[name]["tuned"] is not False:
+                errors.append(f"config.parameters.{name}: must be fixed (tuned=false); only gamma is tuned")
+        expected = [(1, "gamma"), (2, "gamma"), (3, "gamma")]
         if [(r["round_id"], r["parameter"]) for r in config["rounds"]] != expected:
-            errors.append("config.rounds: expected gamma, gray_levels, steps as rounds 1, 2, 3")
+            errors.append("config.rounds: expected gamma as rounds 1, 2 and 3")
     except (ValueError, KeyError, TypeError, AttributeError, OverflowError) as error:
         errors.append(f"config: incomplete or invalid tuning configuration: {error}")
 
@@ -170,6 +164,10 @@ def _mapping(mapping: Any, config: dict[str, Any], where: str, errors: list[str]
         validate_mapping(dict(mapping), config)
     except (ValueError, KeyError, TypeError, OverflowError) as error:
         errors.append(f"{where}: {error}")
+    fixed = {key: value for key, value in default_mapping(config).items() if key in _FIXED}
+    for key, value in fixed.items():
+        if mapping[key] != value:
+            errors.append(f"{where}.{key}: fixed at {value!r} (not tuned), got {mapping[key]!r}")
     return len(errors) == before
 
 
@@ -236,10 +234,9 @@ def _translate_candidates(entries: Any, where: str, errors: list[str]) -> dict[s
     return candidates
 
 
-def _parameter_values(mapping: Mapping[str, Any], parameter: str) -> tuple:
-    """Exact binary64 equality for tones; exact integer equality for steps."""
-    keys = ("dark_level", "light_level") if parameter == "gray_levels" else (parameter,)
-    return tuple(mapping[key] if parameter == "steps" else float(mapping[key]) for key in keys)
+def _gamma(mapping: Mapping[str, Any]) -> float:
+    """Exact binary64 equality for gamma values."""
+    return float(mapping["gamma"])
 
 
 def _manifest_candidates(context: ValidationContext, ids: list[str], errors: list[str]) -> dict[str, dict[str, dict]]:
@@ -247,8 +244,12 @@ def _manifest_candidates(context: ValidationContext, ids: list[str], errors: lis
     if not isinstance(manifest, dict):
         errors.append("reviewed_manifest: loaded trial/1 manifest required for a review")
         return {}
-    round_id, parameter = _ROUNDS[context.expected_stage]
-    checks = {"schema_version": "trial/1", "round_id": round_id, "tested_parameter": parameter}
+    rounds = _ROUNDS[context.expected_stage]
+    round_id = manifest.get("round_id")
+    if type(round_id) is not int or round_id not in rounds:
+        errors.append(f"reviewed_manifest.round_id: {context.expected_stage!r} reviews round(s) "
+                      f"{list(rounds)}, got {round_id!r}")
+    checks = {"schema_version": "trial/1", "tested_parameter": "gamma"}
     for field, expected in (("trial_id", context.expected_trial_id),
                             ("calibration_session_id", context.expected_calibration_session_id)):
         if not _nonblank(expected):
@@ -296,39 +297,24 @@ def _manifest_candidates(context: ValidationContext, ids: list[str], errors: lis
         for label, entry in candidates.items():
             if _mapping(entry.get("mapping"), context.config, f"{where}.{label}.mapping", errors):
                 valid_candidates[label] = entry
+        # Validate every printed label, including candidates not selected as winners.
         if "reference" in valid_candidates:
             reference = valid_candidates["reference"]["mapping"]
-            original = _parameter_values(reference, parameter)
-            seen: dict[tuple, str] = {}
+            original = _gamma(reference)
+            seen: dict[float, str] = {}
             for label in TEST_IDS:
                 if label not in valid_candidates:
                     continue
                 mapping = valid_candidates[label]["mapping"]
-                if changed_parameters(reference, mapping) != {parameter}:
-                    errors.append(f"{where}.{label}: must change only reviewed parameter {parameter!r}")
-                values = _parameter_values(mapping, parameter)
-                if values == original:
-                    errors.append(f"{where}.{label}: duplicates printed reference {parameter}")
-                if values in seen:
-                    errors.append(f"{where}.{label}: duplicate printed {parameter} test (same as {seen[values]})")
-                seen[values] = label
+                if changed_parameters(reference, mapping) != {"gamma"}:
+                    errors.append(f"{where}.{label}: must change only gamma")
+                value = _gamma(mapping)
+                if value == original:
+                    errors.append(f"{where}.{label}: duplicates printed reference gamma")
+                if value in seen:
+                    errors.append(f"{where}.{label}: duplicate printed gamma test (same as {seen[value]})")
+                seen[value] = label
         result[experiment] = valid_candidates
-    # Validate every printed label, including candidates not selected as winners.
-    # In gamma/steps rounds, the per-item change-only check also freezes endpoints
-    # within that item. Gamma and steps may vary between experiments.
-    for label in ("reference", *TEST_IDS):
-        shared: tuple | None = None
-        first_experiment = None
-        for experiment in ids:
-            entry = result.get(experiment, {}).get(label)
-            if entry is None:
-                continue
-            pair = _parameter_values(entry["mapping"], "gray_levels")
-            if shared is None:
-                shared, first_experiment = pair, experiment
-            elif pair != shared:
-                errors.append(f"reviewed_manifest.variations[{experiment!r}].{label}: shared endpoints "
-                              f"must be identical to {first_experiment!r} for this candidate")
     return result
 
 
@@ -361,19 +347,11 @@ def get_candidate_correspondence(context: ValidationContext) -> tuple[CandidateI
 
 def _winners(response: Response, ids: list[str], candidates: dict[str, dict[str, dict]],
              errors: list[str]) -> dict[str, EffectiveMapping]:
-    if isinstance(response, GrayLevelsReviewResponse):
-        winner = response.endpoint_winner
-        if winner is None:
-            errors.append("endpoint_winner: required for a usable review")
-            return {}
-        winners = [(experiment, winner) for experiment in ids]
-    else:
-        field = "gamma_winners" if isinstance(response, GammaReviewResponse) else "step_winners"
-        entries = getattr(response, field)
-        _coverage([e.experiment_id for e in entries], ids, field, errors)
-        winners = [(entry.experiment_id, entry) for entry in entries]
+    entries = response.gamma_winners
+    _coverage([e.experiment_id for e in entries], ids, "gamma_winners", errors)
     resolved: dict[str, EffectiveMapping] = {}
-    for experiment, winner in winners:
+    for winner in entries:
+        experiment = winner.experiment_id
         where = f"winner[{experiment!r}].{winner.candidate_id}"
         if winner.tie_explanation is not None and not _nonblank(winner.tie_explanation):
             errors.append(f"{where}.tie_explanation: must be nonblank or null")
@@ -382,10 +360,6 @@ def _winners(response: Response, ids: list[str], candidates: dict[str, dict[str,
             errors.append(f"{where}: absent from this experiment in the reviewed trial/round")
         elif isinstance(candidate.get("mapping"), dict):
             resolved[experiment] = dict(candidate["mapping"])
-    if isinstance(response, GrayLevelsReviewResponse) and len(resolved) == len(ids):
-        pairs = {(m.get("dark_level"), m.get("light_level")) for m in resolved.values()}
-        if len(pairs) != 1:
-            errors.append("endpoint_winner: candidate endpoints must be identical across all selected experiments")
     return resolved
 
 
@@ -394,11 +368,9 @@ def _assessment(response: Response, errors: list[str]) -> bool:
         return True
     if not response.issues or not all(_nonblank(issue) for issue in response.issues):
         errors.append("issues: an unusable assessment requires at least one nonblank explanation")
-    for field in ("gamma_winners", "endpoint_tests", "step_tests", "step_winners"):
+    for field in ("gamma_winners", "gamma_tests"):
         if getattr(response, field, []):
             errors.append(f"{field}: must be empty for assessment={response.assessment!r}")
-    if getattr(response, "endpoint_winner", None) is not None:
-        errors.append("endpoint_winner: must be null for an unusable assessment")
     return False
 
 
@@ -430,8 +402,6 @@ def _references(references: Mapping[str, Mapping[str, Any]] | None, ids: list[st
         mapping = references.get(experiment)
         if _mapping(mapping, config, f"reference_mappings[{experiment!r}]", errors):
             valid[experiment] = dict(mapping)
-    if len(valid) == len(ids) and len({(m["dark_level"], m["light_level"]) for m in valid.values()}) != 1:
-        errors.append("reference_mappings: endpoint pairs must be shared consistently across all experiments")
     return valid
 
 
@@ -439,7 +409,7 @@ def validate_context(context: ValidationContext) -> ValidationContext:
     """Check non-model context before requesting a specialist decision.
 
     Initial proposals require references. Reviews require a valid bound manifest;
-    optional supplied references are checked for shape/ranges/sharing only here.
+    optional supplied references are checked for shape/ranges/fixed values only here.
     Their agreement with the eventual winners is checked by validate_response.
     No proposal or winner is fabricated to perform this preflight.
     """
@@ -453,25 +423,23 @@ def validate_context(context: ValidationContext) -> ValidationContext:
     return context
 
 
-def _tests(tests: Sequence[Any], reference: dict, parameter: str, config: dict,
-           where: str, errors: list[str]) -> None:
+def _tests(tests: Sequence[Any], reference: dict, config: dict, where: str, errors: list[str]) -> None:
+    """Gamma tests: inside the config range, not the reference gamma, no duplicates."""
     _coverage([t.candidate_id for t in tests], TEST_IDS, where + ".candidate_id", errors)
-    seen: set[Any] = set()
-    keys = ("dark_level", "light_level") if parameter == "gray_levels" else (parameter,)
-    original = _parameter_values(reference, parameter)
+    seen: set[float] = set()
+    original = _gamma(reference)
     for test in tests:
         location = f"{where}.{test.candidate_id}"
-        values = tuple(getattr(test, key) for key in keys)
-        proposed = reference | dict(zip(keys, values))
+        proposed = reference | {"gamma": test.gamma}
         if not _mapping(proposed, config, location, errors):
             continue
         # Exact float64 comparison: no label-format rounding or arbitrary epsilon.
-        comparable = _parameter_values(proposed, parameter)
-        if comparable == original:
-            errors.append(f"{location}: duplicates the applicable reference {parameter}")
-        if comparable in seen:
-            errors.append(f"{location}: duplicate {parameter} test")
-        seen.add(comparable)
+        value = _gamma(proposed)
+        if value == original:
+            errors.append(f"{location}: duplicates the applicable reference gamma")
+        if value in seen:
+            errors.append(f"{location}: duplicate gamma test")
+        seen.add(value)
 
 
 def validate_response(response: ResponseT, context: ValidationContext) -> ResponseT:
@@ -497,22 +465,17 @@ def validate_response(response: ResponseT, context: ValidationContext) -> Respon
             references = {}
     else:
         references = _references(context.reference_mappings, ids, context.config, errors)
-    if usable:
-        if isinstance(response, GammaReviewResponse):
-            if references:
-                _tests(response.endpoint_tests, next(iter(references.values())), "gray_levels", context.config, "endpoint_tests", errors)
+    # Next gamma tests: the initial proposal and the round 1/2 reviews (not the final review).
+    if usable and isinstance(response, (GammaProposalResponse, GammaReviewResponse)):
+        field = "experiments" if isinstance(response, GammaProposalResponse) else "gamma_tests"
+        groups = getattr(response, field)
+        _coverage([group.experiment_id for group in groups], ids, field, errors)
+        for group in groups:
+            where = f"{field}[{group.experiment_id!r}]"
+            if group.experiment_id in references:
+                _tests(group.tests, references[group.experiment_id], context.config, where, errors)
             else:
-                _coverage([t.candidate_id for t in response.endpoint_tests], TEST_IDS, "endpoint_tests.candidate_id", errors)
-        elif isinstance(response, (GammaProposalResponse, GrayLevelsReviewResponse)):
-            field, parameter = ("experiments", "gamma") if isinstance(response, GammaProposalResponse) else ("step_tests", "steps")
-            groups = getattr(response, field)
-            _coverage([group.experiment_id for group in groups], ids, field, errors)
-            for group in groups:
-                where = f"{field}[{group.experiment_id!r}]"
-                if group.experiment_id in references:
-                    _tests(group.tests, references[group.experiment_id], parameter, context.config, where, errors)
-                else:
-                    _coverage([t.candidate_id for t in group.tests], TEST_IDS, where + ".candidate_id", errors)
+                _coverage([t.candidate_id for t in group.tests], TEST_IDS, where + ".candidate_id", errors)
     if errors:
         raise TuningValidationError(errors)
     return response

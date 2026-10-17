@@ -14,7 +14,7 @@ from app.workflow.tuning import (
     TuningSessionError, initialize_tuning_session, load_tuning_session,
     accept_specialist_response, record_print_approval, begin_print_attempt,
     record_print_result, resolve_print_outcome, request_trial_reprint, record_stop,
-    _bound_trial, _trial_manifest,
+    _REVIEW_STAGES, _bound_trial, _trial_manifest,
 )
 from app.workflow.tuning_evidence import prepare_tuning_inputs
 from app.agents.photo_quality_specialist import photo_quality_specialist
@@ -743,7 +743,7 @@ def build_graph(
         return (session["status"] == "completed" and session["phase"] == "completed"
                 and session["active_round"] == 3 and bool(session.get("final_settings"))
                 and session["final_settings"] == session["accepted_settings"] == final["winners"]
-                and review.get("stage") == "review_steps" and review.get("assessment") == "usable")
+                and review.get("stage") == "review_gamma_final" and review.get("assessment") == "usable")
 
     def action(name: str, **kwargs) -> dict:
         return {"route": "tuning_executor", "tuning_action": {"action": name, **kwargs}}
@@ -834,7 +834,7 @@ def build_graph(
                     # Acceptance may have committed before this node checkpoint.
                     return {"route": "tuning_route"}
             stage = ("propose_gamma" if session["phase"] == "awaiting_gamma_proposal" else
-                     {1: "review_gamma", 2: "review_gray_levels", 3: "review_steps"}[session["active_round"]])
+                     _REVIEW_STAGES[session["active_round"]])
             inputs = prepare_tuning_inputs(state["tuning_session_path"], stage)
             response = photo_quality_specialist(
                 specialist_llm if specialist_llm is not None else llm, inputs.context, inputs.evidence,

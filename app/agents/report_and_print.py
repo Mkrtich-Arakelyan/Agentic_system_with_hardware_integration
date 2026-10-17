@@ -74,7 +74,7 @@ interpolation='none' to preserve its original pixels in the PDF. Keep its aspect
 ratio, fully inside the one A4 portrait page, at least 25% of page width and
 height. The application checks the actual embedded pixels before approval.
 Scientific findings and selection reasons come from the scientific evidence;
-gamma/endpoints/steps are presentation and print adjustments, not new findings.
+the tuned gamma is a presentation and print adjustment, not a new finding.
 
 Layout: create a polished scientific brief suitable for grayscale printing.
 Use a white background, black text and restrained gray accents, with approximately

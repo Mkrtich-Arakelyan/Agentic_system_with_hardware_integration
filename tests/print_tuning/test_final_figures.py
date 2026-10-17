@@ -11,8 +11,7 @@ from PIL import Image
 
 import app.print_tuning.final_figures as final_figures
 from app.print_tuning.fake_scan import fake_scan
-from app.print_tuning.schemas import (GammaProposalResponse, GammaReviewResponse, GrayLevelsReviewResponse,
-                                      StepsReviewResponse)
+from app.print_tuning.schemas import GammaFinalReviewResponse, GammaProposalResponse, GammaReviewResponse
 from app.print_tuning.tuning_tools import create_tuning_tools
 from app.workflow.tuning import (accept_specialist_response, build_tuning_context, initialize_tuning_session,
                                  load_tuning_session, record_scan_for_executor, record_trial_result)
@@ -20,13 +19,13 @@ from app.workflow.tuning import (accept_specialist_response, build_tuning_contex
 IDS = ("exp/A", "exp-B", "exp-C", "exp-D")       # exp/A becomes item exp_A on the trial sheet
 SHAPE, TARGET = (40, 40), (20, 20)
 GAMMAS = (0.4, 0.6, 1.5, 2.2, 3.0)
-PAIRS = ((0.02, 1.0), (0.04, 1.0), (0.06, 0.95), (0.08, 0.9), (0.1, 0.85))
-STEPS = (2, 4, 8, 16, 32)
-# Different winners per experiment, so the final settings differ (reference: gamma 1.0, steps 0).
-GAMMA_WINNERS = {"exp/A": "test_2", "exp-B": "reference", "exp-C": "test_4", "exp-D": "test_1"}
-ENDPOINT_WINNER = "test_3"                         # shared: dark 0.06, light 0.95
-STEP_WINNERS = {"exp/A": "reference", "exp-B": "test_2", "exp-C": "test_3", "exp-D": "test_1"}
-EXPECTED_STEPS = {"exp/A": 0, "exp-B": 4, "exp-C": 8, "exp-D": 2}
+FACTORS = (0.7, 0.85, 1.15, 1.3, 1.5)            # rounds 2 and 3 test the winner's gamma times these
+# Different winners per experiment, so the final gammas differ (round 1 reference: gamma 1.0).
+ROUND_WINNERS = {1: {"exp/A": "test_2", "exp-B": "reference", "exp-C": "test_4", "exp-D": "test_1"},
+                 2: {e: "reference" for e in IDS},
+                 3: {"exp/A": "reference", "exp-B": "test_2", "exp-C": "test_3", "exp-D": "test_1"}}
+ROUND_1_GAMMA = {"exp/A": 0.6, "exp-B": 1.0, "exp-C": 2.2, "exp-D": 0.4}
+EXPECTED_GAMMA = {"exp/A": 0.6, "exp-B": 1.0 * 0.85, "exp-C": 2.2 * 1.15, "exp-D": 0.4 * 0.7}
 
 
 def _winner(candidate, experiment=None):
@@ -35,21 +34,18 @@ def _winner(candidate, experiment=None):
     return value | ({"experiment_id": experiment} if experiment else {})
 
 
-def _response(stage):
+def _response(stage, round_id=None):
     if stage == "propose_gamma":
         return GammaProposalResponse(stage=stage, experiments=[dict(experiment_id=e, tests=[
             dict(candidate_id=f"test_{i}", gamma=g, reason="Explore tone curve") for i, g in enumerate(GAMMAS, 1)])
             for e in IDS])
-    common = dict(stage=stage, assessment="usable", issues=[])
-    if stage == "review_gamma":
-        return GammaReviewResponse(**common, gamma_winners=[_winner(GAMMA_WINNERS[e], e) for e in IDS],
-                                   endpoint_tests=[dict(candidate_id=f"test_{i}", dark_level=d, light_level=l,
-                                                        reason="Compare endpoints") for i, (d, l) in enumerate(PAIRS, 1)])
-    if stage == "review_gray_levels":
-        return GrayLevelsReviewResponse(**common, endpoint_winner=_winner(ENDPOINT_WINNER), step_tests=[
-            dict(experiment_id=e, tests=[dict(candidate_id=f"test_{i}", steps=s, reason="Compare bands")
-                                         for i, s in enumerate(STEPS, 1)]) for e in IDS])
-    return StepsReviewResponse(**common, step_winners=[_winner(STEP_WINNERS[e], e) for e in IDS])
+    common = dict(stage=stage, assessment="usable", issues=[],
+                  gamma_winners=[_winner(ROUND_WINNERS[round_id][e], e) for e in IDS])
+    if stage == "review_gamma":       # round 2 keeps the round 1 winners, so both rounds refine around them
+        return GammaReviewResponse(**common, gamma_tests=[dict(experiment_id=e, tests=[
+            dict(candidate_id=f"test_{i}", gamma=ROUND_1_GAMMA[e] * f, reason="Refine tone curve")
+            for i, f in enumerate(FACTORS, 1)]) for e in IDS])
+    return GammaFinalReviewResponse(**common)
 
 
 def _camera(index: int, focused: bool) -> np.ndarray:
@@ -83,14 +79,14 @@ def build_completed_session(root: Path) -> Path:
     path = root / "tuning_session.json"
     accept_specialist_response(path, _response("propose_gamma"), build_tuning_context(path, "propose_gamma"))
     make_trial_sheet, read_scan = create_tuning_tools(root)
-    for number, stage in ((1, "review_gamma"), (2, "review_gray_levels"), (3, "review_steps")):
+    for number, stage in ((1, "review_gamma"), (2, "review_gamma"), (3, "review_gamma_final")):
         trial = make_trial_sheet.invoke({"round_id": number})
         assert trial["status"] == "ok", trial
         record_trial_result(path, trial)
         scan = read_scan.invoke({"scan_paths": fake_scan(trial["pdf_path"], root / f"scan_{number}")})
         assert scan["status"] == "ok", scan
         record_scan_for_executor(path, scan, record_id=f"scan_{number}")
-        accept_specialist_response(path, _response(stage), build_tuning_context(path, stage),
+        accept_specialist_response(path, _response(stage, number), build_tuning_context(path, stage),
                                    evaluation_record_id=f"scan_{number}")
     return path
 
@@ -126,9 +122,9 @@ def spies(monkeypatch):
 def test_session_has_different_final_settings(completed):
     _, session = completed
     final = session["final_settings"]
-    assert {e: final[e]["steps"] for e in IDS} == EXPECTED_STEPS
-    assert len({final[e]["gamma"] for e in IDS}) == 4                         # 0.6, 1.0, 2.2, 0.4
-    assert {(final[e]["dark_level"], final[e]["light_level"]) for e in IDS} == {(0.06, 0.95)}
+    assert {e: final[e]["gamma"] for e in IDS} == EXPECTED_GAMMA
+    assert len({final[e]["gamma"] for e in IDS}) == 4
+    assert {(final[e]["dark_level"], final[e]["light_level"], final[e]["steps"]) for e in IDS} == {(0.0, 1.0, 0)}
 
 
 def test_figure_uses_exactly_the_saved_settings_and_frozen_limits(completed, spies, tmp_path):
@@ -153,12 +149,10 @@ def test_figure_uses_exactly_the_saved_settings_and_frozen_limits(completed, spi
     assert len(panels) == len(mapped)
     assert all(np.array_equal(image, call["grays"]) for image, call in zip(panels, mapped))
 
+    # steps stay fixed at 0 (smooth): no panel is banded into a few gray levels
     for index, experiment in enumerate(IDS):
         levels = {len(np.unique(mapped[2 * index + panel]["grays"])) for panel in (0, 1)}
-        if EXPECTED_STEPS[experiment] == 4:
-            assert max(levels) <= 4, (experiment, levels)
-        if EXPECTED_STEPS[experiment] == 0:
-            assert min(levels) > 4, (experiment, levels)
+        assert min(levels) > 4, (experiment, levels)
 
 
 def test_png_is_gray_with_its_size_dpi_and_hash(completed, tmp_path):
@@ -222,7 +216,7 @@ def _missing_panel_file(session, folder):
 @pytest.mark.parametrize("change, message", [
     (_drop_final_settings, "final_settings .* is missing"),
     (_drop_one_experiment, r"final_settings has no mapping for \['exp-C'\]"),
-    (_other_dark_level, "dark_level and light_level are shared"),
+    (_other_dark_level, r"final_settings\['exp-B'\] changes the fixed \(not tuned\) values"),
     (_gamma_out_of_range, r"final_settings\['exp-D'\] is not a valid mapping: gamma 9.0 is outside"),
     (_flat_limits, r"selected_experiments\['exp-B'\].limits needs finite lo < hi"),
     (_missing_panel_file, "gone.npy does not exist"),

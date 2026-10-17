@@ -18,7 +18,7 @@ from uuid import uuid4
 
 from app.agents.scientist import ExperimentSelection
 from app.experiments.selection import selection_from_scientist
-from app.print_tuning.grayscale_render import load_config, starting_mapping
+from app.print_tuning.grayscale_render import default_mapping, load_config
 from app.print_tuning.tuning_tools import (
     OUTPUT_FOLDER, SESSION_FILE, _ToolError, _load_selection, _round_tests,
     _session_inputs, _variations, prepare_specialist_previews,
@@ -34,7 +34,9 @@ class TuningSessionError(ValueError):
     """Invalid session input, incompatible artifacts, or out-of-order operation."""
 
 
-_REVIEW_STAGES = {1: "review_gamma", 2: "review_gray_levels", 3: "review_steps"}
+# Every round tests gamma: rounds 1 and 2 end with review_gamma (winners + next tests),
+# round 3 with review_gamma_final (final winners only).
+_REVIEW_STAGES = {1: "review_gamma", 2: "review_gamma", 3: "review_gamma_final"}
 _RETRY_LIMITS = {"rescans": 3, "reprints": 1, "trial_regenerations": 2}
 
 
@@ -155,9 +157,10 @@ def initialize_tuning_session(
     An omitted paper session uses {paper_session_id: default, description:
     unspecified paper; no paper-color assumption}. A supplied paper record must
     contain a nonblank paper_session_id. Caller-supplied objects are not mutated.
-    Paper color uses the renderer's existing starting_mapping presets. It may be
-    supplied here or in paper_session; conflicting values are rejected. Omitting
-    both paper inputs on resume preserves the frozen paper metadata and color.
+    Paper color is context for the specialist only; every round starts from the
+    config defaults. It may be supplied here or in paper_session; conflicting
+    values are rejected. Omitting both paper inputs on resume preserves the frozen
+    paper metadata and color.
     """
     root = Path(run_dir).resolve()
     path = root / SESSION_FILE
@@ -181,7 +184,7 @@ def initialize_tuning_session(
                   ("validity", "comparability", "relevance", "information_gained")), "Scientific selection reasons must be nonblank")
         _need(isinstance(selection["group_reason"], str) and bool(selection["group_reason"].strip()), "Scientific group_reason required")
         frozen_config = _clone(config if config is not None else load_config())
-        defaults = {e: dict(starting_mapping(frozen_config, paper_color)[0]) for e in ids}
+        defaults = {e: default_mapping(frozen_config) for e in ids}
         validate_context(ValidationContext("propose_gamma", ids, frozen_config, reference_mappings=defaults))
     except (ValueError, KeyError, TypeError, AttributeError) as error:
         raise TuningSessionError(f"Cannot initialize from scientific selection/configuration: {error}") from None
@@ -196,7 +199,6 @@ def initialize_tuning_session(
         if paper_session is None and paper_color is None:
             paper_color = session.get("paper_color")
         _need(session.get("paper_color") == paper_color, "Existing session uses a different paper color; frozen previews cannot be changed")
-        defaults = {e: dict(starting_mapping(frozen_config, paper_color)[0]) for e in ids}
         if session["initialization"]["status"] == "complete":
             return load_tuning_session(path)
         _need(retry_initialization, "Initialization incomplete; deliberate retry_initialization=True required")
@@ -505,8 +507,10 @@ def accept_specialist_response(
     path = Path(session_path)
     session = load_tuning_session(path)
     stage = context.expected_stage
-    number = {"propose_gamma": 1, "review_gamma": 1, "review_gray_levels": 2, "review_steps": 3}.get(stage)
-    _need(number is not None and response.stage == stage, "Decision stage/model mismatch")
+    # review_gamma covers rounds 1 and 2, so a review's round comes from its reviewed manifest.
+    number = 1 if stage == "propose_gamma" else (context.reviewed_manifest or {}).get("round_id")
+    _need((stage == "propose_gamma" or _REVIEW_STAGES.get(number) == stage) and response.stage == stage,
+          "Decision stage/model mismatch")
     entry = session["rounds"][str(number)]
     _need(list(context.selected_experiment_ids) == _ids(session) and context.config == session["config_snapshot"], "Decision selection/order/config differs from session")
     _need(context.expected_calibration_session_id in (None, session["session_id"]), "Context calibration session differs")
@@ -757,8 +761,8 @@ def recover_stopped_tuning(session_path: str | Path, *, backup_path: str | Path)
         phase = "awaiting_gamma_proposal"
     else:
         _need(entry["reference_settings"] == session["accepted_settings"], "Current references differ from accepted settings")
-        from app.print_tuning.schemas import GammaProposalResponse, GammaReviewResponse, GrayLevelsReviewResponse
-        model = {1: GammaProposalResponse, 2: GammaReviewResponse, 3: GrayLevelsReviewResponse}[number]
+        from app.print_tuning.schemas import GammaProposalResponse, GammaReviewResponse
+        model = GammaProposalResponse if number == 1 else GammaReviewResponse
         proposal = model.model_validate(entry["proposal"])
         if number == 1:
             validate_response(proposal, _context(session, "propose_gamma"))

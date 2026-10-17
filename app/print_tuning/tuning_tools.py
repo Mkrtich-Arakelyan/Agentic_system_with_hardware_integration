@@ -26,15 +26,15 @@ Session keys read (all in _session_inputs, the only place to change if the graph
     config_snapshot         the tuning config dict, frozen for the session
     selected_experiments    [{experiment_id, limits}] in the frozen order
     accepted_settings       experiment_id -> complete mapping accepted BEFORE the round; missing or
-                            empty for round 1, which then uses starting_mapping(config, paper_color) for
-                            every experiment
+                            empty for round 1, which then uses default_mapping(config) for every
+                            experiment
     rounds                  {"1", "2", "3"} -> {proposal, trial_result}: proposal is the validated
-                            specialist response that proposed THIS round's tests (as a dict), and
+                            specialist response that proposed THIS round's gamma tests (as a dict:
+                            propose_gamma for round 1, review_gamma for rounds 2 and 3), and
                             trial_result is what make_trial_sheet returned once the round was drawn
     active_trial_id         the trial whose scan read_scan measures
     paper_color             optional: the paper color the user named (missing or null: plain white);
-                            passed on to the specialist, and through the config's paper_presets it sets
-                            round 1's starting dark_level, and nothing else
+                            passed on to the specialist as context only
 
 Candidates are listed reference first, then test_1 ... test_5, with variation_id equal to the
 candidate id: app/print_tuning/validation.py maps candidates by role and by test order.
@@ -50,11 +50,10 @@ from langchain_core.tools import BaseTool, tool
 from PIL import Image, ImageDraw, ImageFont
 from pydantic import BaseModel, ValidationError
 
-from app.print_tuning.grayscale_render import (MappingError, apply_mapping, mapping_label, starting_mapping,
+from app.print_tuning.grayscale_render import (MappingError, apply_mapping, default_mapping, mapping_label,
                                                validate_config, validate_mapping)
 from app.print_tuning.scan_evaluation import ScanError, evaluate_scan
-from app.print_tuning.schemas import (GammaProposalResponse, GammaReviewResponse, GrayLevelsReviewResponse,
-                                      TestCandidateId)
+from app.print_tuning.schemas import GammaProposalResponse, GammaReviewResponse, TestCandidateId
 from app.print_tuning.trial_sheet import (TrialSheetError, _check_marks, _new_limits, create_trial_sheet,
                                           load_panel_data)
 
@@ -64,7 +63,6 @@ OUTPUT_FOLDER = "print_tuning"
 TEST_IDS = get_args(TestCandidateId)
 PREVIEW_MIN_PX = 256                  # previews are enlarged (nearest neighbour) to at least this
 PREVIEW_FONT_PX = 13
-ENDPOINT_ALIASES = {"gray_min": "dark_level", "gray_max": "light_level"}
 
 logger = logging.getLogger(__name__)
 
@@ -147,7 +145,7 @@ def _session_inputs(session: dict, round_id: int | None) -> dict:
     accepted = session.get("accepted_settings") or {}
     need(isinstance(accepted, dict), "accepted_settings must be experiment_id -> mapping")
     if not accepted and round_id == 1:
-        accepted = {experiment_id: starting_mapping(config, paper_color)[0] for experiment_id in experiment_ids}
+        accepted = {experiment_id: default_mapping(config) for experiment_id in experiment_ids}
     missing = [e for e in experiment_ids if not isinstance(accepted.get(e), dict)]
     need(not missing, f"accepted_settings has no mapping for {missing} before round {round_id}")
 
@@ -214,44 +212,24 @@ def _per_experiment(groups: list, experiment_ids: list[str], where: str) -> dict
     return {group.experiment_id: _by_candidate(group.tests, f"{where}[{group.experiment_id}]") for group in groups}
 
 
-def _endpoint_aliases(proposal: dict) -> dict:
-    """The proposal with gray_min/gray_max in endpoint_tests renamed to dark_level/light_level."""
-    tests = proposal.get("endpoint_tests")
-    if not isinstance(tests, list):
-        return proposal
-    renamed = []
-    for test in tests:
-        if isinstance(test, dict):
-            test = dict(test)
-            for alias, key in ENDPOINT_ALIASES.items():
-                if alias in test:
-                    value = test.pop(alias)
-                    if key in test and test[key] != value:
-                        raise _ToolError("proposal_invalid", f"endpoint test {test.get('candidate_id')}: {alias} "
-                                                             f"{value!r} differs from {key} {test[key]!r}")
-                    test[key] = value
-        renamed.append(test)
-    return proposal | {"endpoint_tests": renamed}
-
-
 def _round_tests(proposal: dict, round_id: int, experiment_ids: list[str]) -> dict:
-    """experiment_id -> candidate_id -> (changed mapping values, reason), from this round's proposal."""
+    """experiment_id -> candidate_id -> (changed mapping values, reason), from this round's proposal.
+
+    Every round tests gamma: round 1 from propose_gamma, rounds 2 and 3 from the review_gamma of
+    the round before.
+    """
     if not isinstance(proposal, dict):
         raise _ToolError("proposal_invalid", f"round {round_id} proposal must be a dict")
     if round_id == 1:
         response = _parse(GammaProposalResponse, proposal, round_id)
-        tests = _per_experiment(response.experiments, experiment_ids, "experiments")
-        return {e: {c: ({"gamma": t.gamma}, t.reason) for c, t in by_id.items()} for e, by_id in tests.items()}
-    if round_id == 2:
-        response = _parse(GammaReviewResponse, _endpoint_aliases(proposal), round_id)
-        shared = _by_candidate(response.endpoint_tests, "endpoint_tests")
-        return {e: {c: ({"dark_level": t.dark_level, "light_level": t.light_level}, t.reason)
-                    for c, t in shared.items()} for e in experiment_ids}
-    if round_id == 3:
-        response = _parse(GrayLevelsReviewResponse, proposal, round_id)
-        tests = _per_experiment(response.step_tests, experiment_ids, "step_tests")
-        return {e: {c: ({"steps": t.steps}, t.reason) for c, t in by_id.items()} for e, by_id in tests.items()}
-    raise _ToolError("proposal_invalid", f"round_id must be 1, 2 or 3, got {round_id!r}")
+        groups, field = response.experiments, "experiments"
+    elif round_id in (2, 3):
+        response = _parse(GammaReviewResponse, proposal, round_id)
+        groups, field = response.gamma_tests, "gamma_tests"
+    else:
+        raise _ToolError("proposal_invalid", f"round_id must be 1, 2 or 3, got {round_id!r}")
+    tests = _per_experiment(groups, experiment_ids, field)
+    return {e: {c: ({"gamma": t.gamma}, t.reason) for c, t in by_id.items()} for e, by_id in tests.items()}
 
 
 def _variations(tests: dict, accepted: dict, item_ids: dict, config: dict) -> dict:
@@ -384,10 +362,9 @@ def create_tuning_tools(run_dir: str | Path) -> list[BaseTool]:
     def make_trial_sheet(round_id: int) -> dict:
         """Draw the printable trial sheet (PDF) for tuning round 1, 2 or 3.
 
-        The tests come from the round's validated proposal in the tuning session: round 1 tests
-        gamma, round 2 the shared dark/light gray levels, round 3 the number of gray steps. Each
-        of the 4 selected experiments gets 6 candidates: reference (the accepted settings) and
-        test_1 to test_5. Returns the trial_id, the PDF path and its sha256, the manifest path
+        The tests come from the round's validated proposal in the tuning session. Every round
+        tests gamma only; gray levels and steps stay fixed. Each of the 4 selected experiments
+        gets 6 candidates: reference (the best gamma so far) and test_1 to test_5. Returns the trial_id, the PDF path and its sha256, the manifest path
         and the page count. It does not print the sheet.
         """
         try:
@@ -455,8 +432,7 @@ def prepare_specialist_previews(session_path, out_dir) -> dict[str, Any]:
 
     The limits are computed exactly as create_trial_sheet computes them (percentiles, with hi raised
     to the brightest cell inside a box mark), so they equal the limits later saved in the manifest.
-    Each panel is drawn with round 1's starting mapping: the config's defaults, with the paper preset's
-    dark_level when the session's paper_color matches one (paper_preset names it, else None). Raises
+    Each panel is drawn with round 1's starting mapping, the config's defaults. Raises
     ValueError on a bad session or TrialSheetError on bad panel data; the caller saves the returned
     limits into the session.
     """
@@ -471,7 +447,7 @@ def prepare_specialist_previews(session_path, out_dir) -> dict[str, Any]:
     except _ToolError as error:
         raise ValueError(str(error)) from error
     config = inputs["config"]
-    mapping, preset = starting_mapping(config, inputs["paper_color"])
+    mapping = default_mapping(config)
     items = {item["item_id"]: item for item in selection["items"]}
     out_dir = Path(out_dir)
     out_dir.mkdir(parents=True, exist_ok=True)
@@ -495,4 +471,4 @@ def prepare_specialist_previews(session_path, out_dir) -> dict[str, Any]:
             previews.append({"experiment_id": experiment_id, "panel": panel["name"], "path": str(path)})
     return {"contract_version": CONTRACT_VERSION, "previews": previews, "normalization_limits": limits,
             "reference_mappings": {experiment_id: dict(mapping) for experiment_id in inputs["experiment_ids"]},
-            "paper_color": inputs["paper_color"], "paper_preset": preset}
+            "paper_color": inputs["paper_color"]}

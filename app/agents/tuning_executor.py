@@ -52,7 +52,7 @@ TUNING_TOOLS = frozenset(("make_trial_sheet", "read_scan", "printer_status", "su
 
 TUNING_EXECUTOR_PROMPT = """You are the executor in its print-tuning mode, not a new agent.
 Perform only the ONE workflow-requested action, making exactly one tool request.
-The tool-free photo quality specialist owns parameter choices and winner selection.
+The tool-free photo quality specialist owns the gamma choices and winner selection.
 Use its saved proposals through make_trial_sheet(round_id); never invent, copy into
 other arguments, or modify tuning parameters, winners, or the frozen experiments.
 Trial sheets may have multiple pages. Never apply the report's one-page restriction.

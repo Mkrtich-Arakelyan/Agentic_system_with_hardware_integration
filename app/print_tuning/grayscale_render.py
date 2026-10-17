@@ -3,10 +3,10 @@
 A mapping only changes how data looks on paper, never the data itself. Grays run
 from 0 (black) to 1 (white). A mapping is a dict with exactly these keys:
   gamma (float), dark_level (float), light_level (float), steps (int), invert (bool).
-dark_level and light_level come from the config's gray_levels parameter.
+dark_level and light_level come from the config's gray_levels parameter. Only gamma is
+tuned; gray_levels and steps are fixed at their config defaults (dark 0, light 1, smooth).
 """
 import json
-import re
 from pathlib import Path
 
 import numpy as np
@@ -131,35 +131,6 @@ def validate_config(config: dict) -> None:
         if parameters[name]["tuned"] is not True:
             raise ConfigError(f"round {number} names parameter {name!r}, which is not tuned")
 
-    if "paper_presets" in config:
-        _check_paper_presets(config["paper_presets"], parameters)
-
-
-def _check_paper_presets(section, parameters: dict) -> None:
-    """The optional paper_presets: named presets, each with match words and a dark_level that fits."""
-    presets = section.get("presets") if isinstance(section, dict) else None
-    if not isinstance(presets, list) or not presets:
-        raise ConfigError("paper_presets.presets must be a non-empty list")
-    gray = parameters.get(MAPPING_PARAMETERS["dark_level"])
-    if not isinstance(gray, dict) or gray.get("type") != "range":
-        raise ConfigError("paper_presets need the gray_levels range parameter")
-    dark, light_default, gap = gray["dark"], gray["light"]["default"], gray["min_gap"]
-    for index, preset in enumerate(presets):
-        where = f"paper_presets.presets[{index}]"
-        if not isinstance(preset, dict):
-            raise ConfigError(f"{where} must be an object")
-        name, match, level = preset.get("name"), preset.get("match"), preset.get("dark_level")
-        if not isinstance(name, str) or not name.strip():
-            raise ConfigError(f"{where}.name must be a non-empty string")
-        if not isinstance(match, list) or not match or \
-                not all(isinstance(word, str) and word.strip() for word in match):
-            raise ConfigError(f"{where} ({name}): match must be a non-empty list of non-empty strings")
-        if not _is_number(level) or not dark["min"] <= level <= dark["max"]:
-            raise ConfigError(f"{where} ({name}): dark_level {level!r} is outside [{dark['min']}, {dark['max']}]")
-        if light_default - level < gap:
-            raise ConfigError(f"{where} ({name}): dark_level {level} leaves less than min_gap {gap} "
-                              f"to the default light_level {light_default}")
-
 
 def default_mapping(config: dict) -> dict:
     """Return the mapping made of the config's default values."""
@@ -171,23 +142,6 @@ def default_mapping(config: dict) -> dict:
         "steps": int(parameters["steps"]["default"]),
         "invert": bool(parameters["invert"]["default"]),
     }
-
-
-def starting_mapping(config: dict, paper_color: str | None) -> tuple[dict, str | None]:
-    """(round 1's starting mapping, preset name): the default mapping, with the dark_level of the first
-    paper preset that has a match word in paper_color as a whole word (any case).
-
-    Only dark_level changes. No color, an unknown color or a config without presets give the
-    unchanged default mapping and None.
-    """
-    mapping, name = default_mapping(config), None
-    presets = (config.get("paper_presets") or {}).get("presets") or []
-    for preset in presets if paper_color else ():
-        if any(re.search(rf"\b{re.escape(word.strip())}\b", paper_color, re.IGNORECASE) for word in preset["match"]):
-            mapping["dark_level"], name = float(preset["dark_level"]), preset["name"]
-            break
-    validate_mapping(mapping, config)
-    return mapping, name
 
 
 def validate_mapping(mapping: dict, config: dict) -> None:

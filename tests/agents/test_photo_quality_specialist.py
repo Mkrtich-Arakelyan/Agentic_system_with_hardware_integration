@@ -189,11 +189,9 @@ class SpecialistTests(unittest.TestCase):
                 context, evidence = self.inputs(stage)
                 data = fixtures.payload(stage)
                 data.update(assessment=assessment, issues=["Unreliable scan" if assessment == "needs_rescan" else "Measured contrast inadequate"])
-                for field in ("gamma_winners", "endpoint_tests", "step_tests", "step_winners"):
+                for field in ("gamma_winners", "gamma_tests"):
                     if field in data:
                         data[field] = []
-                if "endpoint_winner" in data:
-                    data["endpoint_winner"] = None
                 response = fixtures.MODELS[stage](**data)
                 model = self.model(self.result(response))
                 if assessment == "needs_rescan":
@@ -201,7 +199,7 @@ class SpecialistTests(unittest.TestCase):
                 self.assertIs(photo_quality_specialist(model, context, evidence), response)
 
     def test_partial_images_require_explicit_missing_evidence(self):
-        context, evidence = self.inputs("review_steps")
+        context, evidence = self.inputs("review_gamma_final")
         with self.assertRaises(SpecialistInputError):
             prepare_specialist_messages(context, replace(evidence, images=evidence.images[:-1]))
         missing = MissingImage(evidence.images[-1].label, "Crop was unavailable")
@@ -229,18 +227,19 @@ class SpecialistTests(unittest.TestCase):
         self.assertEqual(sum(p["type"] == "image_url" for p in messages[1].content), len(pages))
 
     def test_reference_winners_and_no_final_proposals(self):
-        context, evidence = self.inputs("review_steps")
-        response = self.response("review_steps")
+        context, evidence = self.inputs("review_gamma_final")
+        response = self.response("review_gamma_final")
         model = self.model(self.result(response))
         returned = photo_quality_specialist(model, context, evidence)
-        self.assertTrue(all(w.candidate_id == "reference" for w in returned.step_winners))
-        self.assertNotIn("step_tests", returned.model_dump())
+        self.assertTrue(all(w.candidate_id == "reference" for w in returned.gamma_winners))
+        self.assertNotIn("gamma_tests", returned.model_dump())
         self.assertIn("No further proposals", model.with_structured_output.return_value.invoke.call_args.args[0][1].content[0]["text"])
 
     def test_proposals_use_resolved_winners_not_prior_settings(self):
         context, evidence = self.inputs("review_gamma")
         response = self.response("review_gamma")
         response.gamma_winners[0].candidate_id = "test_2"
+        response.gamma_tests[0].tests[1].gamma = 0.7        # 0.6 is now the winner's gamma
         evidence = replace(evidence, prior_settings={e: dict(self.fixture.base) for e in fixtures.IDS})
         model = self.model(self.result(response))
         self.assertIs(photo_quality_specialist(model, context, evidence), response)
@@ -285,13 +284,13 @@ class SpecialistTests(unittest.TestCase):
             model.with_structured_output.assert_not_called()
 
     def test_wrong_response_stage_and_final_extra_fields_get_correction(self):
-        context, evidence = self.inputs("review_steps")
-        model = self.model(self.result(self.response("review_gamma")), self.result(self.response("review_steps")))
-        self.assertEqual(photo_quality_specialist(model, context, evidence).stage, "review_steps")
+        context, evidence = self.inputs("review_gamma_final")
+        model = self.model(self.result(self.response("review_gamma")), self.result(self.response("review_gamma_final")))
+        self.assertEqual(photo_quality_specialist(model, context, evidence).stage, "review_gamma_final")
         with self.assertRaises(ValidationError) as caught:
-            fixtures.MODELS["review_steps"](**(fixtures.payload("review_steps") | {"step_tests": []}))
-        model = self.model({"parsed": None, "parsing_error": caught.exception, "raw": AIMessage(content='{"step_tests": []}')},
-                           self.result(self.response("review_steps")))
+            fixtures.MODELS["review_gamma_final"](**(fixtures.payload("review_gamma_final") | {"gamma_tests": []}))
+        model = self.model({"parsed": None, "parsing_error": caught.exception, "raw": AIMessage(content='{"gamma_tests": []}')},
+                           self.result(self.response("review_gamma_final")))
         photo_quality_specialist(model, context, evidence)
         self.assertEqual(model.with_structured_output.return_value.invoke.call_count, 2)
 

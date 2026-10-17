@@ -14,7 +14,7 @@ from PIL import Image
 from app.agents.photo_quality_specialist import (
     ImageLabel, photo_quality_specialist, prepare_specialist_messages,
 )
-from app.print_tuning.schemas import GammaProposalResponse, GammaReviewResponse, GrayLevelsReviewResponse
+from app.print_tuning.schemas import GammaProposalResponse, GammaReviewResponse
 from app.print_tuning.tuning_tools import _make_trial_sheet, create_tuning_tools, summarize_scan_result
 from app.print_tuning.fake_scan import fake_scan
 from app.print_tuning.validation import get_candidate_correspondence
@@ -135,8 +135,8 @@ class EvidenceTests(unittest.TestCase):
 
     def test_all_review_stages_keep_prior_references_and_accepted_history(self):
         self.fixture.propose()
-        for number, stage in enumerate(("review_gamma", "review_gray_levels", "review_steps"), 1):
-            with self.subTest(stage=stage):
+        for number, stage in enumerate(("review_gamma", "review_gamma", "review_gamma_final"), 1):
+            with self.subTest(round=number):
                 trial = self.trial(number)
                 self.record(trial, self.evaluation(trial), f"scan-{number}")
                 inputs, _ = self.messages(stage)
@@ -146,10 +146,10 @@ class EvidenceTests(unittest.TestCase):
                 self.assertEqual(inputs.evidence.prior_settings, session["rounds"][str(number)]["reference_settings"])
                 self.assertEqual(inputs.evidence.prior_settings, session["accepted_settings"])
                 self.assertEqual([type(r) for r in inputs.prior_decisions],
-                                 [GammaProposalResponse, GammaReviewResponse, GrayLevelsReviewResponse][:number])
+                                 [GammaProposalResponse, GammaReviewResponse, GammaReviewResponse][:number])
                 self.assertEqual([r.stage for r in inputs.prior_decisions],
-                                 ["propose_gamma", "review_gamma", "review_gray_levels"][:number])
-                accepted = accept_specialist_response(self.path, fixtures.response(stage), inputs.context,
+                                 ["propose_gamma", "review_gamma", "review_gamma"][:number])
+                accepted = accept_specialist_response(self.path, fixtures.response(stage, round_id=number), inputs.context,
                                                       evaluation_record_id=inputs.evaluation_record_id)
                 if number < 3:
                     self.assertNotEqual(inputs.evidence.prior_settings, accepted["accepted_settings"])
@@ -360,7 +360,7 @@ class EvidenceTests(unittest.TestCase):
         with self.assertRaisesRegex(TuningEvidenceError, "active evaluation"):
             prepare_tuning_inputs(self.path, "review_gamma")
         with self.assertRaises(TuningEvidenceError):
-            prepare_tuning_inputs(self.path, "review_steps")
+            prepare_tuning_inputs(self.path, "review_gamma_final")
 
     def test_unknown_duplicate_or_conflicting_scan_records_rejected(self):
         self.fixture.propose()

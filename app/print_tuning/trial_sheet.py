@@ -169,8 +169,8 @@ def _check_variations(items: list, variations: dict, parameter: str, config: dic
     for item_id in item_ids:
         _check_item_variations(item_id, variations.get(item_id), parameter, config)
 
-    # Shared parameters (gray_levels: the printer's and paper's endpoints) must be the same in every
-    # round: the k-th variation of every item uses the same value, so items stay comparable.
+    # Shared parameters (gray_levels, fixed at the config defaults) must be the same in every item:
+    # the k-th variation of every item uses the same value, so items stay comparable.
     if not config["variation_rules"]["shared_parameters_same_tests_for_all_items"]:
         return
     keys = sorted(key for key, name in MAPPING_PARAMETERS.items() if config["parameters"][name]["scope"] == "shared")

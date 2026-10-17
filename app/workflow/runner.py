@@ -583,7 +583,8 @@ def main() -> int:
             "Printer states: idle, printing, stopped, offline, error, unknown, out_of_paper, "
             "paper_jam. Job states: waiting, printing, done, failed, uncertain.\n"
             "Print tuning: after the four experiments are chosen, the graph tunes how their heatmaps "
-            "print in 3 rounds: gamma, then the dark/light gray levels, then the number of gray steps.\n"
+            "print in 3 rounds, each tuning only gamma; the gray levels (dark 0, light 1) and steps "
+            "(0, smooth) stay fixed.\n"
             "Every trial sheet print needs human approval of that exact PDF and printer. The human "
             f"scans the printed pages into {run_dir / 'scans'}/round_N (N = 1, 2, 3).\n"
             + (

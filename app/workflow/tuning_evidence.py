@@ -34,7 +34,7 @@ from app.agents.photo_quality_specialist import (
     SpecialistEvidence, SpecialistInputError,
 )
 from app.print_tuning.schemas import (
-    GammaProposalResponse, GammaReviewResponse, GrayLevelsReviewResponse, StepsReviewResponse,
+    GammaFinalReviewResponse, GammaProposalResponse, GammaReviewResponse,
 )
 from app.print_tuning.grayscale_render import validate_mapping
 from app.print_tuning.validation import (
@@ -42,12 +42,11 @@ from app.print_tuning.validation import (
     get_candidate_correspondence, validate_context,
 )
 from app.workflow.tuning import (
-    TuningSessionError, build_tuning_context, load_tuning_evaluation, load_tuning_session,
+    _REVIEW_STAGES, TuningSessionError, build_tuning_context, load_tuning_evaluation, load_tuning_session,
 )
 
 _MODELS = {"propose_gamma": GammaProposalResponse, "review_gamma": GammaReviewResponse,
-           "review_gray_levels": GrayLevelsReviewResponse, "review_steps": StepsReviewResponse}
-_STAGES = tuple(_MODELS)
+           "review_gamma_final": GammaFinalReviewResponse}
 
 
 class TuningEvidenceError(SpecialistInputError):
@@ -105,23 +104,25 @@ def _issues(value: Any, where: str, page_numbers: set[int]) -> list[str]:
 
 
 def _history(session: dict, stage: Stage) -> tuple[Response, ...]:
-    found = {}
+    """The accepted usable decisions before this one, in order: propose_gamma, then one review per
+    finished round (review_gamma twice covers rounds 1 and 2)."""
+    step = 0 if stage == "propose_gamma" else session["active_round"]
+    expected = ["propose_gamma", *(_REVIEW_STAGES[n] for n in range(1, step))]
+    found = []
     for decision in _records(session.get("decisions"), "session.decisions"):
         previous = decision.get("stage")
         _need(isinstance(previous, str) and previous in _MODELS, "History contains an unknown decision stage")
-        if _STAGES.index(previous) >= _STAGES.index(stage):
-            continue
         data = _object(decision.get("response"), "historical response")
         if data.get("assessment", "usable") != "usable":
             continue
-        _need(previous not in found and data.get("stage") == previous, "Conflicting accepted decision history")
+        _need(data.get("stage") == previous, "Conflicting accepted decision history")
         try:
-            found[previous] = _MODELS[previous].model_validate(data)
+            found.append(_MODELS[previous].model_validate(data))
         except ValidationError as error:
             raise TuningEvidenceError(f"Invalid accepted {previous} history: {error}") from None
-    expected = _STAGES[:_STAGES.index(stage)]
-    _need(set(found) == set(expected), "Earlier accepted specialist decisions are missing")
-    return tuple(found[s] for s in expected)
+    found = found[:step]
+    _need([d.stage for d in found] == expected[:step], "Earlier accepted specialist decisions are missing")
+    return tuple(found)
 
 
 def _previews(session: dict, root: Path, review: bool) -> tuple[list[ImageAttachment], list[MissingImage]]:

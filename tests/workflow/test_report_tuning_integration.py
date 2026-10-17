@@ -34,7 +34,7 @@ class ReportIntegrationTests(unittest.TestCase):
         cls.addClassCleanup(cls.fixture.doCleanups)
         cls.fixture.init()
         cls.fixture.propose()
-        for number, stage in enumerate(("review_gamma", "review_gray_levels", "review_steps"), 1):
+        for number, stage in enumerate(("review_gamma", "review_gamma", "review_gamma_final"), 1):
             _, trial = cls.fixture.trial(number)
             cls.fixture.scan(trial)
             cls.fixture.review(stage)

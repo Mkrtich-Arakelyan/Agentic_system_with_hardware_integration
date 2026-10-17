@@ -14,7 +14,7 @@ from pydantic import ValidationError
 from app.experiments.selection import build_selection
 from app.print_tuning.grayscale_render import default_mapping, load_config
 from app.print_tuning.schemas import (
-    GammaProposalResponse, GammaReviewResponse, GrayLevelsReviewResponse, StepsReviewResponse,
+    GammaFinalReviewResponse, GammaProposalResponse, GammaReviewResponse,
 )
 from app.print_tuning.trial_sheet import create_trial_sheet
 from app.print_tuning.validation import (
@@ -25,8 +25,7 @@ from app.print_tuning.validation import (
 
 IDS = ("exp/A", "exp-B", "exp-C", "exp-D")
 GAMMAS = (0.4, 0.6, 1.5, 2.2, 3.0)
-PAIRS = ((0.02, 1.0), (0.04, 1.0), (0.06, 0.95), (0.08, 0.90), (0.1, 0.85))
-STEPS = (0, 2, 4, 8, 16)
+REVIEWS = ("review_gamma", "review_gamma_final")
 
 
 def winner(experiment=None, candidate="reference"):
@@ -38,23 +37,16 @@ def winner(experiment=None, candidate="reference"):
 
 def payload(stage):
     gamma = [dict(candidate_id=f"test_{i}", gamma=g, reason="Compare tone curve") for i, g in enumerate(GAMMAS, 1)]
-    endpoints = [dict(candidate_id=f"test_{i}", dark_level=d, light_level=l, reason="Compare contrast")
-                 for i, (d, l) in enumerate(PAIRS, 1)]
-    steps = [dict(candidate_id=f"test_{i}", steps=s, reason="Compare gray bands") for i, s in enumerate(STEPS, 1)]
     if stage == "propose_gamma":
         return dict(stage=stage, experiments=[dict(experiment_id=e, tests=deepcopy(gamma)) for e in IDS])
-    data = dict(stage=stage, assessment="usable", issues=[])
+    data = dict(stage=stage, assessment="usable", issues=[], gamma_winners=[winner(e) for e in IDS])
     if stage == "review_gamma":
-        data.update(gamma_winners=[winner(e) for e in IDS], endpoint_tests=endpoints)
-    elif stage == "review_gray_levels":
-        data.update(endpoint_winner=winner(), step_tests=[dict(experiment_id=e, tests=deepcopy(steps)) for e in IDS])
-    else:
-        data.update(step_winners=[winner(e) for e in IDS])
+        data.update(gamma_tests=[dict(experiment_id=e, tests=deepcopy(gamma)) for e in IDS])
     return data
 
 
 MODELS = {"propose_gamma": GammaProposalResponse, "review_gamma": GammaReviewResponse,
-          "review_gray_levels": GrayLevelsReviewResponse, "review_steps": StepsReviewResponse}
+          "review_gamma_final": GammaFinalReviewResponse}
 
 
 class ValidationTests(unittest.TestCase):
@@ -64,8 +56,8 @@ class ValidationTests(unittest.TestCase):
         cls.addClassCleanup(cls.temp.cleanup)
         folder = Path(cls.temp.name)
         cls.config = load_config()
-        # A valid hand-set initial band count keeps 0 available as a new test.
-        base = default_mapping(cls.config) | {"steps": 6}
+        # Gray levels and steps are fixed: every mapping is the default one except for gamma.
+        base = default_mapping(cls.config)
         cls.base = base
         # Real selection packaging preserves the original IDs but sanitizes exp/A.
         camera = folder / "camera.npy"
@@ -81,9 +73,7 @@ class ValidationTests(unittest.TestCase):
             reference = dict(base)
             variants = {}
             for item in selection["items"]:
-                values = ([{"gamma": g} for g in GAMMAS] if round_id == 1 else
-                          [{"dark_level": d, "light_level": l} for d, l in PAIRS] if round_id == 2 else
-                          [{"steps": s} for s in STEPS])
+                values = [{"gamma": g} for g in GAMMAS]       # every round tests gamma
                 variants[item["item_id"]] = [dict(variation_id="ref", role="reference", mapping=reference, note="")]
                 variants[item["item_id"]] += [dict(variation_id=f"v{i}", role="test", mapping=reference | value, note="")
                                                for i, value in enumerate(values)]
@@ -91,10 +81,10 @@ class ValidationTests(unittest.TestCase):
             # Use the actual on-disk JSON representation, not a parallel fixture shape.
             cls.manifests[round_id] = json.loads(Path(record["manifest_path"]).read_text(encoding="utf-8"))
 
-    def context(self, stage):
+    def context(self, stage, round_id=None):
         if stage == "propose_gamma":
             return ValidationContext(stage, IDS, deepcopy(self.config), {e: dict(self.base) for e in IDS})
-        round_id = {"review_gamma": 1, "review_gray_levels": 2, "review_steps": 3}[stage]
+        round_id = round_id or {"review_gamma": 1, "review_gamma_final": 3}[stage]
         manifest = deepcopy(self.manifests[round_id])
         return ValidationContext(stage, IDS, deepcopy(self.config), reviewed_manifest=manifest,
                                  expected_trial_id=manifest["trial_id"], expected_calibration_session_id="calibration",
@@ -116,56 +106,52 @@ class ValidationTests(unittest.TestCase):
         for stage in MODELS:
             with self.subTest(stage=stage):
                 self.check(payload(stage))
+        self.check(payload("review_gamma"), self.context("review_gamma", 2))   # review_gamma also reviews round 2
+
+    def test_review_stage_must_match_the_round(self):
+        self.rejects(payload("review_gamma"), "round_id", self.context("review_gamma", 3))
+        for round_id in (1, 2):
+            self.rejects(payload("review_gamma_final"), "round_id", self.context("review_gamma_final", round_id))
 
     def test_nonreference_winners_and_ties(self):
-        for stage, field in (("review_gamma", "gamma_winners"), ("review_steps", "step_winners")):
+        for stage in REVIEWS:
             data = payload(stage)
-            data[field][0].update(candidate_id="test_2", tie_explanation="Effectively tied; retain detail")
+            data["gamma_winners"][0].update(candidate_id="test_2", tie_explanation="Effectively tied; retain detail")
+            if stage == "review_gamma":
+                data["gamma_tests"][0]["tests"][1]["gamma"] = 0.7   # 0.6 is now the winner's gamma
             self.check(data)
-        data = payload("review_gray_levels")
-        data["endpoint_winner"].update(candidate_id="test_3", tie_explanation="Equivalent contrast")
-        self.check(data)
 
     def test_blank_tie_explanation(self):
-        for stage, field in (("review_gamma", "gamma_winners"), ("review_steps", "step_winners")):
+        for stage in REVIEWS:
             data = payload(stage)
-            data[field][0]["tie_explanation"] = "  "
+            data["gamma_winners"][0]["tie_explanation"] = "  "
             self.rejects(data, "tie_explanation")
-        data = payload("review_gray_levels")
-        data["endpoint_winner"]["tie_explanation"] = "\n"
-        self.rejects(data, "tie_explanation")
 
     def test_unusable_assessments_need_no_references(self):
         for stage in list(MODELS)[1:]:
             for assessment in ("needs_rescan", "insufficient_contrast"):
                 data = payload(stage)
                 data.update(assessment=assessment, issues=["Page alignment unreliable"])
-                for field in ("gamma_winners", "endpoint_tests", "step_tests", "step_winners"):
+                for field in ("gamma_winners", "gamma_tests"):
                     if field in data:
                         data[field] = []
-                if "endpoint_winner" in data:
-                    data["endpoint_winner"] = None
                 self.check(data)
                 self.assertEqual(resolve_review_winners(MODELS[stage](**data), self.context(stage)), {})
                 bad = deepcopy(data)
                 bad["issues"] = []
                 self.rejects(bad, "issues")
                 bad = deepcopy(data)
-                field = "step_tests" if stage == "review_gray_levels" else "gamma_winners" if stage == "review_gamma" else "step_winners"
-                bad[field] = payload(stage)[field]
+                bad["gamma_winners"] = payload(stage)["gamma_winners"]
                 self.rejects(bad, "must be empty")
                 wrong = self.context(stage)
                 self.rejects(data, "trial_id", replace(wrong, expected_trial_id="another-trial"))
 
     def test_missing_usable_decisions(self):
-        for stage, field in (("review_gamma", "gamma_winners"), ("review_gamma", "endpoint_tests"),
-                             ("review_gray_levels", "step_tests"), ("review_steps", "step_winners")):
+        for stage, field in (("review_gamma", "gamma_winners"), ("review_gamma", "gamma_tests"),
+                             ("review_gamma_final", "gamma_winners")):
             data = payload(stage)
             data[field] = []
             self.rejects(data, "missing")
-        data = payload("review_gray_levels")
-        data["endpoint_winner"] = None
-        self.rejects(data, "endpoint_winner")
 
     def test_selected_ids_invalid(self):
         context = self.context("propose_gamma")
@@ -173,8 +159,8 @@ class ValidationTests(unittest.TestCase):
             self.rejects(payload("propose_gamma"), "four distinct nonblank", replace(context, selected_experiment_ids=ids))
 
     def test_experiment_coverage(self):
-        for stage, field in (("propose_gamma", "experiments"), ("review_gray_levels", "step_tests"),
-                             ("review_gamma", "gamma_winners"), ("review_steps", "step_winners")):
+        for stage, field in (("propose_gamma", "experiments"), ("review_gamma", "gamma_tests"),
+                             ("review_gamma", "gamma_winners"), ("review_gamma_final", "gamma_winners")):
             for mode in ("missing", "extra", "duplicate"):
                 data = payload(stage)
                 if mode == "missing":
@@ -188,7 +174,7 @@ class ValidationTests(unittest.TestCase):
     def test_stage_mismatch(self):
         self.rejects(payload("propose_gamma"), "stage", replace(self.context("propose_gamma"), expected_stage="review_gamma"))
         response = GammaProposalResponse(**payload("propose_gamma"))
-        response.stage = "review_steps"
+        response.stage = "review_gamma_final"
         with self.assertRaisesRegex(TuningValidationError, "stage"):
             validate_response(response, self.context("propose_gamma"))
 
@@ -212,11 +198,10 @@ class ValidationTests(unittest.TestCase):
             self.rejects(payload("review_gamma"), "experiment_item_ids", replace(context, experiment_item_ids=association))
 
     def test_candidate_ids_counts(self):
-        for stage, field in (("propose_gamma", "experiments"), ("review_gray_levels", "step_tests"),
-                             ("review_gamma", "endpoint_tests")):
+        for stage, field in (("propose_gamma", "experiments"), ("review_gamma", "gamma_tests")):
             for mode in ("missing", "duplicate", "extra"):
                 data = payload(stage)
-                tests = data[field] if field == "endpoint_tests" else data[field][0]["tests"]
+                tests = data[field][0]["tests"]
                 if mode == "missing":
                     tests.pop()
                 elif mode == "duplicate":
@@ -234,45 +219,29 @@ class ValidationTests(unittest.TestCase):
         data["experiments"][0]["tests"][0]["gamma"] = math.nextafter(GAMMAS[1], math.inf)
         self.check(data)  # Adjacent float64 values must not be merged by rounding.
 
+    def test_next_gamma_tests_checked_in_every_review_round(self):
+        for round_id in (1, 2):
+            context = self.context("review_gamma", round_id)
+            for value in (0.05, 5.1, 1., GAMMAS[1]):      # range, the winner's gamma, a duplicate
+                data = payload("review_gamma")
+                data["gamma_tests"][0]["tests"][0]["gamma"] = value
+                self.rejects(data, "outside|duplicate", context)
+        # The next tests may not repeat the NEW winner's gamma.
+        data = payload("review_gamma")
+        data["gamma_winners"][0]["candidate_id"] = "test_1"
+        self.rejects(data, "duplicates the applicable reference gamma")
+
     def test_nonfinite_and_schema_strict_types(self):
-        for stage, field, key in (("propose_gamma", "experiments", "gamma"),
-                                  ("review_gamma", "endpoint_tests", "dark_level")):
+        for stage, field in (("propose_gamma", "experiments"), ("review_gamma", "gamma_tests")):
             for value in (float("nan"), float("inf"), float("-inf"), True):
                 data = payload(stage)
-                tests = data[field] if field == "endpoint_tests" else data[field][0]["tests"]
-                tests[0][key] = value
+                data[field][0]["tests"][0]["gamma"] = value
                 with self.assertRaises(ValidationError):
                     MODELS[stage](**data)
-        for value in (True, 2.5, 2.0):
-            data = payload("review_gray_levels")
-            data["step_tests"][0]["tests"][0]["steps"] = value
-            with self.assertRaises(ValidationError):
-                GrayLevelsReviewResponse(**data)
         response = GammaProposalResponse(**payload("propose_gamma"))
         response.experiments[0].tests[0].gamma = float("nan")
         with self.assertRaisesRegex(TuningValidationError, "finite"):
             validate_response(response, self.context("propose_gamma"))
-
-    def test_endpoints_bounds_gap_duplicates_and_reference(self):
-        for dark, light in ((-.1, 1.), (.1, 1.1), (.4, .6), (.4, .2), (0., 1.), PAIRS[1]):
-            data = payload("review_gamma")
-            data["endpoint_tests"][0].update(dark_level=dark, light_level=light)
-            self.rejects(data, "outside|smaller|duplicate")
-        self.check(payload("review_gamma"))  # Several valid pairs share light=1.
-
-    def test_steps_smooth_bounds_duplicates_reference(self):
-        self.check(payload("review_gray_levels"))  # Includes smooth 0.
-        context = self.context("review_gray_levels")
-        for value in (1, -1, 33, 2):
-            data = payload("review_gray_levels")
-            data["step_tests"][0]["tests"][0]["steps"] = value
-            self.rejects(data, "not in special_values|duplicate", context)
-        # A caller may start from smooth 0; it must not then be proposed again.
-        bad_context = self.context("review_gray_levels")
-        for entries in bad_context.reviewed_manifest["variations"].values():
-            for entry in entries:
-                entry["mapping"]["steps"] = 0
-        self.rejects(payload("review_gray_levels"), "duplicates the applicable reference", bad_context)
 
     def test_config_count_and_missing_context(self):
         context = self.context("propose_gamma")
@@ -283,6 +252,11 @@ class ValidationTests(unittest.TestCase):
             self.rejects(payload("propose_gamma"), "schema", replace(context, config=config))
         self.rejects(payload("propose_gamma"), "config", replace(context, config={}))
         self.rejects(payload("propose_gamma"), "reference_mappings", replace(context, reference_mappings=None))
+        tuned = deepcopy(self.config)
+        tuned["parameters"]["steps"]["tuned"] = True
+        self.rejects(payload("propose_gamma"), "only gamma is tuned", replace(context, config=tuned))
+        tuned["rounds"][2]["parameter"] = "steps"
+        self.rejects(payload("propose_gamma"), "expected gamma as rounds 1, 2 and 3", replace(context, config=tuned))
 
     def test_winner_manifest_membership_and_incomplete_mappings(self):
         data = payload("review_gamma")
@@ -313,21 +287,10 @@ class ValidationTests(unittest.TestCase):
                 context.reviewed_manifest["items"].pop()
             self.rejects(payload("review_gamma"), "variation|items", context)
 
-    def test_shared_winner_allows_different_gamma_steps_but_not_endpoints(self):
-        data = payload("review_gray_levels")
-        data["endpoint_winner"]["candidate_id"] = "test_1"
-        context = self.context("review_gray_levels")
-        for index, entries in enumerate(context.reviewed_manifest["variations"].values()):
-            for entry in entries:
-                entry["mapping"].update(gamma=1. + index / 10, steps=20 + index)
-        self.check(data, context)
-        broken = deepcopy(context.reviewed_manifest)
-        broken["variations"][self.association[IDS[0]]][1]["mapping"]["dark_level"] = .03
-        self.rejects(data, "identical endpoints|endpoints must be identical", replace(context, reviewed_manifest=broken))
-
     def test_updated_references_and_pure_resolution(self):
         data = payload("review_gamma")
         data["gamma_winners"][0]["candidate_id"] = "test_1"
+        data["gamma_tests"][0]["tests"][0]["gamma"] = 1.    # refine around the new winner 0.4
         response = GammaReviewResponse(**data)
         context = self.context("review_gamma")
         original = deepcopy(context.reviewed_manifest)
@@ -337,17 +300,18 @@ class ValidationTests(unittest.TestCase):
         self.rejects(data, "stale", replace(context, reference_mappings={e: dict(self.base) for e in IDS}))
         resolved[IDS[0]]["gamma"] = 99
         self.assertEqual(context.reviewed_manifest, original)
-        # Round-2 endpoint winner has steps inherited as 6 in this fixture.
-        data = payload("review_gray_levels")
-        self.check(data)
-        data["step_tests"][0]["tests"][0]["steps"] = 6
-        self.rejects(data, "duplicates the applicable reference")
 
-    def test_unshared_reference_endpoints(self):
+    def test_gray_levels_and_steps_are_fixed(self):
         context = self.context("propose_gamma")
-        refs = deepcopy(context.reference_mappings)
-        refs[IDS[0]]["dark_level"] = .02
-        self.rejects(payload("propose_gamma"), "shared consistently", replace(context, reference_mappings=refs))
+        for key, value in (("dark_level", .02), ("light_level", .9), ("steps", 6)):
+            refs = deepcopy(context.reference_mappings)
+            refs[IDS[0]][key] = value
+            self.rejects(payload("propose_gamma"), "fixed at", replace(context, reference_mappings=refs))
+        for stage in REVIEWS:
+            context = self.context(stage)
+            for entry in context.reviewed_manifest["variations"][self.association[IDS[0]]]:
+                entry["mapping"]["dark_level"] = .02      # every candidate, so only gamma still differs
+            self.assert_review_rejected_by_both(stage, context, "fixed at")
 
     def test_manifest_config_mismatch(self):
         context = self.context("review_gamma")
@@ -355,20 +319,9 @@ class ValidationTests(unittest.TestCase):
         self.rejects(payload("review_gamma"), "manifest.config", context)
 
     def test_final_stage_extra_proposals_rejected(self):
-        data = payload("review_steps") | {"step_tests": []}
+        data = payload("review_gamma_final") | {"gamma_tests": []}
         with self.assertRaises(ValidationError):
-            StepsReviewResponse(**data)
-
-    def test_resolved_endpoint_winner_rejects_stale_full_references(self):
-        data = payload("review_gray_levels")
-        data["endpoint_winner"]["candidate_id"] = "test_1"
-        context = self.context("review_gray_levels")
-        response = GrayLevelsReviewResponse(**data)
-        resolved = resolve_review_winners(response, context)
-        self.assertEqual(resolved[IDS[0]]["dark_level"], PAIRS[0][0])
-        self.check(data, replace(context, reference_mappings=resolved))
-        stale = {e: dict(self.base, steps=6) for e in IDS}
-        self.rejects(data, "stale", replace(context, reference_mappings=stale))
+            GammaFinalReviewResponse(**data)
 
     def test_invalid_reference_mappings(self):
         context = self.context("propose_gamma")
@@ -377,11 +330,6 @@ class ValidationTests(unittest.TestCase):
             refs = deepcopy(context.reference_mappings)
             refs[IDS[0]][key] = value
             self.rejects(payload("propose_gamma"), "reference_mappings", replace(context, reference_mappings=refs))
-
-    def test_unusable_endpoint_winner_forbidden(self):
-        data = payload("review_gray_levels")
-        data.update(assessment="needs_rescan", issues=["Blurred"], step_tests=[])
-        self.rejects(data, "endpoint_winner: must be null")
 
     def test_collects_independent_errors(self):
         data = payload("propose_gamma")
@@ -398,27 +346,9 @@ class ValidationTests(unittest.TestCase):
             with self.subTest(api=validate.__name__), self.assertRaisesRegex(TuningValidationError, message):
                 validate(response, context)
 
-    def test_nonwinning_printed_endpoint_must_be_shared(self):
-        context = self.context("review_gray_levels")
-        # Winner is reference; test_5 is still required to be shared.
-        entries = context.reviewed_manifest["variations"][self.association[IDS[0]]]
-        entries[5]["mapping"]["dark_level"] = .11
-        self.assert_review_rejected_by_both("review_gray_levels", context, "shared|identical")
-
-    def test_printed_reference_endpoints_must_be_shared_in_every_round(self):
-        for stage in list(MODELS)[1:]:
-            context = self.context(stage)
-            entries = context.reviewed_manifest["variations"][self.association[IDS[0]]]
-            # Shift every candidate in gamma/steps rounds so each still changes
-            # only its own parameter. This isolates cross-experiment sharing.
-            for entry in entries if stage != "review_gray_levels" else entries[:1]:
-                entry["mapping"]["dark_level"] = .01
-            self.assert_review_rejected_by_both(stage, context, "shared|identical")
-
     def test_duplicate_printed_tests_with_distinct_ids(self):
         for stage in list(MODELS)[1:]:
             context = self.context(stage)
-            # Duplicate tests in every item to preserve endpoint sharing.
             for entries in context.reviewed_manifest["variations"].values():
                 entries[2]["mapping"] = dict(entries[1]["mapping"])
                 self.assertNotEqual(entries[1]["variation_id"], entries[2]["variation_id"])
@@ -515,21 +445,18 @@ class ValidationTests(unittest.TestCase):
         self.check(payload("review_gamma"), context)
         get_candidate_correspondence(context)
 
-    def test_inherited_values_may_differ_between_experiments(self):
-        for stage in ("review_gamma", "review_gray_levels", "review_steps"):
+    def test_gamma_may_differ_between_experiments(self):
+        for stage in REVIEWS:
             context = self.context(stage)
             for index, entries in enumerate(context.reviewed_manifest["variations"].values()):
                 for entry in entries:
-                    if stage != "review_gamma":
-                        entry["mapping"]["gamma"] = 1. + index / 10
-                    if stage != "review_steps":
-                        entry["mapping"]["steps"] = 20 + index
+                    entry["mapping"]["gamma"] *= 1. + index / 10
             self.check(payload(stage), context)
             self.assertEqual(len(resolve_review_winners(MODELS[stage](**payload(stage)), context)), 4)
 
     def test_rescan_still_validates_manifest_and_skips_proposal_references(self):
         data = payload("review_gamma")
-        data.update(assessment="needs_rescan", issues=["Blurred"], gamma_winners=[], endpoint_tests=[])
+        data.update(assessment="needs_rescan", issues=["Blurred"], gamma_winners=[], gamma_tests=[])
         response = GammaReviewResponse(**data)
         context = replace(self.context("review_gamma"), reference_mappings=None)
         self.assertIs(validate_response(response, context), response)
@@ -542,17 +469,18 @@ class ValidationTests(unittest.TestCase):
         for entry in entries:
             entry["mapping"]["dark_level"] = .01
         for validate in (validate_response, resolve_review_winners):
-            with self.assertRaisesRegex(TuningValidationError, "shared"):
+            with self.assertRaisesRegex(TuningValidationError, "fixed at"):
                 validate(response, context)
 
-    def test_smooth_printed_candidate_can_win(self):
-        data = payload("review_steps")
-        data["step_winners"][0]["candidate_id"] = "test_1"
-        context = self.context("review_steps")
-        response = self.check(data, context)
-        mappings = resolve_review_winners(response, context)
-        self.assertEqual(mappings[IDS[0]]["steps"], 0)
-        self.assertEqual(mappings[IDS[1]]["steps"], self.base["steps"])
+    def test_final_winner_keeps_fixed_gray_levels_and_steps(self):
+        data = payload("review_gamma_final")
+        data["gamma_winners"][0]["candidate_id"] = "test_1"
+        context = self.context("review_gamma_final")
+        mappings = resolve_review_winners(self.check(data, context), context)
+        self.assertEqual(mappings[IDS[0]]["gamma"], GAMMAS[0])
+        self.assertEqual(mappings[IDS[1]]["gamma"], self.base["gamma"])
+        for mapping in mappings.values():
+            self.assertEqual((mapping["dark_level"], mapping["light_level"], mapping["steps"]), (0., 1., 0))
 
 
 if __name__ == "__main__":

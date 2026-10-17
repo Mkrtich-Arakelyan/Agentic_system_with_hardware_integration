@@ -27,8 +27,7 @@ from PIL import Image, UnidentifiedImageError
 from pydantic import BaseModel, ValidationError
 
 from app.print_tuning.schemas import (
-    GammaProposalResponse, GammaReviewResponse, GrayLevelsReviewResponse,
-    StepsReviewResponse, WinnerCandidateId,
+    GammaFinalReviewResponse, GammaProposalResponse, GammaReviewResponse, WinnerCandidateId,
 )
 from app.print_tuning.validation import (
     Response, TuningValidationError, ValidationContext, get_candidate_correspondence,
@@ -59,35 +58,35 @@ shadows, blur and scan processing as confounders. Never independently normalize
 or enhance candidates. Paper color alone need not change proposals; identical
 proposals across paper sessions are acceptable when supported by evidence.
 
-Read parameter bounds, counts, defaults, min_gap and special values from supplied
-config. dark_level/light_level use renderer units: 0 black, 1 white. steps=0 means
-smooth when permitted. Gamma and steps are per experiment; endpoints are ONE
-shared choice across all four. One reference plus test_1 through test_5 is printed
-per experiment. Only the physical round's parameter changes; inversion and fixed
-per-experiment Initial/Final normalization limits stay unchanged. Accepted settings
-carry forward. Select reference or a printed test using the supplied candidate
-correspondence, never an internal variation ID or an ID from another trial.
+Gamma is the ONLY tuned parameter, in all three physical rounds. Read the gamma
+bounds (min/max), default and log spacing from supplied config. Gamma is chosen
+per experiment. Gray levels and steps are fixed, not tuned: every mapping prints
+with dark 0 (black), light 1 (white) and steps 0 (smooth); inversion and the fixed
+per-experiment Initial/Final normalization limits also stay unchanged. Never
+propose or judge anything but gamma. One reference (the best gamma so far) plus
+test_1 through test_5 is printed per experiment in every round. Select reference
+or a printed test using the supplied candidate correspondence, never an internal
+variation ID or an ID from another trial.
 
-For usable reviews, return all required winners and proposals. New proposals use
-the complete mappings of your reviewed winners, including inherited settings, as
-their references. Do not reconstruct or change inherited parameters. Avoid
-duplicate tests and duplicates of the reference. Endpoints must satisfy min_gap.
+For usable reviews, return all required winners and proposals. After rounds 1
+and 2, propose five new gamma tests per experiment that refine around your
+winner's gamma: log spaced, inside min/max, none equal to the winner's gamma and
+no duplicates. After round 3, return only the final gamma winners.
 Effective ties are usable: retaining reference is acceptable; explain the tie
 and choose appropriate confidence. Report best TESTED candidates, never a proven
 global optimum. Use needs_rescan if visual evidence cannot support reliable
 judgment; use insufficient_contrast when usable evidence demonstrates inadequate
 printable contrast. Poor photography is not proof of a physical contrast limit.
-For either nonusable assessment, explain issues, leave all winner/proposal lists
-empty and endpoint_winner null where applicable. Follow the exact stage schema.
+For either nonusable assessment, explain issues and leave all winner/proposal
+lists empty. Follow the exact stage schema.
 """
 
 _SCHEMAS = {"propose_gamma": GammaProposalResponse, "review_gamma": GammaReviewResponse,
-            "review_gray_levels": GrayLevelsReviewResponse, "review_steps": StepsReviewResponse}
+            "review_gamma_final": GammaFinalReviewResponse}
 _STAGE_TEXT = {
     "propose_gamma": "No physical scan exists yet. Propose five exploratory gamma tests per experiment from digital previews; these are not measured printer optima. Do not hardcode or choose random values. Systematic spacing is acceptable when justified by previews and uncertainty.",
-    "review_gamma": "Review physical round 1 (gamma). Choose one gamma winner per experiment, then propose five shared endpoint pairs for physical round 2.",
-    "review_gray_levels": "Review physical round 2 (gray endpoints). Choose ONE shared endpoint winner judged across all four experiments, then propose five steps tests per experiment for physical round 3.",
-    "review_steps": "Review physical round 3 (steps). Choose one steps winner per experiment. This final decision is required after the third scan; do not finish before this review. No further proposals.",
+    "review_gamma": "Review physical round 1 or 2 (gamma; see round_id). Choose one gamma winner per experiment, then propose five new gamma tests per experiment for the next physical round, refined around that winner's gamma: log spaced, inside the config min/max, no duplicates and none equal to the winner's gamma.",
+    "review_gamma_final": "Review physical round 3 (gamma). Choose the final gamma winner per experiment; the report uses these gammas. This final decision is required after the third scan; do not finish before this review. No further proposals.",
 }
 
 

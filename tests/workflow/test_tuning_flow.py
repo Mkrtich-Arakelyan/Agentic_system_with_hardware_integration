@@ -118,12 +118,7 @@ class TuningFlowTests(unittest.TestCase):
             # The real specialist has loaded actual image parts from the adapter.
             self.assertTrue(any(p["type"] == "image_url" for p in messages[1].content))
             assessment = self.assessments.pop(0) if self.assessments and stage != "propose_gamma" else "usable"
-            decision = fixtures.response(stage, assessment)
-            if assessment == "usable":
-                # Keep reference valid throughout, including steps=0 final winner.
-                if stage == "review_gamma":
-                    for winner in decision.gamma_winners:
-                        winner.candidate_id = "reference"
+            decision = fixtures.response(stage, assessment, self.session()["active_round"])
             return {"parsed": decision, "raw": None, "parsing_error": None}
         return SimpleNamespace(invoke=invoke)
 
@@ -204,10 +199,11 @@ class TuningFlowTests(unittest.TestCase):
             result = self.resume("scan", scan_paths=[f"phone/round-{number}.pdf"])
         self.assertEqual(self.kind(result), "print_approval")
         self.assertTrue(result["report"]["figure_embedded"])
-        self.assertEqual(self.stages, ["propose_gamma", "review_gamma", "review_gray_levels", "review_steps"])
+        self.assertEqual(self.stages, ["propose_gamma", "review_gamma", "review_gamma", "review_gamma_final"])
         self.assertEqual(len(self.submissions), 3)
         self.assertEqual(self.session()["status"], "completed")
-        self.assertTrue(all(m["steps"] == 0 for m in self.session()["final_settings"].values()))
+        self.assertTrue(all((m["gamma"], m["dark_level"], m["light_level"], m["steps"]) == (fixtures.FINAL_GAMMA, 0., 1., 0)
+                            for m in self.session()["final_settings"].values()))
         self.assertEqual(result["decision_count"], 99)
         for record in result["execution_results"]:
             if record["tool_name"] == "read_scan":

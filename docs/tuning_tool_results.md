@@ -7,6 +7,12 @@ run, cut to one page and one candidate. `<run>` stands for the run folder.
 Every result has `contract_version` (1) and `status`. Tools never raise: problems come back as
 `status: "error"` or `"needs_rescan"` with an `error_code` and a `message`.
 
+Only gamma is tuned, in all three rounds. Each round prints, per experiment, the reference (the
+best gamma so far) and 5 gamma tests. Round 1's tests come from the `propose_gamma` proposal,
+rounds 2 and 3 from the `review_gamma` review of the round before; the `review_gamma_final`
+review of round 3 picks the final gamma. Gray levels and steps are fixed, not tuned: every
+mapping prints with `dark_level` 0.0, `light_level` 1.0 and `steps` 0 (smooth).
+
 ## make_trial_sheet(round_id)
 
 ### ok
@@ -91,7 +97,7 @@ record's `notes`.
 | `experiment_id` | the trial sheet's **item_id** (see below) |
 | `candidate_id` | `reference`, `test_1` … `test_5` |
 | `role` | `reference` or `test` |
-| `mapping` | the full mapping printed: `gamma`, `dark_level`, `light_level`, `steps`, `invert` |
+| `mapping` | the full mapping printed: `gamma` (tuned), `dark_level`, `light_level`, `steps` (fixed at 0.0, 1.0, 0), `invert` |
 | `page_number` | page the tile is on |
 | `tile_path` | colour PNG crop of the whole tile (both panels, scale bar, label) |
 | `panels` | `[{panel, png, measurements, notes}]`, one per panel (`Initial`, `Final`) |

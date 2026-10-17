@@ -1,11 +1,12 @@
-"""The final report figure: the selected experiments' heatmaps printed with their tuned gray settings.
+"""The final report figure: the selected experiments' heatmaps printed with their tuned gamma.
 
 After round 3 the graph calls render_final_heatmaps(session_path, out_dir); its report step puts
 the PNG into report.pdf. One figure: one row per selected experiment (frozen order), Initial and
 Final side by side, each row with its label and mapping above and a gray scale bar below.
 
 The session is read with tuning_tools' key names (_session_inputs, _load_selection). The tuned
-mappings come from the session's final_settings (experiment_id -> complete mapping), read only in
+mappings come from the session's final_settings (only gamma is tuned; gray levels and steps are the
+fixed config defaults) (experiment_id -> complete mapping), read only in
 _final_settings. The limits are the fixed ones in selected_experiments[].limits: none are recomputed,
 so the grays are exactly those apply_mapping gives and the trial sheets printed.
 """
@@ -21,7 +22,8 @@ from matplotlib.figure import Figure
 from matplotlib.patches import Rectangle
 from PIL import Image
 
-from app.print_tuning.grayscale_render import apply_mapping, mapping_label, scale_bar, validate_mapping
+from app.print_tuning.grayscale_render import (apply_mapping, default_mapping, mapping_label, scale_bar,
+                                               validate_mapping)
 from app.print_tuning.trial_sheet import _check_marks, _draw_box_mark, load_panel_data
 from app.print_tuning.tuning_tools import _load_selection, _session_inputs, _ToolError
 
@@ -56,10 +58,13 @@ def _final_settings(session: dict, experiment_ids: list[str], config: dict) -> d
             raise ValueError(f"tuning session: final_settings[{experiment_id!r}] is not a valid mapping: "
                              f"{error}") from error
         mappings[experiment_id] = dict(mapping)
-    pairs = {e: (m["dark_level"], m["light_level"]) for e, m in mappings.items()}
-    if len(set(pairs.values())) > 1:
-        raise ValueError(f"tuning session: dark_level and light_level are shared and must be the same for every "
-                         f"experiment, got {pairs}")
+    fixed = {key: value for key, value in default_mapping(config).items()
+             if key in ("dark_level", "light_level", "steps")}
+    for experiment_id, mapping in mappings.items():
+        changed = {key: mapping[key] for key, value in fixed.items() if mapping[key] != value}
+        if changed:
+            raise ValueError(f"tuning session: final_settings[{experiment_id!r}] changes the fixed (not tuned) "
+                             f"values {changed}; they must stay {fixed}")
     return mappings
 
 

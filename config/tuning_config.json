@@ -1,7 +1,7 @@
 {
   "schema_version": "tuning_config/1",
   "name": "photonic_focus_heatmaps",
-  "description": "Grayscale print tuning for the focusing experiments: each item is one experiment with its Initial and Final camera heatmaps, printed in several grayscale variations per round, scanned by the user and judged by the agents to pick better settings.",
+  "description": "Grayscale print tuning for the focusing experiments: each item is one experiment with its Initial and Final camera heatmaps, printed in several grayscale variations per round, scanned by the user and judged by the agents to pick a better gamma. Only gamma is tuned, in all three rounds.",
   "page": {
     "size": "A4",
     "orientation": "portrait",
@@ -21,7 +21,7 @@
     "low_percentile": 0.5,
     "high_percentile": 99.5,
     "scope": "per_item",
-    "description": "The value limits that map data to gray are computed once from all panels of an item together and stay fixed for the whole calibration session, so the panels of an item stay comparable and only the tuned settings change between rounds."
+    "description": "The value limits that map data to gray are computed once from all panels of an item together and stay fixed for the whole calibration session, so the panels of an item stay comparable and only gamma changes between rounds."
   },
   "parameters": {
     "gamma": {
@@ -40,8 +40,8 @@
       "light": {"min": 0.6, "max": 1.0, "default": 1.0},
       "min_gap": 0.3,
       "scope": "shared",
-      "tuned": true,
-      "description": "The printed gray for the lowest (dark) and highest (light) data values, where 0 means black and 1 means white. light minus dark must be at least min_gap. Shared by all items because it depends on the printer and paper."
+      "tuned": false,
+      "description": "The printed gray for the lowest (dark) and highest (light) data values, where 0 means black and 1 means white. Not tuned: always printed with the defaults, dark 0.0 and light 1.0."
     },
     "steps": {
       "type": "int",
@@ -50,8 +50,8 @@
       "default": 0,
       "special_values": {"0": "smooth"},
       "scope": "per_item",
-      "tuned": true,
-      "description": "Number of discrete gray bands. 0 means smooth (no banding), so the allowed values are 0 or 2 to 32."
+      "tuned": false,
+      "description": "Number of discrete gray bands. 0 means smooth (no banding). Not tuned: always printed with the default 0 (smooth)."
     },
     "invert": {
       "type": "bool",
@@ -63,8 +63,8 @@
   },
   "rounds": [
     {"round_id": 1, "parameter": "gamma"},
-    {"round_id": 2, "parameter": "gray_levels"},
-    {"round_id": 3, "parameter": "steps"}
+    {"round_id": 2, "parameter": "gamma"},
+    {"round_id": 3, "parameter": "gamma"}
   ],
   "variation_rules": {
     "reference_count": 1,
@@ -85,13 +85,5 @@
     "recommended_dpi": 300,
     "accepted_formats": ["pdf", "png", "jpg", "jpeg"],
     "description": "Requirements for the scanned page the user returns."
-  },
-  "paper_presets": {
-    "description": "Starting dark_level by paper color for round 1's reference. First guesses, not measured; the tuning rounds still decide the final values. Unknown or missing colors use the parameter defaults.",
-    "presets": [
-      {"name": "light", "match": ["cream", "ivory", "light", "pastel"], "dark_level": 0.03},
-      {"name": "dark", "match": ["dark", "deep"], "dark_level": 0.1},
-      {"name": "colored", "match": ["yellow", "blue", "green", "pink", "orange", "gray", "grey", "red", "purple"], "dark_level": 0.05}
-    ]
   }
 }
