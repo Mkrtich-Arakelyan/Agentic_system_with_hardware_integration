@@ -13,7 +13,7 @@ DEFAULT_EXTRA_DECISIONS = 5
 
 ORCHESTRATOR_PROMPT = """
 You coordinate autonomous focusing at the fixed camera target and the printed
-one-page report of the results. Read the full dialogue and tool evidence. Return
+2/3-page report of the results. Read the full dialogue and tool evidence. Return
 next_role, a short instruction, and a one-sentence reason. Choose the role
 needed now, not a fixed sequence:
 - scientist: optical theory, experiment planning, analysis and the report spec;

@@ -113,7 +113,7 @@ def _new_path(out_dir: Path, session_id: str) -> Path:
     return path
 
 
-def render_final_heatmaps(session_path, out_dir, *, figsize_mm: tuple[float, float] = (180, 200)) -> dict:
+def render_final_heatmaps(session_path, out_dir, *, figsize_mm: tuple[float, float] = (180, 200), compact=False) -> dict:
     """Draw the selected experiments' Initial and Final heatmaps with their final settings; save a gray PNG.
 
     Raises ValueError for a bad session or missing or invalid final settings, and TrialSheetError
@@ -148,12 +148,37 @@ def render_final_heatmaps(session_path, out_dir, *, figsize_mm: tuple[float, flo
         for name in PANELS:          # the same loading and mark checks as trial_sheet._load_items
             panel, where = by_name[name], f"item {item['item_id']} panel {name}"
             data = load_panel_data(panel["data_path"], where)
+            if panel.get("sha256") and hashlib.sha256(Path(panel["data_path"]).read_bytes()).hexdigest() != panel["sha256"]:
+                raise ValueError("Original scientific array changed after selection: " + where)
             marks = _check_marks(item.get("marks"), where, data.shape) + \
                 _check_marks(panel.get("marks"), where, data.shape)
             panels.append({"name": name, "grays": apply_mapping(data, limits[experiment_id], mappings[experiment_id]),
                            "marks": marks})
         rows.append({"experiment_id": experiment_id, "label": str(item.get("label", item["item_id"])),
                      "panels": panels})
+
+    if compact:
+        fig = Figure(figsize=(180 / 25.4, 196 / 25.4), dpi=DPI, facecolor="white")
+        FigureCanvasAgg(fig)
+        for index, row in enumerate(rows):
+            for column, panel in enumerate(row["panels"]):
+                box = (28 + column * 83, 2 + index * 49, 45, 45)
+                ax = _axes(fig, box, 180, 196)
+                grays = panel["grays"]
+                ax.imshow(grays, cmap="gray", vmin=0, vmax=1, interpolation="nearest", aspect="auto",
+                          extent=(0, grays.shape[1], grays.shape[0], 0))
+                for mark in panel["marks"]:
+                    _draw_box_mark(ax, mark, grays.shape, box)
+        fig.canvas.draw()
+        out_dir = Path(out_dir); out_dir.mkdir(parents=True, exist_ok=True)
+        target = _new_path(out_dir, inputs["session_id"])
+        Image.fromarray(np.asarray(fig.canvas.buffer_rgba())[..., :3]).convert("L").save(target, dpi=(DPI, DPI))
+        return {"contract_version": 1, "status": "ok", "figure_path": str(target),
+            "figure_sha256": hashlib.sha256(target.read_bytes()).hexdigest(), "comparison_version": "scientific-pairs/1",
+            "width_mm": 180, "height_mm": 196, "columns": ["Initial", "Final"],
+            "experiments": [{"experiment_id": row["experiment_id"], "label": f"E{i + 1}",
+                "mapping": mappings[row["experiment_id"]], "limits": limits[row["experiment_id"]]}
+                for i, row in enumerate(rows)]}
 
     # layout in mm: square panels as large as the rows allow, centred
     width_mm, height_mm = (float(v) for v in figsize_mm)
@@ -220,4 +245,9 @@ def render_final_heatmaps(session_path, out_dir, *, figsize_mm: tuple[float, flo
             "experiments": [{"experiment_id": row["experiment_id"], "label": row["label"],
                              "mapping": mappings[row["experiment_id"]], "limits": limits[row["experiment_id"]]}
                             for row in rows]}
+
+
+def render_report_comparison(session_path, out_dir):
+    """Scientific Initial/Final arrays, both using the final accepted mapping."""
+    return render_final_heatmaps(session_path, out_dir, compact=True)
 

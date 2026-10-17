@@ -1,4 +1,8 @@
-"""Structured specialist responses for the four print-tuning decision stages.
+"""Structured specialist responses for the four reusable print-tuning decision stages.
+
+Stages repeat within explicitly identified cycles. Application ValidationContext
+binds every decision to its cycle/step/trial/evaluation; the model cannot choose
+the active cycle or advance it through a response field.
 
 Contextual checks live in app.print_tuning.validation: frozen experiment IDs,
 active stage/round, candidate counts, configuration ranges, duplicate tests and

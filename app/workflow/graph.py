@@ -9,7 +9,7 @@ from langgraph.graph import END, START, StateGraph
 from langgraph.types import interrupt
 
 from app.workflow.state import State
-from app.report_policy import REPORT_PAGES
+from app.report_policy import REPORT_PAGES, REPORT_ALLOWED_PAGES
 import app.workflow.reporting as report_records
 from app.workflow.tuning import (
     TuningSessionError, initialize_tuning_session, load_tuning_session,
@@ -193,6 +193,7 @@ def build_graph(
     *,
     tuning_tools: list[BaseTool] | None = None,
     specialist_llm: BaseChatModel | None = None,
+    max_cycles: int = 3,
 ):
     """Build the experiment, tuning, then report workflow.
 
@@ -243,7 +244,7 @@ def build_graph(
         path = str(run_dir / "tuning_session.json")
         try:
             session = initialize_tuning_session(run_dir, selection, _successful_focusing_results(state),
-                                                paper_color=state.get("paper_color"))
+                                                  paper_color=state.get("paper_color"), max_cycles=max_cycles)
             metadata = {"status": session["initialization"]["status"], "session_id": session["session_id"]}
         except TuningSessionError as error:
             metadata = {"status": "error", "message": str(error)}
@@ -771,8 +772,8 @@ def build_graph(
         count = _count_successful_focusing_results(state)
         if count < MIN_EXPERIMENTS:
             missing.append(f"{MIN_EXPERIMENTS} successful focusing experiments (found {count})")
-        if not report.get("exists") or report.get("pages") != REPORT_PAGES:
-            missing.append("a two-page report.pdf")
+        if not report.get("exists") or report.get("pages") not in REPORT_ALLOWED_PAGES:
+            missing.append("a 2/3-page report.pdf")
         if not missing:
             return {"stop_reason": "finished", "route": "end", "report": report,
                     "final_figure_path": figure["figure_path"], "final_figure_metadata": figure,
@@ -855,6 +856,8 @@ def build_graph(
             if missing:
                 return blocked("Missing injected tuning tools: " + ", ".join(sorted(missing)))
             phase = session["phase"]
+            if phase == "awaiting_cycle_decision":
+                return {"route": "tuning_cycle"}
             if phase == "awaiting_gamma_proposal":
                 return {"route": "tuning_specialist"}
             if phase == "ready_for_trial":
@@ -873,6 +876,24 @@ def build_graph(
             return after_print(state, session)
         except (TuningSessionError, KeyError, OSError) as error:
             return blocked(str(error))
+
+    def tuning_cycle_node(state):
+        from app.workflow.tuning import decide_cycle
+        session = session_for(state)
+        if session["phase"] != "awaiting_cycle_decision":
+            return {"route": "tuning_route"}
+        choices = (["continue"] if session["active_cycle"] < session["max_cycles"] else []) + ["finish", "stop"]
+        from app.print_tuning.progress import describe_history
+        reply = interrupt({"kind": "tuning_cycle", "cycle_id": session["active_cycle"],
+            "question": "Cycle complete. Continue tuning, finish and create the report, or stop?" if "continue" in choices
+                        else "Maximum cycles reached. Finish and create the report, or stop?",
+            "choices": choices, "metric_summary": describe_history(session["metric_history"]) if session.get("metric_history") else "Metrics not available"})
+        choice = reply.get("action") if isinstance(reply, dict) else None
+        if choice not in choices:
+            return {"route": "tuning_cycle"}
+        decide_cycle(state["tuning_session_path"], choice)
+        return {"route": "tuning_route", "pending_trial_print": None, "tuning_failures": 0,
+                "tuning_polls": 0, "trial_approval": None}
 
     def tuning_specialist_node(state):
         try:
@@ -974,6 +995,7 @@ def build_graph(
         except (TuningSessionError, KeyError, ValueError, OSError) as error:
             return {**problem(state, "Approval invalid; fresh approval is required: " + str(error)), "pending_trial_print": None}
         reply = interrupt({"kind": "trial_print_approval", "pdf_path": pending.get("args", {}).get("pdf_path"),
+                           "cycle_id": pending.get("cycle_id", 1), "step_id": pending.get("step_id", pending.get("round_id")),
                            "page_count": pending.get("trial_result", {}).get("page_count"),
                            "printer": pending.get("args", {}).get("printer"),
                            "session_id": pending.get("session_id"), "round_id": pending.get("round_id"),
@@ -1025,8 +1047,11 @@ def build_graph(
     def tuning_scan_node(state):
         session = session_for(state)
         reply = interrupt({"kind": "tuning_scan", "round_id": session["active_round"],
+            "cycle_id": session.get("active_cycle", 1), "step_id": session["active_round"],
             "trial_id": session["active_trial_id"],
-            "suggested_scan_directory": str(run_dir / "scans" / f"round_{session['active_round']}"),
+            "suggested_scan_directory": str(run_dir / "scans" / f"cycle_{session['active_cycle']}" /
+                f"step_{session['active_round']}" if session.get("contract_version") == 2 else
+                run_dir / "scans" / f"round_{session['active_round']}"),
             "question": "Scan BOTH faces of each printed sheet as separate pages, keeping all markers visible. Save and supply explicit paths; or reprint/stop.",
             "choices": ["scan", "reprint", "stop"]})
         if not isinstance(reply, dict):
@@ -1130,7 +1155,7 @@ def build_graph(
         "tuning_approval": tuning_approval_node, "tuning_submit": tuning_submit_node,
         "tuning_scan": tuning_scan_node, "tuning_confirmation": tuning_confirmation_node,
         "tuning_poll": tuning_poll_node, "tuning_problem": tuning_problem_node,
-        "tuning_recovery": tuning_recovery_node,
+        "tuning_recovery": tuning_recovery_node, "tuning_cycle": tuning_cycle_node,
     }
     for name, node in tuning_nodes.items():
         builder.add_node(name, node)
@@ -1180,7 +1205,7 @@ def build_graph(
         "end": END,
     })
     builder.add_conditional_edges("finish_gate", route, {
-        "orchestrator": "orchestrator", "end": END,
+        "orchestrator": "orchestrator", "report_and_print": "report_and_print", "end": END,
     })
 
     return builder.compile(checkpointer=checkpointer)

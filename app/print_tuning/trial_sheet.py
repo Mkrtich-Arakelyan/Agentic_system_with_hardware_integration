@@ -440,7 +440,7 @@ def _draw_frame(page: _Page, layout: dict, bits: list[int], header: str) -> None
         page.rect(box, fill="black" if bit else "white", edge="black", width=0.4)
         page.regions["page_code"].append({"bit": bit, "box": _box(*box)})
 
-    header_x = code_x + CODE_BITS * (CODE_SQUARE + CODE_GAP) + 2.0
+    header_x = code_x + len(bits) * (CODE_SQUARE + CODE_GAP) + 2.0
     page.label("header", header_x, margin + MARKER / 2, header, far_x - 2.0 - header_x, size=8, va="center")
 
 
@@ -514,7 +514,7 @@ def _draw_reference_strip(page: _Page, layout: dict) -> None:
 
 
 def _write_pdf(path: Path, items: list, variations: dict, cells: dict, layout: dict, per_page: int,
-               round_id: int, parameter: str, trial_id: str) -> list[dict]:
+                 round_id: int, parameter: str, trial_id: str, cycle_id=None) -> list[dict]:
     """Draw every page into one PDF; return the manifest pages."""
     chunks = [items[i:i + per_page] for i in range(0, len(items), per_page)]
     pages = []
@@ -523,7 +523,12 @@ def _write_pdf(path: Path, items: list, variations: dict, cells: dict, layout: d
         for number, chunk in enumerate(chunks, start=1):
             page = _Page()
             bits = page_code_bits(number, round_id)
-            _draw_frame(page, layout, bits, f"Trial round {round_id} · testing {parameter} · "
+            if cycle_id is not None:
+                # Trial-specific 12-bit tag plus page bits: detects stale sheets;
+                # finite tag collisions remain possible, so durable IDs/hashes still bind evidence.
+                tag = int(hashlib.sha256(trial_id.encode()).hexdigest()[:3], 16)
+                bits = [int(b) for b in f"{number:03b}{tag:012b}"]
+            _draw_frame(page, layout, bits, f"C{cycle_id or 1}-S{round_id} · testing {parameter} · "
                                             f"page {number} of {len(chunks)} · trial {trial_id[:8]}")
             for slot, item in enumerate(chunk):
                 _draw_item(page, layout, slot, item, variations[item["item_id"]], cells)
@@ -566,7 +571,7 @@ def _check_same_selection(previous: dict, selection: dict, items: list, calibrat
 
 def create_trial_sheet(selection: dict, variations: dict, round_id: int, out_dir, calibration_session_id: str,
                        config: dict | None = None, limits: dict | None = None,
-                       print_settings: dict | None = None, previous_record: dict | None = None) -> dict:
+                         print_settings: dict | None = None, previous_record: dict | None = None, cycle_id=None) -> dict:
     """Check the inputs, draw the trial PDF and write the cells and manifest; return the trial record.
 
     previous_record is the record of an earlier round of the same calibration session: the
@@ -604,7 +609,7 @@ def create_trial_sheet(selection: dict, variations: dict, round_id: int, out_dir
     pdf_path, cells_path, manifest_path = paths
 
     pages = _write_pdf(pdf_path, items, variations, cells, layout, config["page"]["items_per_page"],
-                       round_id, parameter, trial_id)
+                       round_id, parameter, trial_id, cycle_id)
     np.savez_compressed(cells_path, **cells)
 
     record = {
@@ -627,5 +632,7 @@ def create_trial_sheet(selection: dict, variations: dict, round_id: int, out_dir
         "manifest_path": str(manifest_path),
         "pages": pages,
     }
+    if cycle_id is not None:
+        record.update(cycle_id=cycle_id, step_id=round_id, page_code_identity="trial-sha256-prefix-12bits; collision possible")
     manifest_path.write_text(json.dumps(record, indent=2, ensure_ascii=False, allow_nan=False), encoding="utf-8")
     return record

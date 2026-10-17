@@ -15,6 +15,7 @@ def pdf(tmp_path):
     path = tmp_path / "report.pdf"
     with pymupdf.open() as document:
         document.new_page()
+        document.new_page()
         document.save(path)
     return path
 
@@ -47,6 +48,16 @@ def test_fake_printer_without_problem_ends_confirmed_done(fake, pdf):
     final = _wait_until_finished(submitted["job_id"])
     assert final == {"job_id": submitted["job_id"], "state": "done", "confirmed": True, "message": "fake job is done"}
     assert connector.cancel_job(submitted["job_id"])["state"] == "done"
+
+
+@pytest.mark.parametrize("pages", [1, 2, 3, 4])
+def test_mcp_report_page_policy_is_distinct_from_trials(fake, tmp_path, pages):
+    target = tmp_path / "report.pdf"
+    with pymupdf.open() as document:
+        for _ in range(pages): document.new_page()
+        document.save(target)
+    result = mcp_server.submit_print(str(target), PRINTER)
+    assert result["ok"] is (pages in (2, 3))
 
 
 def test_fake_cancel_before_printing_still_works(fake, pdf):

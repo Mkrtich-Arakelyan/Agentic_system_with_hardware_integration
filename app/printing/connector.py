@@ -6,7 +6,7 @@ Interface: the operating system's own print commands, run through subprocess.
   - macOS / Linux: CUPS commands lp, lpstat and cancel.
 
 Two ways to print:
-  - submit_print:       the two-page report, with the system's default print settings.
+  - submit_print:       the 2/3-page report, with the system's default print settings.
   - submit_trial_print: the grayscale trial sheets from trial_sheet.py: one copy, A4,
                         grayscale, two-sided (long-edge) and at 100% size (no fit-to-page), because the
                         sheet's positions are measured in mm on the scan. On Windows this

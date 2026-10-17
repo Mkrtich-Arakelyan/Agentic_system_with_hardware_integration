@@ -34,7 +34,7 @@ DEFAULT_REQUEST = (
     "answer the scientific question, requesting more runs if needed. "
     "Judge whether the comparison is fair, compare "
     "performance and computational cost, and suggest the next experiment. Then "
-    "produce a two-page report with one graph, its explanation and a verdict, and "
+    "produce a 2/3-page report with one graph, its explanation and a verdict, and "
     "print it on the office printer after my approval."
 )
 # Paper color: asked once per new run; empty or one of these words means plain white (None).
@@ -212,9 +212,11 @@ def check_tuning_tools(printer_tools, tuning_tools) -> None:
         raise RuntimeError("print tuning needs these tools, which are missing: " + ", ".join(sorted(missing)))
 
 
-def scan_folders(run_dir: Path) -> list[Path]:
+def scan_folders(run_dir: Path, max_cycles=None) -> list[Path]:
     """Create run_dir/scans/round_1 .. round_3 (the folders the tuning pauses suggest) and return them."""
-    folders = [Path(run_dir) / "scans" / f"round_{number}" for number in SCAN_ROUNDS]
+    folders = ([Path(run_dir) / "scans" / f"cycle_{cycle}" / f"step_{step}"
+                for cycle in range(1, max_cycles + 1) for step in SCAN_ROUNDS] if max_cycles else
+               [Path(run_dir) / "scans" / f"round_{number}" for number in SCAN_ROUNDS])
     for folder in folders:
         folder.mkdir(parents=True, exist_ok=True)
     return folders
@@ -430,6 +432,8 @@ def main() -> int:
     parser.add_argument("--resume", type=Path, metavar="RUN_DIR", help="Continue a saved run in the same folder.")
     parser.add_argument("--report-revision", metavar="TEXT",
                         help="With --resume, request report edits without rerunning experiments or tuning.")
+    parser.add_argument("--max-tuning-cycles", type=positive_int, default=None,
+                        help="Maximum tuning cycles for a new run (default 3, maximum 20); saved sessions retain their limit.")
     parser.add_argument("--resume-stopped-tuning", action="store_true",
                         help="With --resume, back up JSON records and explicitly reopen human-stopped tuning.")
     parser.add_argument("--initial-decisions", type=positive_int, metavar="N",
@@ -446,6 +450,8 @@ def main() -> int:
                         help='Paper color to print on, e.g. "light yellow" (default: plain white; '
                              "asked at the start of a new run if not given).")
     args = parser.parse_args()
+    if args.max_tuning_cycles is not None and (args.max_tuning_cycles > 20 or args.resume):
+        parser.error("--max-tuning-cycles is 1..20 and applies only to new runs")
     if args.resume_stopped_tuning and not args.resume:
         parser.error("--resume-stopped-tuning requires --resume RUN_DIR.")
     if args.report_revision is not None and (not args.resume or not args.report_revision.strip()):
@@ -538,8 +544,9 @@ def main() -> int:
           + (" (fake)" if fake_printer else "") + "\n" + paper_line(state.get("paper_color")), flush=True)
     if specialist_model:
         print(f"Specialist model: {specialist_model}", flush=True)
-    folders = scan_folders(run_dir)
-    print(f"Scan folders for the trial sheets: {folders[0].parent}/round_1, round_2, round_3", flush=True)
+    cycle_limit = args.max_tuning_cycles or saved.get("max_tuning_cycles", 3)
+    folders = scan_folders(run_dir, cycle_limit if not saved or saved.get("max_tuning_cycles") else None)
+    print(f"Trial scan directories: {folders[0]} ... {folders[-1]}", flush=True)
 
     try:
         from langchain_openai import ChatOpenAI
@@ -606,7 +613,7 @@ def main() -> int:
             "that change one setting.\n"
             "Computational cost is compared by iterations and camera shots per measurement "
             "(and by wall_time_seconds and camera_shots if the results include them).\n"
-            "The final product is report.pdf in the output directory: two A4 portrait pages with one "
+            "The final product is report.pdf in the output directory: 2 or 3 A4 portrait pages with one "
             "graph, its explanation, a fairness judgement, performance vs cost, a suggested "
             "next experiment and a verdict on page 1; Hardware loop results on page 2. "
             "The executor calls build_final_report, which uses a reusable layout, frozen "
@@ -616,9 +623,10 @@ def main() -> int:
             "Printer states: idle, printing, stopped, offline, error, unknown, out_of_paper, "
             "paper_jam. Job states: waiting, printing, done, failed, uncertain.\n"
             "Print tuning: after the four experiments are chosen, the graph tunes how their heatmaps "
-            "print in 3 rounds: gamma, then the dark/light gray levels, then the number of gray steps.\n"
+            "print in three-step cycles: gamma, then shared dark/light gray levels, then gray steps. "
+            "After each accepted cycle the human chooses Continue, Finish or Stop; continuation is not print approval.\n"
             "Every trial sheet print needs human approval of that exact PDF and printer. The human "
-            f"scans the printed pages into {run_dir / 'scans'}/round_N (N = 1, 2, 3).\n"
+            f"scans both faces into {run_dir / 'scans'}/cycle_N/step_N. Legacy round_N paths remain accepted.\n"
             + (
                 f"The office printer is named {printer_name}; pass printer=\"{printer_name}\" "
                 "to printer_status and submit_print.\n"
@@ -641,6 +649,7 @@ def main() -> int:
             "reasoning_effort": "medium",
             "python": sys.version,
             "bench": bench_settings,
+            "max_tuning_cycles": cycle_limit,
             "request": args.request,
             "script_timeout_seconds": RUN_TIMEOUT_SECONDS,
         }
@@ -686,7 +695,7 @@ def main() -> int:
         check_tuning_tools(printer_tools, tuning_tools)
         workflow = build_graph(
             llm, focusing_tool, coding_tool, printer_tools, create_information_tool(),
-            run_dir, extra_decisions, InMemorySaver(), tuning_tools=tuning_tools,
+            run_dir, extra_decisions, InMemorySaver(), tuning_tools=tuning_tools, max_cycles=cycle_limit,
             **({"specialist_llm": chat_model(specialist_model)} if specialist_model else {}),
         )
         # The report-and-print self-loop needs more than the default 25 steps.

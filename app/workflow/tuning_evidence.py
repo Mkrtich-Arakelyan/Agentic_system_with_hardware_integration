@@ -107,6 +107,8 @@ def _issues(value: Any, where: str, page_numbers: set[int]) -> list[str]:
 def _history(session: dict, stage: Stage) -> tuple[Response, ...]:
     found = {}
     for decision in _records(session.get("decisions"), "session.decisions"):
+        if decision.get("cycle_id", 1) != session.get("active_cycle", 1):
+            continue
         previous = decision.get("stage")
         _need(isinstance(previous, str) and previous in _MODELS, "History contains an unknown decision stage")
         if _STAGES.index(previous) >= _STAGES.index(stage):
@@ -301,7 +303,7 @@ def prepare_tuning_inputs(session_path: str | Path, stage: Stage) -> TuningInput
         evaluation_id = None
         if stage == "propose_gamma":
             _need(session["active_trial_id"] is None, "Initial proposal cannot review an active physical trial")
-            _need(session["previews"].get("reference_mappings") == context.reference_mappings,
+            _need(session.get("active_cycle", 1) > 1 or session["previews"].get("reference_mappings") == context.reference_mappings,
                   "Preview reference mappings differ from initial references")
             evidence = SpecialistEvidence(
                 {e["experiment_id"]: deepcopy(e["limits"]) for e in session["selected_experiments"]},

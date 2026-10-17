@@ -21,7 +21,7 @@ from uuid import uuid4
 from PIL import Image
 
 from app.print_tuning.final_figures import render_report_comparison as render_final_heatmaps
-from app.report_policy import REPORT_PAGES, REPORT_VERSION, COMPARISON_VERSION, COMPARISON_PAGE
+from app.report_policy import REPORT_PAGES, REPORT_ALLOWED_PAGES, REPORT_VERSION, COMPARISON_VERSION, COMPARISON_PAGE
 from app.print_tuning.tuning_tools import _load_selection, _session_inputs
 
 
@@ -125,13 +125,13 @@ def inspect_tuned_report(path, figure):
                   inputs_sha256=figure["inputs_sha256"])
     try:
         _need(sha(figure["figure_path"]) == figure["figure_sha256"], "Final figure changed")
-        _need(report["exists"] and report["pages"] == REPORT_PAGES, f"report.pdf must have exactly {REPORT_PAGES} pages")
+        _need(report["exists"] and report["pages"] in REPORT_ALLOWED_PAGES, "report.pdf must have 2 or 3 pages")
         with Image.open(figure["figure_path"]) as source:
             expected = source.convert("RGB")
             size, pixels = expected.size, expected.tobytes()
         with pymupdf.open(path) as document:
             _need(all(abs(p.rect.width - 595.276) < 3 and abs(p.rect.height - 841.89) < 3 for p in document),
-                  "Report must have two A4 portrait pages")
+                  "Report must have A4 portrait pages")
             page = document[COMPARISON_PAGE]
             images = page.get_image_info(xrefs=True)
             _need(len(images) <= 64, "Too many PDF images to validate")
@@ -157,7 +157,7 @@ def inspect_tuned_report(path, figure):
 
 
 def require_report(report):
-    _need(report.get("exists") and report.get("pages") == REPORT_PAGES and report.get("figure_embedded")
+    _need(report.get("exists") and report.get("pages") in REPORT_ALLOWED_PAGES and report.get("figure_embedded")
           and not report.get("error"), "Invalid final report: " + str(report.get("error", "missing tuned figure")))
 
 

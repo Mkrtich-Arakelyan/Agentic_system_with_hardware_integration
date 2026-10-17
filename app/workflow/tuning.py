@@ -77,6 +77,11 @@ def _sha(path: str | Path) -> str:
 def _write(path: Path, session: dict) -> dict:
     """Serialize first, then fsync a same-directory temporary file and replace."""
     session = _clone(session)
+    if session.get("contract_version") == 2:
+        session["active_step"] = session["active_round"]
+        session["cycles"][str(session["active_cycle"])] = {
+            "cycle_id": session["active_cycle"], "steps": deepcopy(session["rounds"]),
+            "phase": session["phase"], "accepted_settings": deepcopy(session["accepted_settings"])}
     session["revision"] += 1
     session["updated_at"] = _now()
     encoded = json.dumps(session, indent=2, ensure_ascii=False, allow_nan=False)
@@ -116,7 +121,14 @@ def load_tuning_session(session_path: str | Path, *, allow_incomplete: bool = Fa
     """Load the authoritative record; never regenerate limits or reset progress."""
     session = _read(session_path)
     try:
-        _need(session["contract_version"] == 1, "Unsupported tuning session contract")
+        _need(session["contract_version"] in (1, 2), "Unsupported tuning session contract")
+        if session["contract_version"] == 2:
+            _need(type(session["active_cycle"]) is int and 1 <= session["active_cycle"] <= session["max_cycles"] <= 20,
+                  "Invalid cycle count/limit")
+            _need(set(session["cycles"]) == {str(n) for n in range(1, session["active_cycle"] + 1)}, "Cycle history is incomplete")
+            _need(session["active_step"] == session["active_round"] and
+                  session["cycles"][str(session["active_cycle"])]["steps"] == session["rounds"],
+                  "Active cycle projection differs from authoritative steps")
         ready = session["initialization"]["status"] == "complete"
         _need(ready or allow_incomplete, "Tuning initialization is incomplete; retry_initialization=True is required deliberately")
         if ready:
@@ -126,12 +138,29 @@ def load_tuning_session(session_path: str | Path, *, allow_incomplete: bool = Fa
             _need(set(session["rounds"]) == {"1", "2", "3"}, "Session must retain exactly three rounds")
             _need(session["status"] in ("active", "blocked", "completed", "stopped", "error"), "Unknown session status")
             _need({e["experiment_id"]: e["limits"] for e in session["selected_experiments"]} == session["previews"]["normalization_limits"], "Frozen normalization limits changed")
+            if session["contract_version"] == 2:
+                _need(session["original_settings"] == session["previews"]["reference_mappings"], "Original baseline mapping changed")
+                prior = session["original_settings"]
+                for number in range(1, session["active_cycle"] + 1):
+                    steps = session["cycles"][str(number)]["steps"]
+                    _need(set(steps) == {"1", "2", "3"}, "A cycle must retain all three steps")
+                    if steps["1"]["reference_settings"]:
+                        _need(steps["1"]["reference_settings"] == prior, "Cycle starting mapping differs from prior cycle winners")
+                    for step in (1, 2, 3):
+                        entry = steps[str(step)]
+                        if entry["winners"]:
+                            allowed = {1: {"gamma"}, 2: {"dark_level", "light_level"}, 3: {"steps"}}[step]
+                            _need(all(mapping[k] == entry["reference_settings"][eid][k]
+                                for eid, mapping in entry["winners"].items() for k in mapping if k not in allowed), "Historical step changed an unrelated parameter")
+                    if number < session["active_cycle"]:
+                        _need(bool(steps["3"]["winners"]), "A prior cycle is not complete")
+                    prior = steps["3"]["winners"]
             if session["status"] == "completed":
                 _need(session["phase"] == "completed" and session["active_round"] == 3
                       and session["final_settings"] == session["accepted_settings"], "Incomplete final settings cannot be marked completed")
             else:
                 _need(session["final_settings"] is None, "Final settings may appear only on completion")
-            for entry in session["rounds"].values():
+            for entry in _all_steps(session):
                 for name, count in entry["retries"].items():
                     _need(type(count) is int and 0 <= count <= session["retry_limits"][name], f"Invalid retry counter {name}")
             for experiment in session["selected_experiments"]:
@@ -147,6 +176,7 @@ def initialize_tuning_session(
     config: dict | None = None, run_id: str | None = None,
     paper_session: dict | None = None, target_position: tuple[int, int] | None = None,
     retry_initialization: bool = False, paper_color: str | None = None,
+    max_cycles: int | None = None,
 ) -> dict:
     """Package a frozen scientist selection, bootstrap, then freeze real previews.
 
@@ -218,6 +248,11 @@ def initialize_tuning_session(
                                 "retries": {key: 0 for key in _RETRY_LIMITS}} for n in (1, 2, 3)},
             "decisions": [], "outcomes": [], "revision": 0, "created_at": _now(),
         }
+        if max_cycles is not None:
+            _need(type(max_cycles) is int and 1 <= max_cycles <= 20, "max_cycles must be 1..20")
+            session.update(contract_version=2, active_cycle=1, active_step=1, max_cycles=max_cycles,
+                           cycles={}, cycle_decisions=[], original_settings=deepcopy(defaults),
+                           metric_method=None, metric_history=None)
     attempt = {"started_at": _now(), "status": "initializing"}
     session["initialization"]["attempts"].append(attempt)
     session["initialization"]["status"] = session["status"] = session["phase"] = "initializing"
@@ -265,6 +300,12 @@ def _active(session: dict) -> dict:
     return session["rounds"][str(session["active_round"])]
 
 
+def _all_steps(session):
+    archived = [step for key, cycle in session.get("cycles", {}).items()
+                if int(key) != session.get("active_cycle", 1) for step in cycle["steps"].values()]
+    return [*archived, *session["rounds"].values()]
+
+
 def _increment(session: dict, entry: dict, counter: str) -> None:
     _need(entry["retries"][counter] < session["retry_limits"][counter], f"Round {counter} limit reached; user action required")
     entry["retries"][counter] += 1
@@ -277,8 +318,25 @@ def _identity(session: dict, result: dict) -> int:
     if "run_id" in result:
         _need(result["run_id"] == session["run_id"], "Result run mismatch")
     number = result.get("round_id")
+    if session["contract_version"] == 2:
+        _need(result.get("cycle_id") == session["active_cycle"] and result.get("step_id") == number,
+              "Result cycle/step is stale or missing")
     _need(type(number) is int and number == session["active_round"], "Result round is stale/out of order")
     return number
+
+
+def _previous_cycle_context(session):
+    previous = session.get("cycles", {}).get(str(session.get("active_cycle", 1) - 1))
+    if not previous:
+        return None
+    return {"cycle_id": previous["cycle_id"], "accepted_settings": previous["accepted_settings"],
+            "steps": [{"step_id": n, "review": previous["steps"][str(n)]["review"],
+                "winners": previous["steps"][str(n)]["winners"],
+                "metrics": [{"experiment_id": row["experiment_id"], "reason": row["point"].get("reason"),
+                    "metrics": {k: v for k, v in (row["point"].get("metrics") or {}).items()
+                                if k in ("detail_percent", "median_cnr", "wrong_order_fraction")},
+                    "coverage": row["coverage"].get("coverage")} for row in previous["steps"][str(n)].get("metric_snapshot", [])]}
+                for n in (1, 2, 3)]}
 
 
 def _context(session: dict, stage: Stage, manifest: dict | None = None) -> ValidationContext:
@@ -288,7 +346,9 @@ def _context(session: dict, stage: Stage, manifest: dict | None = None) -> Valid
                              reviewed_manifest=manifest, expected_trial_id=manifest["trial_id"] if manifest else None,
                              expected_calibration_session_id=session["session_id"] if manifest else None,
                              experiment_item_ids=association, expected_run_id=session["run_id"],
-                             expected_selection_id=session["selection_id"], expected_selection_version=session["selection_version"])
+                             expected_selection_id=session["selection_id"], expected_selection_version=session["selection_version"],
+                             cycle_id=session.get("active_cycle", 1), step_id={"propose_gamma": 1, "review_gamma": 1, "review_gray_levels": 2, "review_steps": 3}[stage],
+                             previous_cycle_evidence=_previous_cycle_context(session))
 
 
 def build_tuning_context(session_path: str | Path, stage: Stage) -> ValidationContext:
@@ -306,6 +366,9 @@ def build_tuning_context(session_path: str | Path, stage: Stage) -> ValidationCo
 def _trial_manifest(session: dict, result: dict, entry: dict) -> dict:
     """Use existing validation and proposal translation; do not reimplement rendering."""
     manifest = _read(result["manifest_path"])
+    if session["contract_version"] == 2:
+        _need(manifest.get("cycle_id") == session["active_cycle"] and manifest.get("step_id") == result["round_id"],
+              "Manifest belongs to a stale cycle/step")
     round_id = result["round_id"]
     _need(manifest.get("run_id") == session["run_id"] and manifest.get("trial_id") == result["trial_id"], "Trial manifest run/trial mismatch")
     context = _context(session, _REVIEW_STAGES[round_id], manifest)
@@ -343,7 +406,7 @@ def record_trial_result(session_path: str | Path, result: dict) -> dict:
             _need(old["result"] == result, "Conflicting duplicate trial result")
             _need(session["active_trial_id"] == result["trial_id"], "Cannot reactivate a stale trial")
             return session
-    _need(not any(t["result"]["trial_id"] == result.get("trial_id") for r in session["rounds"].values() for t in r["trials"]), "Trial IDs must be unique within the session")
+    _need(not any(t["result"]["trial_id"] == result.get("trial_id") for r in _all_steps(session) for t in r["trials"]), "Trial IDs must be unique within the session")
     _need(session["phase"] in ("ready_for_trial", "awaiting_scan", "awaiting_review") and entry["proposal"] is not None, "Trial generation is out of order")
     _need(not any(a["result"] is None and not a.get("human_resolution") for a in entry["print_attempts"]), "Submission outcome uncertain; resolve it before regenerating")
     try:
@@ -507,6 +570,7 @@ def accept_specialist_response(
     stage = context.expected_stage
     number = {"propose_gamma": 1, "review_gamma": 1, "review_gray_levels": 2, "review_steps": 3}.get(stage)
     _need(number is not None and response.stage == stage, "Decision stage/model mismatch")
+    _need(context.cycle_id == session.get("active_cycle", 1), "Decision belongs to a prior cycle")
     entry = session["rounds"][str(number)]
     _need(list(context.selected_experiment_ids) == _ids(session) and context.config == session["config_snapshot"], "Decision selection/order/config differs from session")
     _need(context.expected_calibration_session_id in (None, session["session_id"]), "Context calibration session differs")
@@ -537,7 +601,7 @@ def accept_specialist_response(
     key = (stage, trial_id, evaluation_record_id)
     data = response.model_dump()
     for old in session["decisions"]:
-        if (old["stage"], old["trial_id"], old["evaluation_record_id"]) == key:
+        if old.get("cycle_id", 1) == session.get("active_cycle", 1) and (old["stage"], old["trial_id"], old["evaluation_record_id"]) == key:
             _need(old["response"] == data, "Conflicting decision for an already accepted stage/evaluation")
             return session
     _active(session)
@@ -563,17 +627,65 @@ def accept_specialist_response(
         elif response.assessment == "insufficient_contrast":
             session.update(status="blocked", phase="user_action_required")
         else:
+            allowed = {1: {"gamma"}, 2: {"dark_level", "light_level"}, 3: {"steps"}}[number]
+            for eid, mapping in winners.items():
+                _need(all(mapping[k] == entry["reference_settings"][eid][k] for k in mapping if k not in allowed),
+                      "Accepted step changed an unrelated mapping parameter")
+            _need(len({(m["dark_level"], m["light_level"]) for m in winners.values()}) == 1,
+                  "Accepted endpoints must remain shared")
             entry["winners"] = deepcopy(winners)
             session["accepted_settings"] = winners
             if number == 3:
-                session.update(final_settings=deepcopy(winners), status="completed", phase="completed")
+                if session["contract_version"] == 2:
+                    session.update(phase="awaiting_cycle_decision")
+                else:
+                    session.update(final_settings=deepcopy(winners), status="completed", phase="completed")
             else:
                 next_round = session["rounds"][str(number + 1)]
                 next_round["proposal"] = data
                 next_round["reference_settings"] = deepcopy(winners)
                 session.update(active_round=number + 1, active_trial_id=None, phase="ready_for_trial")
-    session["decisions"].append({"stage": stage, "trial_id": trial_id, "evaluation_record_id": evaluation_record_id,
+    session["decisions"].append({"cycle_id": session.get("active_cycle", 1), "step_id": number,
+                                 "stage": stage, "trial_id": trial_id, "evaluation_record_id": evaluation_record_id,
                                  "response": data, "accepted_at": _now()})
+    if session["contract_version"] == 2 and stage != "propose_gamma" and response.assessment == "usable":
+        from app.print_tuning.progress import measure_history
+        from app.print_tuning.readability import METHOD
+        session["metric_method"] = session.get("metric_method") or deepcopy(METHOD)
+        session["metric_history"] = measure_history(session)
+        entry["metric_snapshot"] = [{"experiment_id": row["experiment_id"], "point": row["points"][-1],
+            "cell_measurements": row["cell_measurements"][-1], "coverage": row["coverage"]}
+            for row in session["metric_history"]["experiments"]]
+        session.setdefault("metric_history_revisions", []).append({"cycle_id": session["active_cycle"], "step_id": number,
+            "at": _now(), "sha256": _digest(session["metric_history"]),
+            "coverage": [row["coverage"] for row in session["metric_history"]["experiments"]]})
+    return _write(path, session)
+
+
+def decide_cycle(session_path, choice):
+    """Human boundary decision. Continuation creates empty steps; never prints."""
+    path = Path(session_path)
+    session = load_tuning_session(path)
+    _need(session.get("contract_version") == 2 and session["phase"] == "awaiting_cycle_decision",
+          "Cycle decision is out of order")
+    _need(choice in ("continue", "finish", "stop"), "Unknown cycle decision")
+    _need(choice != "continue" or session["active_cycle"] < session["max_cycles"], "Maximum cycle count reached")
+    session["cycle_decisions"].append({"cycle_id": session["active_cycle"], "choice": choice, "at": _now()})
+    if choice == "finish":
+        session.update(status="completed", phase="completed", final_settings=deepcopy(session["accepted_settings"]))
+    elif choice == "stop":
+        _write(path, session)
+        return record_stop(path, "Human stopped print tuning")
+    else:
+        session["cycles"][str(session["active_cycle"])] = {"cycle_id": session["active_cycle"],
+            "steps": deepcopy(session["rounds"]), "phase": "cycle_completed",
+            "accepted_settings": deepcopy(session["accepted_settings"])}
+        session["active_cycle"] += 1
+        session.update(active_round=1, active_trial_id=None, phase="awaiting_gamma_proposal")
+        session["rounds"] = {str(n): {"proposal": None, "trial_result": None, "trials": [], "evaluations": [],
+            "active_evaluation_id": None, "reviews": [], "review": None, "winners": None,
+            "reference_settings": None, "approvals": [], "print_attempts": [],
+            "retries": {key: 0 for key in _RETRY_LIMITS}} for n in (1, 2, 3)}
     return _write(path, session)
 
 
@@ -595,7 +707,7 @@ def record_print_approval(
         if old["metadata"]["approval_id"] == approval_id:
             _need(old["metadata"] == data, "Conflicting duplicate approval")
             return session
-    _need(not any(a["metadata"]["approval_id"] == approval_id for r in session["rounds"].values() for a in r["approvals"]), "Approval IDs must be unique within the session")
+    _need(not any(a["metadata"]["approval_id"] == approval_id for r in _all_steps(session) for a in r["approvals"]), "Approval IDs must be unique within the session")
     _need(session["phase"] == "awaiting_scan", "Approval is out of order")
     if reprint:
         _need(bool(entry["print_attempts"]) and all(a["result"] is not None or a.get("human_resolution") for a in entry["print_attempts"]), "Prior submission outcome must be recorded before approving a reprint")
@@ -624,7 +736,7 @@ def begin_print_attempt(session_path: str | Path, *, approval_id: str, attempt_i
         if old["attempt_id"] == attempt_id:
             _need(old["approval_id"] == approval_id, "Conflicting duplicate print attempt")
             return session
-    _need(not any(a["attempt_id"] == attempt_id for r in session["rounds"].values() for a in r["print_attempts"]),
+    _need(not any(a["attempt_id"] == attempt_id for r in _all_steps(session) for a in r["print_attempts"]),
           "Print attempt IDs must be unique within the session")
     _need(isinstance(attempt_id, str) and bool(attempt_id.strip()), "Print attempt ID required")
     approvals = [a for a in entry["approvals"] if a["metadata"]["approval_id"] == approval_id]
@@ -717,7 +829,7 @@ def record_stop(session_path: str | Path, reason: str, *, error: bool = False, m
     outcome = _clone({"status": "error" if error else "stopped", "reason": reason, "metadata": metadata})
     if session["outcomes"] and session["outcomes"][-1]["outcome"] == outcome:
         return session
-    session["outcomes"].append({"outcome": outcome, "recorded_at": _now()})
+    session["outcomes"].append({"outcome": outcome, "recorded_at": _now(), "prior_phase": session["phase"]})
     session.update(status=outcome["status"], phase=outcome["status"])
     return _write(path, session)
 
@@ -739,7 +851,12 @@ def recover_stopped_tuning(session_path: str | Path, *, backup_path: str | Path)
           "Recovery requires a recorded human tuning stop")
     backup = Path(backup_path).resolve()
     _need((backup / path.name).is_file() and _sha(backup / path.name) == _sha(path),
-          "Recovery needs an unchanged backup of the stopped session")
+            "Recovery needs an unchanged backup of the stopped session")
+    if session.get("contract_version") == 2 and stop.get("prior_phase") == "awaiting_cycle_decision":
+        session.update(status="active", phase="awaiting_cycle_decision")
+        session.setdefault("recoveries", []).append({"at": _now(), "backup_path": str(backup),
+            "source": "--resume-stopped-tuning", "restored_phase": "awaiting_cycle_decision"})
+        return _write(path, session)
     number = session["active_round"]
     _need(type(number) is int and number in (1, 2, 3), "Invalid active tuning round")
     entry = session["rounds"][str(number)]

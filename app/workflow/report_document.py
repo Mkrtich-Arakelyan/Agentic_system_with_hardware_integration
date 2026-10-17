@@ -1,4 +1,4 @@
-"""Reusable two-page report, deterministic offline regeneration, executor tool.
+"""Reusable 2/3-page report, deterministic offline regeneration, executor tool.
 
 No model, experiment, printer or journal mutation occurs in the offline builder.
 The executor tool alone installs a new report version in the active run.
@@ -15,9 +15,10 @@ import shutil
 import numpy as np
 import pymupdf as fitz
 
-from app.report_policy import REPORT_VERSION
+from app.report_policy import REPORT_VERSION, REPORT_PAGES
 from app.print_tuning.final_figures import render_report_comparison
 from app.print_tuning.readability import METHOD, measure_session, method_settings
+from app.print_tuning.progress import measure_history, render_progress, describe_history
 
 MM = 72 / 25.4
 GREEN = (.12, .28, .20)
@@ -43,8 +44,9 @@ def dependency_fingerprint(session_path, session, method, findings):
     """Hash recorded dependencies, including absent files; no recency heuristics."""
     paths = {str(Path(session_path).resolve())}
     from app.print_tuning import readability, final_figures
+    from app.print_tuning import progress
     from app import report_policy
-    paths.update(str(Path(p).resolve()) for p in (__file__, readability.__file__, final_figures.__file__, report_policy.__file__))
+    paths.update(str(Path(p).resolve()) for p in (__file__, readability.__file__, progress.__file__, final_figures.__file__, report_policy.__file__))
     def walk(obj):
         if isinstance(obj, dict):
             for key, value in obj.items():
@@ -225,58 +227,51 @@ def render_document(inputs, figure, target):
             p.text(findings["closing_note"])
 
         p = Page(doc, 2)
-        p.text("Hardware loop results", 21, color=GREEN, gap=7)
-        p.text("Same Final camera arrays; starting and accepted tuned print mappings.", 10, gap=5)
-        label_y = p.y
-        for column, label in enumerate(("Starting print settings", "Tuned print settings")):
-            x = MARGIN + (51 + column * 83) * MM - fitz.Font("tiro").text_length(label, fontsize=11) / 2
-            p.page.insert_text((x, label_y + 10), label, fontsize=11, fontname="tiro")
+        p.text("Experiment images", 21, color=GREEN, gap=7)
+        p.text("Scientific Initial and Final arrays; both columns use the final accepted mapping.", 10)
+        for column, label in enumerate(("Initial", "Final")):
+            p.page.insert_text((MARGIN + (47 + column * 76) * MM, p.y + 10), label, fontsize=11, fontname="tiro")
         p.y += 15
-        rect = fitz.Rect(MARGIN, p.y, WIDTH - MARGIN, p.y + 144 * MM)
+        image_height = 178 * MM if inputs.get("presentation", {}).get("pages", 3) == 3 else 135 * MM
+        rect = fitz.Rect(MARGIN, p.y, WIDTH - MARGIN, p.y + image_height)
         p.page.insert_image(rect, filename=figure["figure_path"], keep_proportion=True)
         for i in range(4):
-            p.page.insert_text((MARGIN + 9, p.y + (i * 36 + 19) * MM), f"E{i + 1}", fontsize=11, fontname="tiro")
-        p.y = rect.y1 + 3
-        p.text("Original numerical data, frozen limits; independent column contrast is disabled.", 10, gap=3)
-        mappings = []
-        for row in figure["experiments"]:
-            a, b = row["starting_mapping"], row["mapping"]
-            arrow = lambda k: f"{_number(a[k])} to {_number(b[k])}"
-            mappings.append([row["label"], arrow("gamma"), arrow("dark_level"), arrow("light_level"), arrow("steps")])
-        p.table(["ID", "Gamma", "Dark", "Light", "Steps (0=smooth)"], mappings, [30, 105, 105, 105, 165], row_height=14)
-        metric_rows = []
-        for i, row in enumerate(metrics["experiments"]):
-            a, b = row.get("before"), row.get("after")
+            p.page.insert_text((MARGIN + 5, p.y + (i + .5) * image_height / 4), f"E{i + 1}", fontsize=11, fontname="tiro")
+        p.y = rect.y1 + 5
+        mappings = [[row["label"], *[_number(row["mapping"][key]) for key in ("gamma", "dark_level", "light_level", "steps")]]
+                    for row in figure["experiments"]]
+        p.table(["ID", "Final gamma", "Dark", "Light", "Steps (0=smooth)"], mappings, [30, 105, 105, 105, 165], row_height=14)
+        p.text("Frozen normalization and annotations preserve scientific differences. Print tuning does not change scientific enhancement.", 10)
+
+        if inputs.get("presentation", {}).get("pages", 3) == 3:
+            p = Page(doc, 3)
+        p.heading("Hardware loop results")
+        import pymupdf
+        chart_height = 162  # Do not shrink chart labels to squeeze a two-page request.
+        for key in ("detail_percent", "median_cnr"):
+            with pymupdf.open(inputs["charts"][key]["path"]) as chart:
+                p.page.show_pdf_page(fitz.Rect(MARGIN, p.y, WIDTH - MARGIN, p.y + chart_height), chart, 0)
+            p.y += chart_height + 5
+        p.text("Baseline uses the original reference; Cn-S1 = gamma, S2 = shared gray endpoints, S3 = steps. Missing points break lines; each point comes from one accepted scan.", 10)
+        summary = []
+        for row in inputs["history"]["experiments"]:
+            a, b = row["points"][0]["metrics"], row["points"][-1]["metrics"]
             if a and b:
-                metric_rows.append([f"E{i + 1}", f"{a['detail_percent']:.1f} to {b['detail_percent']:.1f}",
-                    f"{row['detail_change_pp']:+.1f}", f"{a['median_cnr']:.2f} to {b['median_cnr']:.2f}", f"{row['cnr_change']:+.2f}"])
+                summary.append([row["label"], f"{a['detail_percent']:.1f} to {b['detail_percent']:.1f}",
+                    f"{b['detail_percent']-a['detail_percent']:+.1f}", f"{a['median_cnr']:.2f} to {b['median_cnr']:.2f}",
+                    f"{b['median_cnr']-a['median_cnr']:+.2f}"])
             else:
-                metric_rows.append([f"E{i + 1}", "not available", "-", "not available", "-"])
-        p.table(["ID", "Detail %: start to tuned", "pp", "Median CNR: start to tuned", "Delta"], metric_rows,
-                [25, 145, 40, 230, 70], row_height=14)
-        usable = [r for r in metrics["experiments"] if r.get("before") and r.get("after")]
-        if usable:
-            groups = {"increased": [], "decreased": [], "unchanged": [], "a trade-off": []}
-            for index, record in enumerate(metrics["experiments"]):
-                if record not in usable:
-                    continue
-                d, c = record["detail_change_pp"], record["cnr_change"]
-                key = "increased" if d > 0 and c > 0 else "decreased" if d < 0 and c < 0 else "unchanged" if d == c == 0 else "a trade-off"
-                groups[key].append(f"E{index + 1}")
-            conclusion = "Detail/CNR: " + "; ".join(f"{', '.join(ids)} {key}" for key, ids in groups.items() if ids) + "."
-        else:
-            reasons = list(dict.fromkeys(r.get("reason", "Evidence missing") for r in metrics["experiments"]))
-            conclusion = "Measurements not available: " + "; ".join(reasons) + "."
-        notes = [r.get("measurement_note") for r in metrics["experiments"] if r.get("measurement_note")]
-        note = notes[0] if notes else "Separate scanner captures; acquisition settings unknown."
-        provenance = [str(c.get("scan_provenance", "unknown")) for c in metrics.get("captures", {}).values()]
-        if any("synthetic" in p.lower() for p in provenance):
-            note += " Synthetic scan evidence; no physical printer gains measured."
-        else:
-            note += " Scan origin " + ("explicitly recorded" if provenance and all(p != "unknown" for p in provenance) else "not recorded") + "."
-        p.text(conclusion, 11, gap=3)
-        coverage = ", ".join(f"E{i + 1} {r.get('jointly_valid_pairs', 0)}/{r.get('eligible_pairs', 0)}" for i, r in enumerate(metrics["experiments"]))
-        p.text(note + " Joint/eligible pairs: " + coverage + ". Detail: correct ordering and CNR >= 3; engineering criterion, not a validated visibility score. Acquisition uncertainty prevents a causal printer-gain claim.", 10, gap=0)
+                summary.append([row["label"], "not available", "-", "not available", "-"])
+        p.table(["ID", "Detail %: base to final", "pp", "Median CNR: base to final", "Delta"], summary,
+                [25, 145, 40, 230, 70], row_height=16)
+        p.text(describe_history(inputs["history"]), 11)
+        coverage = "; ".join(row["label"] + " " + str(row["coverage"].get("jointly_valid_pairs", 0)) + "/" +
+            str(row["coverage"].get("eligible_pairs", 0)) for row in inputs["history"]["experiments"])
+        settings = inputs["history"].get("method", METHOD)
+        p.text("Common valid/eligible pairs: " + coverage + f". Source difference >={settings['source_difference']:g}; correct ordering and CNR >={settings['cnr_threshold']:g} define preservation. These engineering thresholds are not validated human-vision cutoffs.", 10)
+        captures = inputs["history"]["captures"].values()
+        origin = "Synthetic evidence; no physical printer gains measured. " if any("synthetic" in str(c.get("scan_provenance", "")).lower() for c in captures) else "Scan origin is recorded in the saved inputs. "
+        p.text(origin + "Separate captures; acquisition settings may be unknown. Normalization does not undo nonlinear scanner correction; detail and CNR summarize the same evidence.", 10)
         layout = [page.rect for page in doc]
         target = Path(target)
         doc.save(target)
@@ -295,9 +290,16 @@ def build_report(run_dir, output_dir, *, findings=None, method=None, figure=None
     settings = method_settings(method)
     science = scientific_inputs(session)
     text = default_findings(science) | (findings or {})
+    if all("synthetic" in str(row.get("recorded_result", {}).get("provenance", "")).lower() for row in science["rows"]):
+        if "synthetic" not in text["title"].lower():
+            text["title"] = "Synthetic experiment results"
+        if "synthetic" not in text["setup"].lower():
+            text["setup"] += " Synthetic numerical fixtures; no scientific experiment or physical printer gain measured."
     presentation = presentation or {}
-    if set(presentation) - {"chart_height_pt"} or not 180 <= presentation.get("chart_height_pt", 215) <= 240:
+    if set(presentation) - {"chart_height_pt", "pages"} or not 180 <= presentation.get("chart_height_pt", 215) <= 240:
         raise ValueError("Supported layout: chart_height_pt between 180 and 240; required font sizes/content stay fixed")
+    if presentation.get("pages", 3) not in (2, 3):
+        raise ValueError("Report page count must be 2 or 3")
     fingerprint, dependencies = dependency_fingerprint(session_path, session, settings,
         {"findings": text, "revision": revision, "presentation": presentation})
     out.mkdir(parents=True, exist_ok=True)
@@ -315,9 +317,15 @@ def build_report(run_dir, output_dir, *, findings=None, method=None, figure=None
     comparison = figure or render_report_comparison(session_path, out)
     comparison = {**comparison, "inputs_sha256": fingerprint}
     inputs = {"schema_version": REPORT_VERSION, "fingerprint": fingerprint, "dependencies": dependencies,
-              "science": science, "findings": text, "metrics": measure_session(session, method=settings),
+              "science": science, "findings": text,
               "figure": comparison, "report_path": str(pdf), "source_session": str(session_path)}
     inputs.update(revision=revision, presentation=presentation)
+    inputs["history"] = measure_history(session, method=settings)
+    inputs["metrics"] = {"method": settings, "experiments": [{**row["coverage"], "experiment_id": row["experiment_id"],
+        "before": row["points"][0]["metrics"], "after": row["points"][-1]["metrics"],
+        "reason": row["points"][0].get("reason") or row["points"][-1].get("reason") or row["coverage"].get("reason")}
+        for row in inputs["history"]["experiments"]]}
+    inputs["charts"] = render_progress(inputs["history"], out)
     inputs["layout"] = render_document(inputs, comparison, pdf)
     from app.workflow.reporting import inspect_tuned_report, require_report
     validation = inspect_tuned_report(pdf, comparison)
@@ -354,7 +362,7 @@ def create_report_tool(run_dir):
     @tool
     def build_final_report(findings: dict | None = None, presentation: dict | None = None,
                            revision_instructions: str = "", revision_id: str = "") -> dict:
-        """Build the two-page final report with fixed layout and offline scan metrics.
+        """Build the 2/3-page final report with fixed layout and offline scan metrics.
 
         findings may override title, question, setup, interpretation, limitation_next,
         closing_note. For a revision, translate the exact pending instructions into
@@ -387,7 +395,7 @@ def create_report_tool(run_dir):
                          or any(not isinstance(value, str) for value in findings.values())):
             return {"ok": False, "error": "Unsupported findings fields or non-text edits"}
         text = baseline | (findings or {})
-        baseline_layout = {"chart_height_pt": 215} | previous.get("presentation", {})
+        baseline_layout = {"chart_height_pt": 215, "pages": 3} | previous.get("presentation", {})
         layout = baseline_layout | (presentation or {})
         changed_fields = [key for key in text if text[key] != baseline.get(key, "")]
         if revision and not changed_fields and layout == baseline_layout:
@@ -426,7 +434,7 @@ def create_report_tool(run_dir):
         except Exception as error:
             return {"ok": False, "error": f"{type(error).__name__}: {error}", "revision_id": revision_id}
         return {"ok": True, "report_path": str(target), "report_inputs_path": str(out / "report_inputs_v2.json"),
-                "pdf_sha256": bundle["pdf_sha256"], "pages": 2, "revision_id": revision_id,
+                "pdf_sha256": bundle["pdf_sha256"], "pages": bundle["layout"]["pages"], "revision_id": revision_id,
                 "revision_checks": checks, "review_note": "Review the revised PDF; semantic compliance requires human review."}
 
     return build_final_report

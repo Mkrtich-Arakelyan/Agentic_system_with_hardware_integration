@@ -210,6 +210,8 @@ def _read_scan(scan_path, accepted: list[str]) -> tuple[list[tuple[np.ndarray, n
                         pages.append((gray, rgb, min(_pdf_page_dpi(page), _estimate_dpi(gray))))
             else:
                 with Image.open(path) as image:
+                    if image.info.get("scan_provenance"):
+                        files[-1]["scan_provenance"] = image.info["scan_provenance"]
                     if image.mode == "1":
                         files[-1].setdefault("bilevel_scan_indices", []).append(len(pages))
                     gray, rgb = _gray_and_rgb(ImageOps.exif_transpose(image))
@@ -846,6 +848,7 @@ def evaluate_scan(scan_path, manifest_path, out_dir=None) -> dict:
         "session_id": record.get("calibration_session_id"),
         "trial_id": record["trial_id"],
         "round_id": record["round_id"],
+        **({"cycle_id": record["cycle_id"], "step_id": record["step_id"]} if "cycle_id" in record else {}),
         "tested_parameter": record["tested_parameter"],
         "created_at": datetime.now(timezone.utc).isoformat(),
         "manifest_path": str(manifest_path.resolve()),

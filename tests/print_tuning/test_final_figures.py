@@ -131,6 +131,21 @@ def test_session_has_different_final_settings(completed):
     assert {(final[e]["dark_level"], final[e]["light_level"]) for e in IDS} == {(0.06, 0.95)}
 
 
+def test_report_pairs_use_initial_and_final_arrays_with_same_final_mapping(completed, spies, tmp_path):
+    path, session = completed
+    mapped, drawn = spies
+    result = final_figures.render_report_comparison(path, tmp_path)
+    assert result["columns"] == ["Initial", "Final"]
+    assert [row["label"] for row in result["experiments"]] == ["E1", "E2", "E3", "E4"]
+    assert len(mapped) == 8
+    for i, eid in enumerate(IDS):
+        for stage in (0, 1):
+            assert np.array_equal(mapped[2*i+stage]["data"], _camera(i, bool(stage)))
+            assert mapped[2*i+stage]["mapping"] == session["final_settings"][eid]
+    panels = [values for values in drawn if values.shape == SHAPE]
+    assert len(panels) == 8 and all(np.array_equal(v, call["grays"]) for v, call in zip(panels, mapped))
+
+
 def test_figure_uses_exactly_the_saved_settings_and_frozen_limits(completed, spies, tmp_path):
     path, session = completed
     mapped, drawn = spies

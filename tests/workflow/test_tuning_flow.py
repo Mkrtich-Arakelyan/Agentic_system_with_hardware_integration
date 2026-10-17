@@ -163,6 +163,7 @@ class TuningFlowTests(unittest.TestCase):
         state = args[0]
         report = self.root / "report.pdf"
         with pymupdf.open() as document:
+            document.new_page(width=595.276, height=841.89)
             page = document.new_page(width=595.276, height=841.89)
             page.insert_image(pymupdf.Rect(30, 70, 565, 700), filename=state["final_figure_path"])
             document.save(report)
@@ -265,7 +266,7 @@ class TuningFlowTests(unittest.TestCase):
         record_print_approval(self.path, approval_id=pending["approval_id"], trial_id=pending["trial_id"],
             pdf_sha256=pending["pdf_sha256"], printer="Offline", approved_by="graph human interrupt",
             print_settings={**pending["args"], "copies": 1, "paper": "A4", "color_mode": "grayscale",
-                            "sides": "one-sided", "scale": "100%"})
+                            "sides": "two-sided-long-edge", "scale": "100%"})
         # Simulate losing the graph checkpoint after only recording approval.
         self.config["configurable"]["thread_id"] = uuid4().hex
         result = self.graph.invoke(self.state, self.config)

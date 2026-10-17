@@ -84,10 +84,10 @@ empty and endpoint_winner null where applicable. Follow the exact stage schema.
 _SCHEMAS = {"propose_gamma": GammaProposalResponse, "review_gamma": GammaReviewResponse,
             "review_gray_levels": GrayLevelsReviewResponse, "review_steps": StepsReviewResponse}
 _STAGE_TEXT = {
-    "propose_gamma": "No physical scan exists yet. Propose five exploratory gamma tests per experiment from digital previews; these are not measured printer optima. Do not hardcode or choose random values. Systematic spacing is acceptable when justified by previews and uncertainty.",
+    "propose_gamma": "No current-cycle scan exists yet. Propose five distinct gamma tests per experiment around current accepted references, using original digital previews and supplied earlier-cycle evidence. These are not measured printer optima. Do not restart original proposals or choose random values; justify spacing with evidence and uncertainty.",
     "review_gamma": "Review physical round 1 (gamma). Choose one gamma winner per experiment, then propose five shared endpoint pairs for physical round 2.",
     "review_gray_levels": "Review physical round 2 (gray endpoints). Choose ONE shared endpoint winner judged across all four experiments, then propose five steps tests per experiment for physical round 3.",
-    "review_steps": "Review physical round 3 (steps). Choose one steps winner per experiment. This final decision is required after the third scan; do not finish before this review. No further proposals.",
+    "review_steps": "Review current-cycle step 3 (steps). Choose one steps winner per experiment; the reference remains eligible. This completes the cycle, not global tuning. Supply no further proposal: the human alone chooses continue, finish or stop.",
 }
 
 
@@ -350,6 +350,9 @@ def prepare_specialist_messages(
     _require(all(isinstance(d, tuple(_SCHEMAS.values())) for d in prior_decisions), "prior_decisions: existing parsed response models required")
     metadata = {
         "stage": context.expected_stage, "stage_instruction": _STAGE_TEXT[context.expected_stage],
+        "cycle_id": context.cycle_id, "step_id": context.step_id,
+        "previous_cycle_evidence": context.previous_cycle_evidence,
+        "cycle_instruction": "Use current accepted references and previous-cycle evidence; do not restart original proposals. Original previews retain their original mapping. Only the current step parameter may vary.",
         "selected_experiments": ids, "config": context.config, "normalization_limits": evidence.normalization_limits,
         "reference_mappings": context.reference_mappings, "prior_settings": evidence.prior_settings,
         "prior_decisions": [d.model_dump() for d in prior_decisions],

@@ -77,6 +77,9 @@ class ValidationContext:
     expected_run_id: str | None = None
     expected_selection_id: str | None = None
     expected_selection_version: int | None = None
+    cycle_id: int = 1
+    step_id: int = 1
+    previous_cycle_evidence: dict | None = None
 
 
 @dataclass(frozen=True)
@@ -177,6 +180,8 @@ def _prepare_context(context: ValidationContext) -> tuple[list[str], list[str]]:
     errors: list[str] = []
     if not isinstance(context, ValidationContext):
         raise TuningValidationError(["context: a ValidationContext instance is required"])
+    if type(context.cycle_id) is not int or context.cycle_id < 1 or type(context.step_id) is not int or context.step_id not in (1, 2, 3):
+        errors.append("cycle_id/step_id: explicit positive cycle and step 1..3 required")
     selected = context.selected_experiment_ids
     if not isinstance(selected, Sequence) or isinstance(selected, (str, bytes, bytearray)):
         errors.append("selected_experiment_ids: require a sequence of four IDs, not a string or scalar")
@@ -249,6 +254,8 @@ def _manifest_candidates(context: ValidationContext, ids: list[str], errors: lis
         return {}
     round_id, parameter = _ROUNDS[context.expected_stage]
     checks = {"schema_version": "trial/1", "round_id": round_id, "tested_parameter": parameter}
+    if "cycle_id" in manifest:
+        checks.update(cycle_id=context.cycle_id, step_id=context.step_id)
     for field, expected in (("trial_id", context.expected_trial_id),
                             ("calibration_session_id", context.expected_calibration_session_id)):
         if not _nonblank(expected):

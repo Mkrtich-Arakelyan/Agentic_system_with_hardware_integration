@@ -96,18 +96,20 @@ def accepted_capture(session, number):
     need(manifest["pdf"]["sha256"] == trial["pdf_sha256"] == sha(trial["pdf_path"]), "Trial PDF changed")
     for file in evaluation["scan_files"]:
         need(sha(file["path"]) == file["sha256"], "Original scan hash changed")
+    metadata = acquisition_metadata(evaluation["scan_files"])
+    declared_origin = [m["scan_provenance"] for m in metadata if m.get("scan_provenance")]
     return {"evaluation": evaluation, "manifest": manifest, "review": review,
             "provenance": {"evaluation_path": str(path), "evaluation_sha256": sha(path),
                 "manifest_path": str(manifest_path), "manifest_sha256": sha(manifest_path),
                 "trial_id": link["trial_id"], "scan_files": deepcopy(evaluation["scan_files"]),
-                "acquisition_metadata": acquisition_metadata(evaluation["scan_files"]),
+                "acquisition_metadata": metadata,
                 "scan_provenance": evaluation.get("scan_provenance", record["result"].get("scan_provenance",
                     [f.get("scan_provenance", "unknown") for f in evaluation["scan_files"]]
-                    if any(f.get("scan_provenance") for f in evaluation["scan_files"]) else "unknown")),
+                    if any(f.get("scan_provenance") for f in evaluation["scan_files"]) else declared_origin or "unknown")),
                 "acquisition_settings": evaluation.get("acquisition_settings")}}
 
 
-def candidate_evidence(session, capture, experiment, number):
+def candidate_evidence(session, capture, experiment, number, *, winner=False):
     """Bind experiment, Final source, limits, complete mapping and candidate location."""
     eid, item_id = experiment["experiment_id"], experiment["item_id"]
     manifest, evaluation = capture["manifest"], capture["evaluation"]
@@ -121,17 +123,20 @@ def candidate_evidence(session, capture, experiment, number):
     need(Path(source["data_path"]).resolve() == Path(panel["data_path"]).resolve(), "Final panel path mismatch")
     need(source.get("marks", []) == panel.get("marks", []), "Final panel annotation mask changed")
     variations = manifest["variations"][item_id]
-    if number == 1:
+    if number == 1 and not winner:
         refs = [v for v in variations if v["role"] == "reference"]
         need(len(refs) == 1, "Missing/ambiguous starting reference")
         variation = refs[0]
         expected = session["rounds"]["1"]["reference_settings"][eid]
     else:
-        winners = [w for w in capture["review"]["step_winners"] if w["experiment_id"] == eid]
+        review = capture["review"]
+        winners = ([review["endpoint_winner"]] if number == 2 else
+                   [w for w in review["gamma_winners" if number == 1 else "step_winners"] if w["experiment_id"] == eid])
         need(len(winners) == 1, "Missing/duplicate final steps winner")
         selected = [v for v in variations if v["variation_id"] == winners[0]["candidate_id"]]
         need(len(selected) == 1, "Winner does not belong to the recorded manifest")
-        variation, expected = selected[0], session["final_settings"][eid]
+        variation = selected[0]
+        expected = session["rounds"][str(number)].get("winners", {}).get(eid) if winner else session["final_settings"][eid]
     need(variation["mapping"] == expected, "Complete candidate mapping differs from accepted settings")
     matches = [c for c in evaluation["candidates"] if c["experiment_id"] == item_id
                and c["candidate_id"] == variation["variation_id"]]

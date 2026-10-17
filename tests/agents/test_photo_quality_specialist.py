@@ -235,7 +235,9 @@ class SpecialistTests(unittest.TestCase):
         returned = photo_quality_specialist(model, context, evidence)
         self.assertTrue(all(w.candidate_id == "reference" for w in returned.step_winners))
         self.assertNotIn("step_tests", returned.model_dump())
-        self.assertIn("No further proposals", model.with_structured_output.return_value.invoke.call_args.args[0][1].content[0]["text"])
+        prompt = model.with_structured_output.return_value.invoke.call_args.args[0][1].content[0]["text"]
+        self.assertIn("Supply no further proposal", prompt)
+        self.assertIn("the human alone chooses continue, finish or stop", prompt)
 
     def test_proposals_use_resolved_winners_not_prior_settings(self):
         context, evidence = self.inputs("review_gamma")

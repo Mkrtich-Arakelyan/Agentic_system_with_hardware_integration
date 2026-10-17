@@ -15,10 +15,18 @@ from tests.print_tuning.test_final_figures import completed
 
 
 @pytest.fixture
-def revision_run(completed, tmp_path):
+def revision_run(completed, tmp_path, monkeypatch):
     from app.workflow import reporting
     from app.workflow.report_document import create_report_tool
     path, session = completed
+    # Revision/layout tests exercise actual PDFs; metric measurement has separate
+    # real-scan tests and need not re-align all large scans for every text edit.
+    labels = ["Baseline", "C1-S1", "C1-S2", "C1-S3"]
+    history = {"labels": labels, "captures": {}, "experiments": [
+        {"experiment_id": e["experiment_id"], "label": f"E{i+1}", "coverage": {"reason": "Synthetic unavailable evidence fixture"},
+         "points": [{"label": label, "metrics": None, "reason": "Synthetic unavailable evidence fixture"} for label in labels]}
+        for i, e in enumerate(session["selected_experiments"])]}
+    monkeypatch.setattr("app.workflow.report_document.measure_history", lambda *a, **k: deepcopy(history))
     root = tmp_path / "runs" / "revision"
     root.mkdir(parents=True)
     (root / "tuning_session.json").write_bytes(path.read_bytes())
@@ -137,11 +145,11 @@ def test_two_page_bundle_legacy_evidence_cache_and_unchanged_source(completed, t
         path.write_text(json.dumps(legacy), encoding="utf-8")
         before = {str(p): digest(p) for p in path.parent.rglob("*") if p.is_file()}
         result = build_report(path.parent, tmp_path / "bundle")
-        assert result["schema_version"] == "report/2" and result["layout"]["pages"] == 2
+        assert result["schema_version"] == "report/3" and result["layout"]["pages"] == 3
         assert "linkage" in result["metrics"]["experiments"][0]["reason"]
         require_report(inspect_tuned_report(result["report_path"], result["figure"]))
         with pymupdf.open(result["report_path"]) as doc:
-            assert len(doc) == 2 and "Hardware loop results" in doc[1].get_text()
+            assert len(doc) == 3 and "Hardware loop results" in doc[2].get_text()
             for page in doc:
                 for block in page.get_text("dict")["blocks"]:
                     for line in block.get("lines", []):
@@ -164,7 +172,7 @@ def test_page_counts_and_comparison_page_are_enforced(completed, tmp_path):
     path, _ = completed
     figure = render_report_comparison(path, tmp_path)
     figure["inputs_sha256"] = "fixture"
-    for count, location in ((1, 0), (3, 1), (2, 0), (2, 1)):
+    for count, location in ((1, 0), (4, 1), (3, 1), (2, 0), (2, 1)):
         target = tmp_path / f"{count}_{location}.pdf"
         with pymupdf.open() as doc:
             for _ in range(count):
@@ -172,7 +180,7 @@ def test_page_counts_and_comparison_page_are_enforced(completed, tmp_path):
             doc[location].insert_image(pymupdf.Rect(45, 90, 550, 500), filename=figure["figure_path"])
             doc.save(target)
         result = inspect_tuned_report(target, figure)
-        assert bool(result.get("figure_embedded") and not result.get("error")) == (count == 2 and location == 1)
+        assert bool(result.get("figure_embedded") and not result.get("error")) == (count in (2, 3) and location == 1)
 
 
 def test_executor_report_tool_installs_valid_report_without_print_or_journal_changes(completed, tmp_path):
@@ -197,7 +205,7 @@ def test_executor_report_tool_installs_valid_report_without_print_or_journal_cha
     with patch("app.workflow.report_document.measure_session", return_value=unavailable), \
             patch("app.printing.connector.submit_print", side_effect=AssertionError("Must not print")):
         result = create_report_tool(root).invoke({})
-    assert result["ok"] and result["pages"] == 2
+    assert result["ok"] and result["pages"] == 3
     assert (root / "report_versions" / (old + ".pdf")).is_file()
     assert digest(root / "report.pdf") != old
     reporting.require_report(reporting.inspect_tuned_report(root / "report.pdf", figure))

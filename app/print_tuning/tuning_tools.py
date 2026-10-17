@@ -100,7 +100,7 @@ def _session_inputs(session: dict, round_id: int | None) -> dict:
         if not condition:
             raise _ToolError("session_invalid", f"tuning session: {message}")
 
-    need(session.get("contract_version") == CONTRACT_VERSION,
+    need(session.get("contract_version") in (1, 2),
          f"contract_version must be {CONTRACT_VERSION}, got {session.get('contract_version')!r}")
     for key in ("session_id", "run_id", "selection_path"):
         need(isinstance(session.get(key), str) and session[key].strip(), f"{key} must be a non-empty string")
@@ -141,6 +141,7 @@ def _session_inputs(session: dict, round_id: int | None) -> dict:
     inputs = {"session_id": session["session_id"], "run_id": session["run_id"],
               "selection_path": session["selection_path"], "config": config, "experiment_ids": experiment_ids,
               "limits": limits, "active_trial": active, "paper_color": paper_color}
+    inputs["cycle_id"] = session.get("active_cycle")
     if round_id is None:
         return inputs
 
@@ -295,12 +296,13 @@ def _make_trial_sheet(run_dir: Path, round_id: int) -> dict:
             raise _ToolError("session_invalid", f"cannot read round {round_id - 1}'s manifest "
                                                 f"{inputs['previous_manifest_path']}: {error}") from error
     try:
-        record = create_trial_sheet(selection, variations, round_id, out_dir=run_dir / OUTPUT_FOLDER,
+          record = create_trial_sheet(selection, variations, round_id, out_dir=run_dir / OUTPUT_FOLDER,
                                     calibration_session_id=inputs["session_id"], config=inputs["config"],
-                                    limits=limits, previous_record=previous_record)
+                                      limits=limits, previous_record=previous_record, cycle_id=inputs["cycle_id"])
     except (TrialSheetError, MappingError) as error:
         raise _ToolError("trial_sheet_failed", str(error)) from error
-    return {"contract_version": CONTRACT_VERSION, "status": "ok", "session_id": inputs["session_id"],
+    return {**({"cycle_id": inputs["cycle_id"], "step_id": round_id} if inputs["cycle_id"] else {}),
+            "contract_version": CONTRACT_VERSION, "status": "ok", "session_id": inputs["session_id"],
             "trial_id": record["trial_id"], "round_id": record["round_id"], "pdf_path": record["pdf"]["path"],
             "pdf_sha256": record["pdf"]["sha256"], "manifest_path": record["manifest_path"],
             "page_count": record["pdf"]["pages"]}
@@ -312,6 +314,8 @@ def _read_scan(run_dir: Path, scan_paths: list[str]) -> dict:
     if active is None:
         raise _ToolError("no_active_trial", "the tuning session has no active trial; draw a trial sheet first")
     ids = {"session_id": inputs["session_id"], "trial_id": active["trial_id"], "round_id": active["round_id"]}
+    if inputs["cycle_id"]:
+        ids.update(cycle_id=inputs["cycle_id"], step_id=active["round_id"])
     paths = [str(path if path.is_absolute() else run_dir / path) for path in map(Path, scan_paths)]
     try:
         result = evaluate_scan(paths, active["manifest_path"], out_dir=run_dir / OUTPUT_FOLDER)
@@ -335,7 +339,7 @@ def _read_scan(run_dir: Path, scan_paths: list[str]) -> dict:
 SUMMARY_MEASUREMENTS = ("collapsed_levels", "full_black_share", "paper_white_share")
 # One row per candidate, as a table, so 24 candidates stay well under 4 KB of JSON.
 CANDIDATE_COLUMNS = ("candidate_id", "role", "mapping", "warnings", *SUMMARY_MEASUREMENTS)
-SHORT_KEYS = ("contract_version", "status", "error_code", "message", "session_id", "trial_id", "round_id")
+SHORT_KEYS = ("contract_version", "status", "error_code", "message", "session_id", "trial_id", "round_id", "cycle_id", "step_id")
 
 
 def _short_number(value):
@@ -364,6 +368,7 @@ def summarize_scan_result(result: dict) -> dict:
         return {
             "contract_version": result["contract_version"], "status": "ok",
             "session_id": result["session_id"], "trial_id": result["trial_id"], "round_id": result["round_id"],
+            **{k: result[k] for k in ("cycle_id", "step_id") if k in result},
             "evaluation_path": result["evaluation_path"],
             "scan_quality": {"usable": quality["usable"], "issues": list(quality["issues"])},
             "pages": [{"page_number": page["page_number"], "code_matches": page["code_matches"],

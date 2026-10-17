@@ -34,6 +34,7 @@ from copy import deepcopy
 from dataclasses import dataclass
 import json
 from pathlib import Path
+from app.printing.settings import trial_print_settings
 from typing import Literal
 
 from langchain_core.language_models.chat_models import BaseChatModel
@@ -55,7 +56,7 @@ Perform only the ONE workflow-requested action, making exactly one tool request.
 The tool-free photo quality specialist owns parameter choices and winner selection.
 Use its saved proposals through make_trial_sheet(round_id); never invent, copy into
 other arguments, or modify tuning parameters, winners, or the frozen experiments.
-Trial sheets may have multiple pages. Never apply the report's one-page restriction.
+Trial sheets may have multiple pages. Never apply the report's page-count policy.
 When requested_action is submit_trial_print, you MUST emit the submit_trial_print
 function call with the supplied active PDF and printer to REQUEST human approval.
 This is not physical printing: application code intercepts the model's call and
@@ -143,7 +144,9 @@ def _pending_trial(session: dict, root: Path, args: dict) -> dict:
     _need(Path(trial["manifest_path"]).resolve() == pdf.with_name(pdf.stem + "_manifest.json"),
           "The active trial manifest must be next to its PDF")
     _need(manifest["pdf"]["pages"] >= 2, "submit_trial_print requires a multi-page trial sheet")
-    return {"args": {"pdf_path": str(pdf), "printer": args["printer"]},
+    exact_args = {"pdf_path": str(pdf), "printer": args["printer"]}
+    return {"args": exact_args, "print_settings": trial_print_settings(exact_args),
+            "cycle_id": session.get("active_cycle", 1), "step_id": trial["round_id"],
             "session_id": session["session_id"], "run_id": session["run_id"],
             "selection_id": session["selection_id"], "selection_version": session["selection_version"],
             "round_id": trial["round_id"], "trial_id": trial["trial_id"],
@@ -272,6 +275,7 @@ def tuning_executor(
                 return _information("print_confirmation", "A prior submission is uncertain; the human must check the printer tray before any reprint request.")
             _pending_trial(session, root, {"pdf_path": entry["trial_result"]["pdf_path"], "printer": task.printer})
         context = {"requested_action": task.action, "instruction": task.instruction,
+                   "cycle_id": session.get("active_cycle", 1), "step_id": session["active_round"],
                    "session_id": session["session_id"], "phase": session["phase"], "round_id": session["active_round"],
                    "selected_experiments": [e["experiment_id"] for e in session["selected_experiments"]],
                    "proposal_saved": entry["proposal"] is not None, "trial": entry["trial_result"],
