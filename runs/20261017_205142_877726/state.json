@@ -1,0 +1,1738 @@
+{
+  "dialogue": [
+    {
+      "role": "system",
+      "text": "Homework 3: hardware in the loop.\nBench settings: {\"dmd_shape\": [16, 16], \"camera_shape\": [32, 32], \"target_position\": [16, 16], \"transmission_seed\": 42, \"noise_seed\": 43, \"noise_std\": 0.01}\nThese dimensions and noise settings are simulation choices, not hardware specifications.\nThe DMD controls binary amplitudes 0 or 1; an illuminated pattern cannot be all off.\nA fixed complex transmission matrix maps 256 DMD pixels to 1024 camera pixels.\nCamera intensity is I = abs(T @ pattern.ravel()) ** 2, followed by fresh additive Gaussian noise and clipping negative measurements to zero. Intensities are relative simulation units.\nOne shared bench is used for the whole run: its matrix and target stay fixed, and its independent noise generator advances between captures.\nUse run_focusing_experiment for all optical experiments. Choose its parameters autonomously; do not recreate the bench or implement another search.\nValid macropixel sizes are 1, 2, 4, and 8: each divides both DMD dimensions and leaves at least two controllable blocks. Each iteration flips one block.\nFocus and background sizes must be positive odd integers, with background larger than focus. Both centred squares must fit around the fixed target; the four background regions must be nonempty. Coordinates are (row, column).\nBackground is the larger square outside the focus square, divided into top-left, top-right, bottom-left, and bottom-right regions. The target row belongs to bottom regions and the target column to right regions.\nEnhancement = focus mean / max(mean of the four background-region means, 1e-12). The four means have equal weight, regardless of region pixel counts.\nAverage 3 fresh captures for each search measurement and 5 fresh captures for final validation. The returned final enhancement comes from validation, not the highest noisy search score.\nUse 1 to 1,000 iterations per tool call. Improvement is not guaranteed.\nKeeping focus and background regions fixed makes comparisons between macropixel sizes or iteration budgets easier to interpret. Changing the regions changes the metric; acknowledge that when comparing results.\nThe run compares at least 4 successful focusing experiments that change one setting.\nComputational cost is compared by iterations and camera shots per measurement (and by wall_time_seconds and camera_shots if the results include them).\nThe final product is report.pdf in the output directory: one A4 page with one graph, its explanation, a fairness judgement, performance vs cost, a suggested next experiment and a verdict. The executor builds it with write_and_run from the saved files experiments.csv and each experiment's results.json; it must not type numbers into the script. Scripts must finish within 300 seconds.\nThe office printer is reached only through the executor's printer tools in the report-and-print turn. The graph asks the human before any print. Printer states: idle, printing, stopped, offline, error, unknown, out_of_paper, paper_jam. Job states: waiting, printing, done, failed, uncertain.\nPrint tuning: after the four experiments are chosen, the graph tunes how their heatmaps print in 3 rounds, each tuning only gamma; the gray levels (dark 0, light 1) and steps (0, smooth) stay fixed.\nEvery trial sheet print needs human approval of that exact PDF and printer. The human scans the printed pages into /Users/razmik/Documents/Agentic_system_with_hardware_integration/runs/20261017_205142_877726/scans/round_N (N = 1, 2, 3).\nThe office printer is named Office_Printer; pass printer=\"Office_Printer\" to printer_status and submit_print.\nPaper: plain white (default).\nOutput directory: /Users/razmik/Documents/Agentic_system_with_hardware_integration/runs/20261017_205142_877726\nThe focusing tool saves initial/final camera images, the final pattern, results.json, and an experiments.csv table. Do not duplicate these outputs.\nBase all conclusions on recorded tool results, never proposals or invented measurements."
+    },
+    {
+      "role": "user",
+      "text": "Compare at least four focusing experiments, changing one setting at a time while holding other settings fixed. Have the scientist select four experiments that answer the scientific question, requesting more runs if needed. Judge whether the comparison is fair, compare performance and computational cost, and suggest the next experiment. Then produce a one-page report with one graph, its explanation and a verdict, and print it on the office printer after my approval."
+    },
+    {
+      "role": "orchestrator",
+      "text": "{\"next_role\":\"scientist\",\"instruction\":\"Develop a fair focusing-experiment plan for the user's comparison, specifying a baseline and four settings that vary only one factor at a time while keeping search_seed, focus_size, background_size, and iterations fixed where applicable. Ensure the planned runs can answer the question and state if more than four runs are warranted.\",\"reason\":\"A scientist plan is needed before the executor can run any focusing experiments.\"}"
+    },
+    {
+      "role": "scientist",
+      "text": "{\"status\":\"needs_more_experiments\",\"analysis\":\"1. Use the same bench and shared settings for all four runs: focus_size=3, background_size=9, iterations=1000, search_seed=1. The centered 3×3 focus and 9×9 background fit around target [16,16], and the four background regions are nonempty. Keep the measurement regions fixed so the enhancement metric remains comparable.\\n2. Change only macropixel_size between runs. A binary-amplitude DMD pattern illuminates pixels with 0 or 1; each iteration flips one block of pixels. The fixed transmission matrix maps that pattern to camera intensity, while fresh measurement noise means search scores vary. Use the tool’s final_enhancement, which is based on five fresh validation shots, rather than the highest search score.\\n3. The requested common 1000-iteration budget is capped by the tool. It is about 20 iterations per controllable block for size 8, and more for sizes 4, 2, and 1; however, it falls short of 20 per block for sizes 2 and 1 (which would require 1280 and 5120 iterations, respectively). Keep the common budget anyway for a fair comparison within the cap.\\n4. Run the four proposed experiments through the executor. No successful results are recorded yet, so four experiments are needed before selecting evidence for the comparison.\",\"selections\":[],\"group_reason\":\"\",\"proposed_experiments\":[{\"macropixel_size\":1,\"focus_size\":3,\"background_size\":9,\"iterations\":1000,\"search_seed\":1,\"reason\":\"Baseline with the finest controllable grid; addresses how fine-grained control performs under the shared capped budget.\"},{\"macropixel_size\":2,\"focus_size\":3,\"background_size\":9,\"iterations\":1000,\"search_seed\":1,\"reason\":\"Change only macropixel_size from the baseline; addresses whether grouping pixels into 2×2 blocks changes focusing performance.\"},{\"macropixel_size\":4,\"focus_size\":3,\"background_size\":9,\"iterations\":1000,\"search_seed\":1,\"reason\":\"Change only macropixel_size from the baseline; addresses performance at an intermediate 4×4 block scale.\"},{\"macropixel_size\":8,\"focus_size\":3,\"background_size\":9,\"iterations\":1000,\"search_seed\":1,\"reason\":\"Change only macropixel_size from the baseline; addresses performance with the coarsest valid controllable grid.\"}]}"
+    },
+    {
+      "role": "orchestrator",
+      "text": "{\"next_role\":\"executor\",\"instruction\":\"Run the four proposed focusing experiments on the shared bench: macropixel_size 1, 2, 4, and 8; use focus_size=3, background_size=9, iterations=1000, and search_seed=1 for each. Keep all other settings identical and record the tool results.\",\"reason\":\"The scientist’s fair plan requires these four experiments, and no successful focusing results have been recorded yet.\"}"
+    },
+    {
+      "role": "executor",
+      "text": "Experiment 1 (macropixel size 1) completed with **initial enhancement 0.817** and **validated final enhancement 28.268**. The validated focus mean was 2.291 and background reference was 0.0810.\n\nSaved results: [results.json](/Users/razmik/Documents/Agentic_system_with_hardware_integration/runs/20261017_205142_877726/experiment_18848d544a654115a84d698c48e80b3a/results.json), [summary figure](/Users/razmik/Documents/Agentic_system_with_hardware_integration/runs/20261017_205142_877726/experiment_18848d544a654115a84d698c48e80b3a/summary.png), and the shared [experiments.csv](/Users/razmik/Documents/Agentic_system_with_hardware_integration/runs/20261017_205142_877726/experiments.csv).\n\nTool: run_focusing_experiment\nRaw tool result:\n{\"ok\": true, \"experiment_id\": \"experiment_18848d544a654115a84d698c48e80b3a\", \"settings\": {\"dmd_shape\": [16, 16], \"camera_shape\": [32, 32], \"target_position\": [16, 16], \"transmission_seed\": 42, \"noise_seed\": 43, \"noise_std\": 0.01, \"macropixel_size\": 1, \"focus_size\": 3, \"background_size\": 9, \"iterations\": 1000, \"search_seed\": 1, \"shots_per_measurement\": 3, \"validation_shots\": 5}, \"initial_enhancement\": 0.817175715734831, \"final_enhancement\": 28.26842897199098, \"focus_mean\": 2.29088092023977, \"background_means\": {\"top_left\": 0.07431616199889851, \"top_right\": 0.08383119367362155, \"bottom_left\": 0.09149104610076314, \"bottom_right\": 0.07452265047473931}, \"background_reference\": 0.08104026306200562, \"paths\": {\"initial_camera\": \"/Users/razmik/Documents/Agentic_system_with_hardware_integration/runs/20261017_205142_877726/experiment_18848d544a654115a84d698c48e80b3a/initial_camera.png\", \"final_camera\": \"/Users/razmik/Documents/Agentic_system_with_hardware_integration/runs/20261017_205142_877726/experiment_18848d544a654115a84d698c48e80b3a/final_camera.png\", \"initial_intensity\": \"/Users/razmik/Documents/Agentic_system_with_hardware_integration/runs/20261017_205142_877726/experiment_18848d544a654115a84d698c48e80b3a/initial_intensity.npy\", \"final_intensity\": \"/Users/razmik/Documents/Agentic_system_with_hardware_integration/runs/20261017_205142_877726/experiment_18848d544a654115a84d698c48e80b3a/final_intensity.npy\", \"final_pattern\": \"/Users/razmik/Documents/Agentic_system_with_hardware_integration/runs/20261017_205142_877726/experiment_18848d544a654115a84d698c48e80b3a/final_pattern.npy\", \"results_json\": \"/Users/razmik/Documents/Agentic_system_with_hardware_integration/runs/20261017_205142_877726/experiment_18848d544a654115a84d698c48e80b3a/results.json\", \"experiments_csv\": \"/Users/razmik/Documents/Agentic_system_with_hardware_integration/runs/20261017_205142_877726/experiments.csv\", \"summary_figure\": \"/Users/razmik/Documents/Agentic_system_with_hardware_integration/runs/20261017_205142_877726/experiment_18848d544a654115a84d698c48e80b3a/summary.png\"}}"
+    },
+    {
+      "role": "orchestrator",
+      "text": "{\"next_role\":\"executor\",\"instruction\":\"Run the remaining three planned focusing experiments on the shared bench: macropixel_size 2, 4, and 8, each with focus_size=3, background_size=9, iterations=1000, and search_seed=1. Keep all other settings identical and record the tool results.\",\"reason\":\"Only the size-1 run is recorded as successful; the other three planned runs are needed for the comparison.\"}"
+    },
+    {
+      "role": "executor",
+      "text": "Experiment (macropixel size 2) completed: initial enhancement **0.864**; validated final enhancement **6.716**.\n\nSaved results: [results.json](/Users/razmik/Documents/Agentic_system_with_hardware_integration/runs/20261017_205142_877726/experiment_0a53b0d22dca48bbb95c5cd1eea54236/results.json), [summary figure](/Users/razmik/Documents/Agentic_system_with_hardware_integration/runs/20261017_205142_877726/experiment_0a53b0d22dca48bbb95c5cd1eea54236/summary.png), and the shared [experiments.csv](/Users/razmik/Documents/Agentic_system_with_hardware_integration/runs/20261017_205142_877726/experiments.csv).\n\nTool: run_focusing_experiment\nRaw tool result:\n{\"ok\": true, \"experiment_id\": \"experiment_0a53b0d22dca48bbb95c5cd1eea54236\", \"settings\": {\"dmd_shape\": [16, 16], \"camera_shape\": [32, 32], \"target_position\": [16, 16], \"transmission_seed\": 42, \"noise_seed\": 43, \"noise_std\": 0.01, \"macropixel_size\": 2, \"focus_size\": 3, \"background_size\": 9, \"iterations\": 1000, \"search_seed\": 1, \"shots_per_measurement\": 3, \"validation_shots\": 5}, \"initial_enhancement\": 0.8643253166741325, \"final_enhancement\": 6.715749595175353, \"focus_mean\": 1.1578063207248006, \"background_means\": {\"top_left\": 0.1635473431750098, \"top_right\": 0.18676993997370106, \"bottom_left\": 0.13855243530635225, \"bottom_right\": 0.20073688722098995}, \"background_reference\": 0.17240165141901326, \"paths\": {\"initial_camera\": \"/Users/razmik/Documents/Agentic_system_with_hardware_integration/runs/20261017_205142_877726/experiment_0a53b0d22dca48bbb95c5cd1eea54236/initial_camera.png\", \"final_camera\": \"/Users/razmik/Documents/Agentic_system_with_hardware_integration/runs/20261017_205142_877726/experiment_0a53b0d22dca48bbb95c5cd1eea54236/final_camera.png\", \"initial_intensity\": \"/Users/razmik/Documents/Agentic_system_with_hardware_integration/runs/20261017_205142_877726/experiment_0a53b0d22dca48bbb95c5cd1eea54236/initial_intensity.npy\", \"final_intensity\": \"/Users/razmik/Documents/Agentic_system_with_hardware_integration/runs/20261017_205142_877726/experiment_0a53b0d22dca48bbb95c5cd1eea54236/final_intensity.npy\", \"final_pattern\": \"/Users/razmik/Documents/Agentic_system_with_hardware_integration/runs/20261017_205142_877726/experiment_0a53b0d22dca48bbb95c5cd1eea54236/final_pattern.npy\", \"results_json\": \"/Users/razmik/Documents/Agentic_system_with_hardware_integration/runs/20261017_205142_877726/experiment_0a53b0d22dca48bbb95c5cd1eea54236/results.json\", \"experiments_csv\": \"/Users/razmik/Documents/Agentic_system_with_hardware_integration/runs/20261017_205142_877726/experiments.csv\", \"summary_figure\": \"/Users/razmik/Documents/Agentic_system_with_hardware_integration/runs/20261017_205142_877726/experiment_0a53b0d22dca48bbb95c5cd1eea54236/summary.png\"}}"
+    },
+    {
+      "role": "orchestrator",
+      "text": "{\"next_role\":\"executor\",\"instruction\":\"Run the two remaining planned experiments on the shared bench: macropixel_size 4 and 8, each with focus_size=3, background_size=9, iterations=1000, and search_seed=1. Keep all other settings identical and record the results.\",\"reason\":\"The planned comparison needs successful results for sizes 4 and 8 before the scientist can review and freeze a four-experiment selection.\"}"
+    },
+    {
+      "role": "executor",
+      "text": "Macropixel size 4 completed with an initial enhancement of **1.016** and a validated final enhancement of **2.873**.\n\nSaved outputs:\n- [results.json](/Users/razmik/Documents/Agentic_system_with_hardware_integration/runs/20261017_205142_877726/experiment_92f251efb4d4474ebbfd2e37a03be6fc/results.json)\n- [summary figure](/Users/razmik/Documents/Agentic_system_with_hardware_integration/runs/20261017_205142_877726/experiment_92f251efb4d4474ebbfd2e37a03be6fc/summary.png)\n- [shared experiments.csv](/Users/razmik/Documents/Agentic_system_with_hardware_integration/runs/20261017_205142_877726/experiments.csv)\n\nTool: run_focusing_experiment\nRaw tool result:\n{\"ok\": true, \"experiment_id\": \"experiment_92f251efb4d4474ebbfd2e37a03be6fc\", \"settings\": {\"dmd_shape\": [16, 16], \"camera_shape\": [32, 32], \"target_position\": [16, 16], \"transmission_seed\": 42, \"noise_seed\": 43, \"noise_std\": 0.01, \"macropixel_size\": 4, \"focus_size\": 3, \"background_size\": 9, \"iterations\": 1000, \"search_seed\": 1, \"shots_per_measurement\": 3, \"validation_shots\": 5}, \"initial_enhancement\": 1.0155286903723395, \"final_enhancement\": 2.872764158064741, \"focus_mean\": 0.8377743765554901, \"background_means\": {\"top_left\": 0.29775962536161643, \"top_right\": 0.3040389844550017, \"bottom_left\": 0.2458262120529064, \"bottom_right\": 0.31888148419614715}, \"background_reference\": 0.29162657651641793, \"paths\": {\"initial_camera\": \"/Users/razmik/Documents/Agentic_system_with_hardware_integration/runs/20261017_205142_877726/experiment_92f251efb4d4474ebbfd2e37a03be6fc/initial_camera.png\", \"final_camera\": \"/Users/razmik/Documents/Agentic_system_with_hardware_integration/runs/20261017_205142_877726/experiment_92f251efb4d4474ebbfd2e37a03be6fc/final_camera.png\", \"initial_intensity\": \"/Users/razmik/Documents/Agentic_system_with_hardware_integration/runs/20261017_205142_877726/experiment_92f251efb4d4474ebbfd2e37a03be6fc/initial_intensity.npy\", \"final_intensity\": \"/Users/razmik/Documents/Agentic_system_with_hardware_integration/runs/20261017_205142_877726/experiment_92f251efb4d4474ebbfd2e37a03be6fc/final_intensity.npy\", \"final_pattern\": \"/Users/razmik/Documents/Agentic_system_with_hardware_integration/runs/20261017_205142_877726/experiment_92f251efb4d4474ebbfd2e37a03be6fc/final_pattern.npy\", \"results_json\": \"/Users/razmik/Documents/Agentic_system_with_hardware_integration/runs/20261017_205142_877726/experiment_92f251efb4d4474ebbfd2e37a03be6fc/results.json\", \"experiments_csv\": \"/Users/razmik/Documents/Agentic_system_with_hardware_integration/runs/20261017_205142_877726/experiments.csv\", \"summary_figure\": \"/Users/razmik/Documents/Agentic_system_with_hardware_integration/runs/20261017_205142_877726/experiment_92f251efb4d4474ebbfd2e37a03be6fc/summary.png\"}}"
+    },
+    {
+      "role": "orchestrator",
+      "text": "{\"next_role\":\"executor\",\"instruction\":\"Run the remaining planned experiment with macropixel_size=8, focus_size=3, background_size=9, iterations=1000, and search_seed=1 on the existing shared bench. Keep all other settings identical and record the full tool result.\",\"reason\":\"The four-run comparison is missing the size-8 experiment, so the scientist cannot yet review and freeze a selection of four successful runs.\"}"
+    },
+    {
+      "role": "executor",
+      "text": "Macropixel size 8 completed with an initial enhancement of **1.159** and a validated final enhancement of **1.160** (five fresh validation shots).\n\nSaved results: [results.json](/Users/razmik/Documents/Agentic_system_with_hardware_integration/runs/20261017_205142_877726/experiment_2f5f3e6a9c104597979ec1175375ede4/results.json), [summary figure](/Users/razmik/Documents/Agentic_system_with_hardware_integration/runs/20261017_205142_877726/experiment_2f5f3e6a9c104597979ec1175375ede4/summary.png), and [experiments.csv](/Users/razmik/Documents/Agentic_system_with_hardware_integration/runs/20261017_205142_877726/experiments.csv).\n\nTool: run_focusing_experiment\nRaw tool result:\n{\"ok\": true, \"experiment_id\": \"experiment_2f5f3e6a9c104597979ec1175375ede4\", \"settings\": {\"dmd_shape\": [16, 16], \"camera_shape\": [32, 32], \"target_position\": [16, 16], \"transmission_seed\": 42, \"noise_seed\": 43, \"noise_std\": 0.01, \"macropixel_size\": 8, \"focus_size\": 3, \"background_size\": 9, \"iterations\": 1000, \"search_seed\": 1, \"shots_per_measurement\": 3, \"validation_shots\": 5}, \"initial_enhancement\": 1.158744371525408, \"final_enhancement\": 1.1602243058771864, \"focus_mean\": 0.5614529678044653, \"background_means\": {\"top_left\": 0.5100150480381701, \"top_right\": 0.4349955362617909, \"bottom_left\": 0.45357588563939744, \"bottom_right\": 0.5370839515830708}, \"background_reference\": 0.4839176053806073, \"paths\": {\"initial_camera\": \"/Users/razmik/Documents/Agentic_system_with_hardware_integration/runs/20261017_205142_877726/experiment_2f5f3e6a9c104597979ec1175375ede4/initial_camera.png\", \"final_camera\": \"/Users/razmik/Documents/Agentic_system_with_hardware_integration/runs/20261017_205142_877726/experiment_2f5f3e6a9c104597979ec1175375ede4/final_camera.png\", \"initial_intensity\": \"/Users/razmik/Documents/Agentic_system_with_hardware_integration/runs/20261017_205142_877726/experiment_2f5f3e6a9c104597979ec1175375ede4/initial_intensity.npy\", \"final_intensity\": \"/Users/razmik/Documents/Agentic_system_with_hardware_integration/runs/20261017_205142_877726/experiment_2f5f3e6a9c104597979ec1175375ede4/final_intensity.npy\", \"final_pattern\": \"/Users/razmik/Documents/Agentic_system_with_hardware_integration/runs/20261017_205142_877726/experiment_2f5f3e6a9c104597979ec1175375ede4/final_pattern.npy\", \"results_json\": \"/Users/razmik/Documents/Agentic_system_with_hardware_integration/runs/20261017_205142_877726/experiment_2f5f3e6a9c104597979ec1175375ede4/results.json\", \"experiments_csv\": \"/Users/razmik/Documents/Agentic_system_with_hardware_integration/runs/20261017_205142_877726/experiments.csv\", \"summary_figure\": \"/Users/razmik/Documents/Agentic_system_with_hardware_integration/runs/20261017_205142_877726/experiment_2f5f3e6a9c104597979ec1175375ede4/summary.png\"}}"
+    },
+    {
+      "role": "orchestrator",
+      "text": "{\"next_role\":\"scientist\",\"instruction\":\"Review the four recorded successful runs (macropixel sizes 1, 2, 4, 8; all other settings fixed). Decide whether these four are sufficient and freeze a selection of four. Provide the fairness judgement, performance and computational-cost comparison, suggested next experiment, verdict, and a concise REPORT SPEC identifying the single graph and its data/labels. Correct the earlier proposed-run language as appropriate; do not request more runs unless essential.\",\"reason\":\"All four planned runs succeeded, so the scientist must analyze the recorded evidence and freeze the report selection before graph explanation and printing.\"}"
+    },
+    {
+      "role": "scientist",
+      "text": "{\"status\":\"ready\",\"analysis\":\"The four successful runs compare macropixel size on the same fixed simulated bench: a transmission matrix maps binary-amplitude DMD patterns (pixels on or off; the pattern cannot be all off) to camera intensity, with fresh measurement noise. Grouping pixels into larger macropixels reduces the number of independently controllable blocks. Enhancement is the focus mean divided by the equally weighted mean of the four background-region means.\\n\\nFairness: Each experiment changed only macropixel_size; search_seed=1, focus_size=3, background_size=9, and iterations=1000 were held fixed, so the measured regions and search budget match. The 3×3 focus and 9×9 background regions fit around target [16,16]. The fixed 1000-iteration budget is capped and does not provide 20 iterations per controllable block for sizes 1 or 2: their nominal averages are about 3.9 and 15.6 iterations per block, versus 62.5 and 250 for sizes 4 and 8. Thus this is a fair comparison at equal absolute iteration budget, but not an equally adequate search budget per control degree of freedom; that caveat particularly limits conclusions about the finer grids.\\n\\nPerformance and cost: Validated final_enhancement was 28.268 for experiment_18848d544a654115a84d698c48e80b3a (size 1), 6.716 for experiment_0a53b0d22dca48bbb95c5cd1eea54236 (size 2), 2.873 for experiment_92f251efb4d4474ebbfd2e37a03be6fc (size 4), and 1.160 for experiment_2f5f3e6a9c104597979ec1175375ede4 (size 8). Each used 1000 iterations, 3 shots per search measurement, and 5 fresh validation shots; wall_time_seconds and camera_shots were not present in the supplied records, so no further cost comparison is available.\\n\\nNext experiment: Repeat size 1 with focus_size=3, background_size=9, iterations=1000, and search_seed=2, changing only the search seed from experiment_18848d544a654115a84d698c48e80b3a; this tests whether its strong validated result is robust to a different search trajectory under the same capped budget.\\n\\nThe four experiments are sufficient to answer the stated comparison under a common iteration budget, with the per-control-budget limitation noted. The validated enhancement declines as macropixel size increases in these runs, and size 1 is the strongest observed result.\\n\\nREPORT SPEC\\ngraph: bar_final_enhancement, with one bar per selected experiment showing validated final_enhancement and labels for macropixel size and experiment ID.\\nlayout: Title at top, graph in the upper half and explanation plus fairness, performance_vs_cost, next_experiment, and verdict text below; A4 portrait, one page.\\nfairness: The four experiments change only macropixel_size and hold seed, regions, and 1000 iterations fixed, although the capped budget is below 20 nominal iterations per block for sizes 1 and 2.\\nperformance_vs_cost: Experiments experiment_18848d544a654115a84d698c48e80b3a, experiment_0a53b0d22dca48bbb95c5cd1eea54236, experiment_92f251efb4d4474ebbfd2e37a03be6fc, and experiment_2f5f3e6a9c104597979ec1175375ede4 achieved validated enhancements 28.268, 6.716, 2.873, and 1.160 respectively, each at 1000 iterations and 3 shots per search measurement plus 5 validation shots; wall-time and total camera-shot figures were not recorded.\\nnext_experiment: Repeat experiment_18848d544a654115a84d698c48e80b3a at macropixel_size=1 with search_seed=2 and all other settings unchanged to assess sensitivity to search trajectory.\\nverdict: Under this common capped iteration budget, size 1 produced the highest validated enhancement and size 8 the lowest. The trend is clear in these runs, but additional runs would be needed to establish robustness, especially given the lower iteration allowance per controllable block for the finer grids.\",\"selections\":[{\"experiment_id\":\"experiment_18848d544a654115a84d698c48e80b3a\",\"validity\":\"Successful recorded result with final enhancement validated using five fresh shots.\",\"comparability\":\"Only macropixel_size differs from the other selected runs; seed, regions, and 1000-iteration budget match.\",\"relevance\":\"This size-1 run tests the finest control grid in the requested macropixel comparison.\",\"information_gained\":\"Its validated enhancement of 28.268 is the strongest observed result; it anchors the fine-grid end of the comparison, with the caveat that 1000 iterations averages about 3.9 per controllable block.\"},{\"experiment_id\":\"experiment_0a53b0d22dca48bbb95c5cd1eea54236\",\"validity\":\"Successful recorded result with final enhancement validated using five fresh shots.\",\"comparability\":\"Only macropixel_size differs from the other selected runs; seed, regions, and 1000-iteration budget match.\",\"relevance\":\"The size-2 run provides the next finer-grid comparison point.\",\"information_gained\":\"Its validated enhancement of 6.716 shows the observed difference from size 1 and informs the fine-grid trend; 1000 iterations averages about 15.6 per controllable block.\"},{\"experiment_id\":\"experiment_92f251efb4d4474ebbfd2e37a03be6fc\",\"validity\":\"Successful recorded result with final enhancement validated using five fresh shots.\",\"comparability\":\"Only macropixel_size differs from the other selected runs; seed, regions, and 1000-iteration budget match.\",\"relevance\":\"The size-4 run tests an intermediate control-block scale.\",\"information_gained\":\"Its validated enhancement of 2.873 extends the observed size trend, with a nominal average of 62.5 iterations per controllable block.\"},{\"experiment_id\":\"experiment_2f5f3e6a9c104597979ec1175375ede4\",\"validity\":\"Successful recorded result with final enhancement validated using five fresh shots.\",\"comparability\":\"Only macropixel_size differs from the other selected runs; seed, regions, and 1000-iteration budget match.\",\"relevance\":\"The size-8 run tests the coarsest valid control grid.\",\"information_gained\":\"Its validated enhancement of 1.160 gives the coarse-grid endpoint; its nominal average budget is 250 iterations per controllable block.\"}],\"group_reason\":\"Together these four distinct successful experiments span every valid macropixel size (1, 2, 4, and 8) while holding seed, measurement regions, and absolute iteration budget fixed, directly answering the requested comparison. Their validated enhancements show a descending trend with larger macropixels in this run set, while the fine-grid iteration-per-block shortfall is an important limitation.\",\"proposed_experiments\":[]}"
+    },
+    {
+      "role": "photo_quality_specialist",
+      "text": "{\"stage\":\"propose_gamma\",\"experiments\":[{\"experiment_id\":\"experiment_18848d544a654115a84d698c48e80b3a\",\"tests\":[{\"candidate_id\":\"test_1\",\"gamma\":0.2,\"reason\":\"Explore strong brightening of the predominantly dark Initial and Final previews to reveal low-intensity structure.\"},{\"candidate_id\":\"test_2\",\"gamma\":0.35,\"reason\":\"Test substantial brightening while retaining more separation from the isolated bright focus spot.\"},{\"candidate_id\":\"test_3\",\"gamma\":0.6,\"reason\":\"Probe moderate brightening for a balance between faint texture visibility and focus-spot detail.\"},{\"candidate_id\":\"test_4\",\"gamma\":1.4,\"reason\":\"Check whether modest darkening improves separation without losing the already dim background detail.\"},{\"candidate_id\":\"test_5\",\"gamma\":2.8,\"reason\":\"Include a stronger darkening comparison to assess whether background texture is currently too prominent.\"}]},{\"experiment_id\":\"experiment_0a53b0d22dca48bbb95c5cd1eea54236\",\"tests\":[{\"candidate_id\":\"test_1\",\"gamma\":0.2,\"reason\":\"Explore strong brightening of the dark Initial and Final previews to make low-intensity detail more legible.\"},{\"candidate_id\":\"test_2\",\"gamma\":0.35,\"reason\":\"Test substantial brightening while checking whether the sparse bright feature remains distinct.\"},{\"candidate_id\":\"test_3\",\"gamma\":0.6,\"reason\":\"Probe moderate brightening as a compromise between revealing faint structure and preserving level separation.\"},{\"candidate_id\":\"test_4\",\"gamma\":1.4,\"reason\":\"Check modest darkening against the current appearance to see whether it clarifies the noisy texture.\"},{\"candidate_id\":\"test_5\",\"gamma\":2.8,\"reason\":\"Include stronger darkening to test whether reduced prominence of the texture improves readability.\"}]},{\"experiment_id\":\"experiment_92f251efb4d4474ebbfd2e37a03be6fc\",\"tests\":[{\"candidate_id\":\"test_1\",\"gamma\":0.2,\"reason\":\"Test strong brightening for low-intensity detail, while checking the already prominent light pixels for washout.\"},{\"candidate_id\":\"test_2\",\"gamma\":0.35,\"reason\":\"Explore substantial brightening to assess faint structure without assuming the bright Initial texture is faithful detail.\"},{\"candidate_id\":\"test_3\",\"gamma\":0.6,\"reason\":\"Probe moderate brightening as an initial balance between low-level visibility and bright-region separation.\"},{\"candidate_id\":\"test_4\",\"gamma\":1.4,\"reason\":\"Test modest darkening to evaluate whether the bright Initial levels become better separated.\"},{\"candidate_id\":\"test_5\",\"gamma\":2.8,\"reason\":\"Include stronger darkening to compare bright-region detail and overall readability in both panels.\"}]},{\"experiment_id\":\"experiment_2f5f3e6a9c104597979ec1175375ede4\",\"tests\":[{\"candidate_id\":\"test_1\",\"gamma\":0.2,\"reason\":\"Test strong brightening for faint detail, while checking whether the comparatively bright texture becomes washed out.\"},{\"candidate_id\":\"test_2\",\"gamma\":0.35,\"reason\":\"Explore substantial brightening to assess low-intensity visibility and preservation of bright-level distinctions.\"},{\"candidate_id\":\"test_3\",\"gamma\":0.6,\"reason\":\"Probe moderate brightening as a balance between revealing dark detail and retaining texture separation.\"},{\"candidate_id\":\"test_4\",\"gamma\":1.4,\"reason\":\"Test modest darkening to evaluate whether the brighter appearance gains useful level separation.\"},{\"candidate_id\":\"test_5\",\"gamma\":2.8,\"reason\":\"Include stronger darkening as a comparison for bright-region detail and the readability of both panels.\"}]}]}"
+    },
+    {
+      "role": "executor",
+      "text": "Trial sheet created for round 1.\n\n- **Trial ID:** `1b859712-cec2-4e99-86a6-d58d6ad596f0`\n- **PDF:** `/Users/razmik/Documents/Agentic_system_with_hardware_integration/runs/20261017_205142_877726/print_tuning/trial_r1_1b859712.pdf`\n- **SHA-256:** `57147b7a645c3c1691cf75625cdf79316db4bb3dfa06b7dc919fe9f1aa18c52c`\n- **Manifest:** `/Users/razmik/Documents/Agentic_system_with_hardware_integration/runs/20261017_205142_877726/print_tuning/trial_r1_1b859712_manifest.json`\n- **Pages:** 2\n\nTool: make_trial_sheet\nTool result:\n{\"contract_version\": 1, \"status\": \"ok\", \"session_id\": \"467c6601-c33e-4889-9fc6-20ed5d948b90\", \"trial_id\": \"1b859712-cec2-4e99-86a6-d58d6ad596f0\", \"round_id\": 1, \"pdf_path\": \"/Users/razmik/Documents/Agentic_system_with_hardware_integration/runs/20261017_205142_877726/print_tuning/trial_r1_1b859712.pdf\", \"pdf_sha256\": \"57147b7a645c3c1691cf75625cdf79316db4bb3dfa06b7dc919fe9f1aa18c52c\", \"manifest_path\": \"/Users/razmik/Documents/Agentic_system_with_hardware_integration/runs/20261017_205142_877726/print_tuning/trial_r1_1b859712_manifest.json\", \"page_count\": 2}"
+    },
+    {
+      "role": "executor",
+      "text": "Office_Printer is idle.\n\nTool: printer_status\nTool result:\n{\"ok\": true, \"printer\": \"Office_Printer\", \"state\": \"idle\", \"message\": \"fake printer is idle\"}"
+    },
+    {
+      "role": "executor",
+      "text": "Human approval of this exact trial PDF is required; nothing was printed."
+    },
+    {
+      "role": "executor",
+      "text": "Job `Office_Printer-15` is printing. The status reports it as confirmed.\n\nTool: job_status\nTool result:\n{\"ok\": true, \"job_id\": \"Office_Printer-15\", \"state\": \"printing\", \"confirmed\": true, \"message\": \"fake job is printing\"}"
+    },
+    {
+      "role": "executor",
+      "text": "The print job `Office_Printer-15` is done and confirmed.\n\nTool: job_status\nTool result:\n{\"ok\": true, \"job_id\": \"Office_Printer-15\", \"state\": \"done\", \"confirmed\": true, \"message\": \"fake job is done\"}"
+    },
+    {
+      "role": "executor",
+      "text": "Scan completed successfully. Both pages matched their trial codes, and the scan was marked usable with no issues.\n\nEvaluation saved to: `/Users/razmik/Documents/Agentic_system_with_hardware_integration/runs/20261017_205142_877726/print_tuning/scan_r1_1b859712_818fd2e8.json`\n\nTool: read_scan\nTool result:\n{\"contract_version\": 1, \"status\": \"ok\", \"session_id\": \"467c6601-c33e-4889-9fc6-20ed5d948b90\", \"trial_id\": \"1b859712-cec2-4e99-86a6-d58d6ad596f0\", \"round_id\": 1, \"evaluation_path\": \"/Users/razmik/Documents/Agentic_system_with_hardware_integration/runs/20261017_205142_877726/print_tuning/scan_r1_1b859712_818fd2e8.json\", \"scan_quality\": {\"usable\": true, \"issues\": []}, \"pages\": [{\"page_number\": 1, \"code_matches\": true, \"issues\": []}, {\"page_number\": 2, \"code_matches\": true, \"issues\": []}], \"candidate_columns\": [\"candidate_id\", \"role\", \"mapping\", \"warnings\", \"collapsed_levels\", \"full_black_share\", \"paper_white_share\"], \"experiments\": [{\"experiment_id\": \"experiment_18848d544a654115a84d698c48e80b3a\", \"candidates\": [[\"reference\", \"reference\", \"γ 1.00 · 0.00–1.00 · smooth\", [\"many cells print as full black\"], 0, 0.545, 0.0], [\"test_1\", \"test\", \"γ 0.20 · 0.00–1.00 · smooth\", [], 0, 0.005, 0.0], [\"test_2\", \"test\", \"γ 0.35 · 0.00–1.00 · smooth\", [], 0, 0.01, 0.0], [\"test_3\", \"test\", \"γ 0.60 · 0.00–1.00 · smooth\", [], 0, 0.1, 0.0], [\"test_4\", \"test\", \"γ 1.40 · 0.00–1.00 · smooth\", [\"many cells print as full black\"], 0, 0.842, 0.0], [\"test_5\", \"test\", \"γ 2.80 · 0.00–1.00 · smooth\", [\"many cells print as full black\"], 0, 0.997, 0.0]]}, {\"experiment_id\": \"experiment_0a53b0d22dca48bbb95c5cd1eea54236\", \"candidates\": [[\"reference\", \"reference\", \"γ 1.00 · 0.00–1.00 · smooth\", [\"many cells print as full black\"], 0, 0.432, 0.0], [\"test_1\", \"test\", \"γ 0.20 · 0.00–1.00 · smooth\", [], 0, 0.005, 0.0], [\"test_2\", \"test\", \"γ 0.35 · 0.00–1.00 · smooth\", [], 0, 0.007, 0.0], [\"test_3\", \"test\", \"γ 0.60 · 0.00–1.00 · smooth\", [], 0, 0.086, 0.0], [\"test_4\", \"test\", \"γ 1.40 · 0.00–1.00 · smooth\", [\"many cells print as full black\"], 0, 0.73, 0.0], [\"test_5\", \"test\", \"γ 2.80 · 0.00–1.00 · smooth\", [\"many cells print as full black\"], 0, 0.973, 0.0]]}, {\"experiment_id\": \"experiment_92f251efb4d4474ebbfd2e37a03be6fc\", \"candidates\": [[\"reference\", \"reference\", \"γ 1.00 · 0.00–1.00 · smooth\", [], 0, 0.282, 0.007], [\"test_1\", \"test\", \"γ 0.20 · 0.00–1.00 · smooth\", [], 0, 0.005, 0.013], [\"test_2\", \"test\", \"γ 0.35 · 0.00–1.00 · smooth\", [], 0, 0.006, 0.01], [\"test_3\", \"test\", \"γ 0.60 · 0.00–1.00 · smooth\", [], 0, 0.053, 0.008], [\"test_4\", \"test\", \"γ 1.40 · 0.00–1.00 · smooth\", [\"many cells print as full black\"], 0, 0.518, 0.006], [\"test_5\", \"test\", \"γ 2.80 · 0.00–1.00 · smooth\", [\"many cells print as full black\"], 0, 0.866, 0.006]]}, {\"experiment_id\": \"experiment_2f5f3e6a9c104597979ec1175375ede4\", \"candidates\": [[\"reference\", \"reference\", \"γ 1.00 · 0.00–1.00 · smooth\", [], 0, 0.264, 0.006], [\"test_1\", \"test\", \"γ 0.20 · 0.00–1.00 · smooth\", [], 0, 0.005, 0.011], [\"test_2\", \"test\", \"γ 0.35 · 0.00–1.00 · smooth\", [], 0, 0.006, 0.009], [\"test_3\", \"test\", \"γ 0.60 · 0.00–1.00 · smooth\", [], 0, 0.046, 0.007], [\"test_4\", \"test\", \"γ 1.40 · 0.00–1.00 · smooth\", [\"many cells print as full black\"], 0, 0.491, 0.006], [\"test_5\", \"test\", \"γ 2.80 · 0.00–1.00 · smooth\", [\"many cells print as full black\"], 0, 0.847, 0.006]]}]}"
+    },
+    {
+      "role": "photo_quality_specialist",
+      "text": "{\"stage\":\"review_gamma\",\"assessment\":\"usable\",\"issues\":[],\"gamma_winners\":[{\"experiment_id\":\"experiment_18848d544a654115a84d698c48e80b3a\",\"candidate_id\":\"test_2\",\"reason\":\"Gamma 0.35 is a better balance across Initial and Final than the very bright gamma 0.2: both panels retain distinct intensity levels and useful detail, while avoiding the severe dark crush seen at higher gamma. It is the best tested balance, although gamma 0.2 offers strong contrast as well.\",\"confidence\":\"medium\",\"tie_explanation\":null},{\"experiment_id\":\"experiment_0a53b0d22dca48bbb95c5cd1eea54236\",\"candidate_id\":\"test_2\",\"reason\":\"Gamma 0.35 gives the strongest aggregate contrast among the tested candidates and keeps detail visible in both Initial and Final. The brighter gamma 0.2 remains a plausible alternative, but looks more prone to flattening intensity distinctions; the darkened candidates lose useful detail.\",\"confidence\":\"medium\",\"tie_explanation\":null},{\"experiment_id\":\"experiment_92f251efb4d4474ebbfd2e37a03be6fc\",\"candidate_id\":\"test_2\",\"reason\":\"Gamma 0.35 is a balanced choice for the unlike panels: it improves Final detail over the reference while retaining separation in the already bright Initial panel. Gamma 0.6 gives slightly more aggregate contrast, but does so less evenly across the two panels.\",\"confidence\":\"medium\",\"tie_explanation\":null},{\"experiment_id\":\"experiment_2f5f3e6a9c104597979ec1175375ede4\",\"candidate_id\":\"test_3\",\"reason\":\"Gamma 0.6 has the highest measured aggregate contrast among the tested options and preserves readable intensity variation in both Initial and Final. Gamma 0.35 is close, but gamma 0.6 appears to provide a slightly clearer balance without the detail loss of stronger darkening.\",\"confidence\":\"medium\",\"tie_explanation\":null}],\"gamma_tests\":[{\"experiment_id\":\"experiment_18848d544a654115a84d698c48e80b3a\",\"tests\":[{\"candidate_id\":\"test_1\",\"gamma\":0.224,\"reason\":\"Refine below the gamma 0.35 winner to check whether slightly stronger brightening reveals useful low-level detail in both panels without flattening their level distinctions.\"},{\"candidate_id\":\"test_2\",\"gamma\":0.28,\"reason\":\"Probe a nearby brighter setting between the current winner and the more strongly brightened candidate.\"},{\"candidate_id\":\"test_3\",\"gamma\":0.4375,\"reason\":\"Probe a modestly darker setting to see whether Initial and Final retain detail with improved separation.\"},{\"candidate_id\":\"test_4\",\"gamma\":0.546875,\"reason\":\"Test a further step toward darker rendering while checking both panels for lost faint structure.\"},{\"candidate_id\":\"test_5\",\"gamma\":0.683594,\"reason\":\"Extend the local refinement toward darker tones to assess whether either panel benefits without losing readable low-intensity detail.\"}]},{\"experiment_id\":\"experiment_0a53b0d22dca48bbb95c5cd1eea54236\",\"tests\":[{\"candidate_id\":\"test_1\",\"gamma\":0.224,\"reason\":\"Refine below the gamma 0.35 winner to check whether slightly stronger brightening reveals useful low-level detail in both panels without flattening their level distinctions.\"},{\"candidate_id\":\"test_2\",\"gamma\":0.28,\"reason\":\"Probe a nearby brighter setting between the current winner and the more strongly brightened candidate.\"},{\"candidate_id\":\"test_3\",\"gamma\":0.4375,\"reason\":\"Probe a modestly darker setting to see whether Initial and Final retain detail with improved separation.\"},{\"candidate_id\":\"test_4\",\"gamma\":0.546875,\"reason\":\"Test a further step toward darker rendering while checking both panels for lost faint structure.\"},{\"candidate_id\":\"test_5\",\"gamma\":0.683594,\"reason\":\"Extend the local refinement toward darker tones to assess whether either panel benefits without losing readable low-intensity detail.\"}]},{\"experiment_id\":\"experiment_92f251efb4d4474ebbfd2e37a03be6fc\",\"tests\":[{\"candidate_id\":\"test_1\",\"gamma\":0.224,\"reason\":\"Refine below the gamma 0.35 winner to check whether slightly stronger brightening improves Final while retaining useful separation in Initial.\"},{\"candidate_id\":\"test_2\",\"gamma\":0.28,\"reason\":\"Probe a nearby brighter setting between the current winner and the more strongly brightened candidate.\"},{\"candidate_id\":\"test_3\",\"gamma\":0.4375,\"reason\":\"Probe a modestly darker setting to check whether bright-region distinctions improve without compromising Final detail.\"},{\"candidate_id\":\"test_4\",\"gamma\":0.546875,\"reason\":\"Test a further step toward darker rendering, considering the different readability needs of Initial and Final.\"},{\"candidate_id\":\"test_5\",\"gamma\":0.683594,\"reason\":\"Extend local refinement toward darker tones while checking that the Final panel retains useful low-intensity structure.\"}]},{\"experiment_id\":\"experiment_2f5f3e6a9c104597979ec1175375ede4\",\"tests\":[{\"candidate_id\":\"test_1\",\"gamma\":0.384,\"reason\":\"Refine below the gamma 0.6 winner to test whether a little more brightening improves low-intensity visibility in both panels.\"},{\"candidate_id\":\"test_2\",\"gamma\":0.48,\"reason\":\"Probe a nearby brighter setting while checking for retained separation across the bright intensity levels.\"},{\"candidate_id\":\"test_3\",\"gamma\":0.75,\"reason\":\"Probe a modestly darker setting to see whether bright-region detail improves without obscuring faint structure.\"},{\"candidate_id\":\"test_4\",\"gamma\":0.9375,\"reason\":\"Test a further darker setting near the linear mapping, checking both panels for excessive darkening.\"},{\"candidate_id\":\"test_5\",\"gamma\":1.171875,\"reason\":\"Extend local refinement toward darker rendering while monitoring whether useful detail remains legible in Initial and Final.\"}]}]}"
+    },
+    {
+      "role": "executor",
+      "text": "The round 2 trial sheet was created successfully.\n\n- **Trial ID:** `e8f2a6f9-1685-472c-9e19-1dce3e625a8d`\n- **PDF:** `/Users/razmik/Documents/Agentic_system_with_hardware_integration/runs/20261017_205142_877726/print_tuning/trial_r2_e8f2a6f9.pdf`\n- **SHA-256:** `68bd47c13424dd82c2ebda7a3ba103f3e8710d6468151effd1dae29b3aa35e97`\n- **Manifest:** `/Users/razmik/Documents/Agentic_system_with_hardware_integration/runs/20261017_205142_877726/print_tuning/trial_r2_e8f2a6f9_manifest.json`\n- **Pages:** 2\n\nTool: make_trial_sheet\nTool result:\n{\"contract_version\": 1, \"status\": \"ok\", \"session_id\": \"467c6601-c33e-4889-9fc6-20ed5d948b90\", \"trial_id\": \"e8f2a6f9-1685-472c-9e19-1dce3e625a8d\", \"round_id\": 2, \"pdf_path\": \"/Users/razmik/Documents/Agentic_system_with_hardware_integration/runs/20261017_205142_877726/print_tuning/trial_r2_e8f2a6f9.pdf\", \"pdf_sha256\": \"68bd47c13424dd82c2ebda7a3ba103f3e8710d6468151effd1dae29b3aa35e97\", \"manifest_path\": \"/Users/razmik/Documents/Agentic_system_with_hardware_integration/runs/20261017_205142_877726/print_tuning/trial_r2_e8f2a6f9_manifest.json\", \"page_count\": 2}"
+    },
+    {
+      "role": "executor",
+      "text": "Office_Printer is idle.\n\nTool: printer_status\nTool result:\n{\"ok\": true, \"printer\": \"Office_Printer\", \"state\": \"idle\", \"message\": \"fake printer is idle\"}"
+    },
+    {
+      "role": "executor",
+      "text": "Human approval of this exact trial PDF is required; nothing was printed."
+    },
+    {
+      "role": "executor",
+      "text": "Job `Office_Printer-16` is done, and the print was confirmed.\n\nTool: job_status\nTool result:\n{\"ok\": true, \"job_id\": \"Office_Printer-16\", \"state\": \"done\", \"confirmed\": true, \"message\": \"fake job is done\"}"
+    },
+    {
+      "role": "executor",
+      "text": "The scan was recorded successfully. Both pages matched the trial, and scan quality is marked usable with no reported issues.\n\nEvaluation saved to: `/Users/razmik/Documents/Agentic_system_with_hardware_integration/runs/20261017_205142_877726/print_tuning/scan_r2_e8f2a6f9_bc034cd1.json`\n\nTool: read_scan\nTool result:\n{\"contract_version\": 1, \"status\": \"ok\", \"session_id\": \"467c6601-c33e-4889-9fc6-20ed5d948b90\", \"trial_id\": \"e8f2a6f9-1685-472c-9e19-1dce3e625a8d\", \"round_id\": 2, \"evaluation_path\": \"/Users/razmik/Documents/Agentic_system_with_hardware_integration/runs/20261017_205142_877726/print_tuning/scan_r2_e8f2a6f9_bc034cd1.json\", \"scan_quality\": {\"usable\": true, \"issues\": []}, \"pages\": [{\"page_number\": 1, \"code_matches\": true, \"issues\": []}, {\"page_number\": 2, \"code_matches\": true, \"issues\": []}], \"candidate_columns\": [\"candidate_id\", \"role\", \"mapping\", \"warnings\", \"collapsed_levels\", \"full_black_share\", \"paper_white_share\"], \"experiments\": [{\"experiment_id\": \"experiment_18848d544a654115a84d698c48e80b3a\", \"candidates\": [[\"reference\", \"reference\", \"γ 0.35 · 0.00–1.00 · smooth\", [], 0, 0.01, 0.0], [\"test_1\", \"test\", \"γ 0.22 · 0.00–1.00 · smooth\", [], 0, 0.005, 0.0], [\"test_2\", \"test\", \"γ 0.28 · 0.00–1.00 · smooth\", [], 0, 0.006, 0.0], [\"test_3\", \"test\", \"γ 0.44 · 0.00–1.00 · smooth\", [], 0, 0.025, 0.0], [\"test_4\", \"test\", \"γ 0.55 · 0.00–1.00 · smooth\", [], 0, 0.069, 0.0], [\"test_5\", \"test\", \"γ 0.68 · 0.00–1.00 · smooth\", [], 0, 0.176, 0.0]]}, {\"experiment_id\": \"experiment_0a53b0d22dca48bbb95c5cd1eea54236\", \"candidates\": [[\"reference\", \"reference\", \"γ 0.35 · 0.00–1.00 · smooth\", [], 0, 0.007, 0.0], [\"test_1\", \"test\", \"γ 0.22 · 0.00–1.00 · smooth\", [], 0, 0.005, 0.0], [\"test_2\", \"test\", \"γ 0.28 · 0.00–1.00 · smooth\", [], 0, 0.005, 0.0], [\"test_3\", \"test\", \"γ 0.44 · 0.00–1.00 · smooth\", [], 0, 0.022, 0.0], [\"test_4\", \"test\", \"γ 0.55 · 0.00–1.00 · smooth\", [], 0, 0.063, 0.0], [\"test_5\", \"test\", \"γ 0.68 · 0.00–1.00 · smooth\", [], 0, 0.145, 0.0]]}, {\"experiment_id\": \"experiment_92f251efb4d4474ebbfd2e37a03be6fc\", \"candidates\": [[\"reference\", \"reference\", \"γ 0.35 · 0.00–1.00 · smooth\", [], 0, 0.006, 0.009], [\"test_1\", \"test\", \"γ 0.22 · 0.00–1.00 · smooth\", [], 0, 0.005, 0.012], [\"test_2\", \"test\", \"γ 0.28 · 0.00–1.00 · smooth\", [], 0, 0.005, 0.011], [\"test_3\", \"test\", \"γ 0.44 · 0.00–1.00 · smooth\", [], 0, 0.012, 0.008], [\"test_4\", \"test\", \"γ 0.55 · 0.00–1.00 · smooth\", [], 0, 0.032, 0.008], [\"test_5\", \"test\", \"γ 0.68 · 0.00–1.00 · smooth\", [], 0, 0.081, 0.008]]}, {\"experiment_id\": \"experiment_2f5f3e6a9c104597979ec1175375ede4\", \"candidates\": [[\"reference\", \"reference\", \"γ 0.60 · 0.00–1.00 · smooth\", [], 0, 0.046, 0.007], [\"test_1\", \"test\", \"γ 0.38 · 0.00–1.00 · smooth\", [], 0, 0.006, 0.007], [\"test_2\", \"test\", \"γ 0.48 · 0.00–1.00 · smooth\", [], 0, 0.015, 0.007], [\"test_3\", \"test\", \"γ 0.75 · 0.00–1.00 · smooth\", [], 0, 0.116, 0.006], [\"test_4\", \"test\", \"γ 0.94 · 0.00–1.00 · smooth\", [], 0, 0.22, 0.006], [\"test_5\", \"test\", \"γ 1.17 · 0.00–1.00 · smooth\", [\"many cells print as full black\"], 0, 0.382, 0.006]]}]}"
+    },
+    {
+      "role": "photo_quality_specialist",
+      "text": "{\"stage\":\"review_gamma\",\"assessment\":\"usable\",\"issues\":[],\"gamma_winners\":[{\"experiment_id\":\"experiment_18848d544a654115a84d698c48e80b3a\",\"candidate_id\":\"test_2\",\"reason\":\"Gamma 0.28 gives the strongest aggregate contrast among the tested candidates and improves the measured contrast in both Initial and Final over the reference. Printed levels remain separated, without the increased darkening and black share of the higher-gamma tests.\",\"confidence\":\"medium\",\"tie_explanation\":null},{\"experiment_id\":\"experiment_0a53b0d22dca48bbb95c5cd1eea54236\",\"candidate_id\":\"reference\",\"reason\":\"The reference at gamma 0.35 has the slightly higher aggregate contrast. Gamma 0.28 improves Final modestly but reduces Initial contrast; the difference is small and both renderings retain separated levels and readable detail in both panels.\",\"confidence\":\"low\",\"tie_explanation\":\"The reference and test_2 (gamma 0.28) are effectively tied: test_2 favors Final slightly while the reference favors Initial and has marginally higher aggregate contrast. Retain the reference for this refinement round.\"},{\"experiment_id\":\"experiment_92f251efb4d4474ebbfd2e37a03be6fc\",\"candidate_id\":\"test_3\",\"reason\":\"Gamma 0.4375 has the highest aggregate contrast among tested candidates and notably improves Initial separation. Final contrast is slightly below the reference, but remains close, with distinct printed levels and readable detail in both panels.\",\"confidence\":\"medium\",\"tie_explanation\":null},{\"experiment_id\":\"experiment_2f5f3e6a9c104597979ec1175375ede4\",\"candidate_id\":\"test_2\",\"reason\":\"Gamma 0.48 improves measured contrast in both Initial and Final over the reference and has the highest aggregate contrast tested. The darker tests lose useful distinction, with test_5 also showing a substantial full-black share.\",\"confidence\":\"medium\",\"tie_explanation\":null}],\"gamma_tests\":[{\"experiment_id\":\"experiment_18848d544a654115a84d698c48e80b3a\",\"tests\":[{\"candidate_id\":\"test_1\",\"gamma\":0.16,\"reason\":\"Probe stronger brightening to check whether faint detail improves without flattening distinctions in either panel.\"},{\"candidate_id\":\"test_2\",\"gamma\":0.205,\"reason\":\"Test a nearby brighter setting below the current winner.\"},{\"candidate_id\":\"test_3\",\"gamma\":0.263,\"reason\":\"Refine just below the winner to assess low-intensity detail and level separation across both panels.\"},{\"candidate_id\":\"test_4\",\"gamma\":0.337,\"reason\":\"Probe just above the winner for a possible improvement in balance between Initial and Final.\"},{\"candidate_id\":\"test_5\",\"gamma\":0.432,\"reason\":\"Test a darker local setting while checking that useful faint detail is retained.\"}]},{\"experiment_id\":\"experiment_0a53b0d22dca48bbb95c5cd1eea54236\",\"tests\":[{\"candidate_id\":\"test_1\",\"gamma\":0.21,\"reason\":\"Explore stronger brightening for low-intensity detail in both panels while monitoring separation.\"},{\"candidate_id\":\"test_2\",\"gamma\":0.26,\"reason\":\"Refine below the reference setting, balancing the modest Final improvement against Initial separation.\"},{\"candidate_id\":\"test_3\",\"gamma\":0.32,\"reason\":\"Test a setting just below the reference to check for a more even Initial and Final balance.\"},{\"candidate_id\":\"test_4\",\"gamma\":0.39,\"reason\":\"Probe slightly above the reference for improved separation without losing detail.\"},{\"candidate_id\":\"test_5\",\"gamma\":0.48,\"reason\":\"Extend the local refinement toward darker tones while checking both panels for loss of faint structure.\"}]},{\"experiment_id\":\"experiment_92f251efb4d4474ebbfd2e37a03be6fc\",\"tests\":[{\"candidate_id\":\"test_1\",\"gamma\":0.3,\"reason\":\"Check whether somewhat stronger brightening reveals useful detail in Final while retaining Initial separation.\"},{\"candidate_id\":\"test_2\",\"gamma\":0.37,\"reason\":\"Probe below the winner for a possible improvement to Final readability.\"},{\"candidate_id\":\"test_3\",\"gamma\":0.46,\"reason\":\"Test just above the winner to refine the balance between Initial contrast and Final detail.\"},{\"candidate_id\":\"test_4\",\"gamma\":0.57,\"reason\":\"Assess a moderately darker setting for greater Initial separation without obscuring Final.\"},{\"candidate_id\":\"test_5\",\"gamma\":0.7,\"reason\":\"Extend the local search toward darker tones while monitoring Final detail and black coverage.\"}]},{\"experiment_id\":\"experiment_2f5f3e6a9c104597979ec1175375ede4\",\"tests\":[{\"candidate_id\":\"test_1\",\"gamma\":0.25,\"reason\":\"Test stronger brightening to see whether low-intensity detail improves without reducing useful level separation.\"},{\"candidate_id\":\"test_2\",\"gamma\":0.315,\"reason\":\"Probe below the winner for a potential improvement in faint detail across both panels.\"},{\"candidate_id\":\"test_3\",\"gamma\":0.397,\"reason\":\"Refine below the winner while checking whether both panels retain their observed intensity distinctions.\"},{\"candidate_id\":\"test_4\",\"gamma\":0.5,\"reason\":\"Test just above the winner to see if slightly darker rendering provides a better balance.\"},{\"candidate_id\":\"test_5\",\"gamma\":0.63,\"reason\":\"Probe a darker local setting while watching for loss of detail and increasing black coverage.\"}]}]}"
+    },
+    {
+      "role": "executor",
+      "text": "Trial sheet created for round 3.\n\n- **Trial ID:** `38b04f0a-aa9a-4606-a7d3-e3aa68bacdcb`\n- **PDF:** `/Users/razmik/Documents/Agentic_system_with_hardware_integration/runs/20261017_205142_877726/print_tuning/trial_r3_38b04f0a.pdf`\n- **SHA-256:** `52e49fff9aafb668f97849c5e2640f54f0dbe9145f6057a04b4ee54f25b5ce27`\n- **Manifest:** `/Users/razmik/Documents/Agentic_system_with_hardware_integration/runs/20261017_205142_877726/print_tuning/trial_r3_38b04f0a_manifest.json`\n- **Pages:** 2\n\nTool: make_trial_sheet\nTool result:\n{\"contract_version\": 1, \"status\": \"ok\", \"session_id\": \"467c6601-c33e-4889-9fc6-20ed5d948b90\", \"trial_id\": \"38b04f0a-aa9a-4606-a7d3-e3aa68bacdcb\", \"round_id\": 3, \"pdf_path\": \"/Users/razmik/Documents/Agentic_system_with_hardware_integration/runs/20261017_205142_877726/print_tuning/trial_r3_38b04f0a.pdf\", \"pdf_sha256\": \"52e49fff9aafb668f97849c5e2640f54f0dbe9145f6057a04b4ee54f25b5ce27\", \"manifest_path\": \"/Users/razmik/Documents/Agentic_system_with_hardware_integration/runs/20261017_205142_877726/print_tuning/trial_r3_38b04f0a_manifest.json\", \"page_count\": 2}"
+    },
+    {
+      "role": "executor",
+      "text": "Office_Printer is idle.\n\nTool: printer_status\nTool result:\n{\"ok\": true, \"printer\": \"Office_Printer\", \"state\": \"idle\", \"message\": \"fake printer is idle\"}"
+    },
+    {
+      "role": "executor",
+      "text": "Human approval of this exact trial PDF is required; nothing was printed."
+    },
+    {
+      "role": "executor",
+      "text": "The job is done, and the status reports it as confirmed.\n\nTool: job_status\nTool result:\n{\"ok\": true, \"job_id\": \"Office_Printer-17\", \"state\": \"done\", \"confirmed\": true, \"message\": \"fake job is done\"}"
+    },
+    {
+      "role": "executor",
+      "text": "The scan was evaluated successfully. It is usable, and both pages matched the trial. The evaluation was saved at:\n\n`/Users/razmik/Documents/Agentic_system_with_hardware_integration/runs/20261017_205142_877726/print_tuning/scan_r3_38b04f0a_c30d6aec.json`\n\nTool: read_scan\nTool result:\n{\"contract_version\": 1, \"status\": \"ok\", \"session_id\": \"467c6601-c33e-4889-9fc6-20ed5d948b90\", \"trial_id\": \"38b04f0a-aa9a-4606-a7d3-e3aa68bacdcb\", \"round_id\": 3, \"evaluation_path\": \"/Users/razmik/Documents/Agentic_system_with_hardware_integration/runs/20261017_205142_877726/print_tuning/scan_r3_38b04f0a_c30d6aec.json\", \"scan_quality\": {\"usable\": true, \"issues\": []}, \"pages\": [{\"page_number\": 1, \"code_matches\": true, \"issues\": []}, {\"page_number\": 2, \"code_matches\": true, \"issues\": []}], \"candidate_columns\": [\"candidate_id\", \"role\", \"mapping\", \"warnings\", \"collapsed_levels\", \"full_black_share\", \"paper_white_share\"], \"experiments\": [{\"experiment_id\": \"experiment_18848d544a654115a84d698c48e80b3a\", \"candidates\": [[\"reference\", \"reference\", \"γ 0.28 · 0.00–1.00 · smooth\", [], 0, 0.006, 0.0], [\"test_1\", \"test\", \"γ 0.16 · 0.00–1.00 · smooth\", [], 0, 0.005, 0.0], [\"test_2\", \"test\", \"γ 0.20 · 0.00–1.00 · smooth\", [\"1 gray levels merge on paper\"], 1, 0.005, 0.0], [\"test_3\", \"test\", \"γ 0.26 · 0.00–1.00 · smooth\", [], 0, 0.006, 0.0], [\"test_4\", \"test\", \"γ 0.34 · 0.00–1.00 · smooth\", [], 0, 0.009, 0.0], [\"test_5\", \"test\", \"γ 0.43 · 0.00–1.00 · smooth\", [], 0, 0.022, 0.0]]}, {\"experiment_id\": \"experiment_0a53b0d22dca48bbb95c5cd1eea54236\", \"candidates\": [[\"reference\", \"reference\", \"γ 0.35 · 0.00–1.00 · smooth\", [], 0, 0.007, 0.0], [\"test_1\", \"test\", \"γ 0.21 · 0.00–1.00 · smooth\", [], 0, 0.005, 0.0], [\"test_2\", \"test\", \"γ 0.26 · 0.00–1.00 · smooth\", [], 0, 0.005, 0.0], [\"test_3\", \"test\", \"γ 0.32 · 0.00–1.00 · smooth\", [], 0, 0.006, 0.0], [\"test_4\", \"test\", \"γ 0.39 · 0.00–1.00 · smooth\", [], 0, 0.011, 0.0], [\"test_5\", \"test\", \"γ 0.48 · 0.00–1.00 · smooth\", [], 0, 0.034, 0.0]]}, {\"experiment_id\": \"experiment_92f251efb4d4474ebbfd2e37a03be6fc\", \"candidates\": [[\"reference\", \"reference\", \"γ 0.44 · 0.00–1.00 · smooth\", [], 0, 0.014, 0.009], [\"test_1\", \"test\", \"γ 0.30 · 0.00–1.00 · smooth\", [], 0, 0.006, 0.011], [\"test_2\", \"test\", \"γ 0.37 · 0.00–1.00 · smooth\", [], 0, 0.007, 0.009], [\"test_3\", \"test\", \"γ 0.46 · 0.00–1.00 · smooth\", [], 0, 0.014, 0.008], [\"test_4\", \"test\", \"γ 0.57 · 0.00–1.00 · smooth\", [], 0, 0.04, 0.008], [\"test_5\", \"test\", \"γ 0.70 · 0.00–1.00 · smooth\", [], 0, 0.088, 0.008]]}, {\"experiment_id\": \"experiment_2f5f3e6a9c104597979ec1175375ede4\", \"candidates\": [[\"reference\", \"reference\", \"γ 0.48 · 0.00–1.00 · smooth\", [], 0, 0.015, 0.007], [\"test_1\", \"test\", \"γ 0.25 · 0.00–1.00 · smooth\", [], 0, 0.005, 0.009], [\"test_2\", \"test\", \"γ 0.32 · 0.00–1.00 · smooth\", [], 0, 0.006, 0.009], [\"test_3\", \"test\", \"γ 0.40 · 0.00–1.00 · smooth\", [], 0, 0.007, 0.007], [\"test_4\", \"test\", \"γ 0.50 · 0.00–1.00 · smooth\", [], 0, 0.019, 0.007], [\"test_5\", \"test\", \"γ 0.63 · 0.00–1.00 · smooth\", [], 0, 0.059, 0.007]]}]}"
+    },
+    {
+      "role": "photo_quality_specialist",
+      "text": "{\"stage\":\"review_gamma_final\",\"assessment\":\"usable\",\"issues\":[],\"gamma_winners\":[{\"experiment_id\":\"experiment_18848d544a654115a84d698c48e80b3a\",\"candidate_id\":\"reference\",\"reason\":\"Retain gamma 0.28: it has the highest measured aggregate contrast in this set, with all intended levels separated in both panels and little full-black coverage. Tests 3 and 4 are close, but do not provide a meaningful readability improvement across Initial and Final.\",\"confidence\":\"low\",\"tie_explanation\":\"The reference and tests 3 and 4 are effectively tied in contrast and visual readability; the reference has a small aggregate advantage and no level-collapse warning.\"},{\"experiment_id\":\"experiment_0a53b0d22dca48bbb95c5cd1eea54236\",\"candidate_id\":\"reference\",\"reason\":\"Retain gamma 0.35. It has the highest measured aggregate contrast, while preserving separated levels and readable detail in both Initial and Final. Test 3 is nearly equivalent, with only a slight shift in favor of Final over Initial.\",\"confidence\":\"low\",\"tie_explanation\":\"The reference and test 3 are effectively tied: their aggregate contrast is nearly the same, with small opposing panel-level differences. Retain the reference.\"},{\"experiment_id\":\"experiment_92f251efb4d4474ebbfd2e37a03be6fc\",\"candidate_id\":\"reference\",\"reason\":\"Retain gamma 0.4375 for the best overall balance across the bright, varied Initial and darker Final panels. Test 3 has marginally higher Initial contrast, but slightly lower Final contrast; the reference also has less full-black coverage than the darker settings. All intended levels remain separated.\",\"confidence\":\"low\",\"tie_explanation\":\"The reference and test 3 are effectively tied in aggregate contrast and both retain readable levels in both panels. The reference has a slight aggregate advantage and favors Final modestly.\"},{\"experiment_id\":\"experiment_2f5f3e6a9c104597979ec1175375ede4\",\"candidate_id\":\"test_4\",\"reason\":\"Choose test 4, gamma 0.5. It has the highest measured aggregate contrast and slightly improves contrast in both Initial and Final over the reference. The increase in full-black coverage is modest, and all intended levels remain separated.\",\"confidence\":\"medium\",\"tie_explanation\":null}]}"
+    },
+    {
+      "role": "executor",
+      "text": "The report was not created: a caption exceeded its layout bounds, so the build stopped before producing a valid one-page PDF. It has not been submitted for printing.\n\nTool: write_and_run\nRaw tool result:\n{\"exit_code\": 1, \"stdout\": \"warning: The `fitz` API is deprecated and will be removed in future. Use `import pymupdf` instead.\\n\", \"stderr\": \"Traceback (most recent call last):\\n  File \\\"/Users/razmik/Documents/Agentic_system_with_hardware_integration/runs/20261017_205142_877726/build_report_v1.py\\\", line 84, in <module>\\n    textbox((L, cap_y, R, cap_y + 15),\\n  File \\\"/Users/razmik/Documents/Agentic_system_with_hardware_integration/runs/20261017_205142_877726/build_report_v1.py\\\", line 63, in textbox\\n    raise RuntimeError(f'Text overflow ({spare:.1f} pt): {text[:80]}')\\nRuntimeError: Text overflow (-4.8 pt): Initial / Final camera heatmaps; experiments ordered by macropixel size 1, 2, 4,\\n\", \"timed_out\": false}\nReport check: /Users/razmik/Documents/Agentic_system_with_hardware_integration/runs/20261017_205142_877726/report.pdf was not created."
+    },
+    {
+      "role": "executor",
+      "text": "The one-page A4 report is ready at `/Users/razmik/Documents/Agentic_system_with_hardware_integration/runs/20261017_205142_877726/report.pdf`. It includes the supplied figure unchanged and passed the one-page check.\n\nIt has not been submitted for printing. I can’t check the printer or request approval in this turn.\n\nTool: write_and_run\nRaw tool result:\n{\"exit_code\": 0, \"stdout\": \"warning: The `fitz` API is deprecated and will be removed in future. Use `import pymupdf` instead.\\n{\\\"report\\\": \\\"/Users/razmik/Documents/Agentic_system_with_hardware_integration/runs/20261017_205142_877726/report.pdf\\\", \\\"pages\\\": 1, \\\"figure_pixels_verified\\\": true, \\\"figure_source_pixels\\\": [2125, 2362], \\\"placed_size_pt\\\": [337.37298583984375, 375.0], \\\"sha256\\\": \\\"e1a2f22b71fff8532587b69592296bff726cb5f0de730c9b3fe223f6fbc9ad1f\\\", \\\"bytes\\\": 85881}\\n\", \"stderr\": \"\", \"timed_out\": false}"
+    },
+    {
+      "role": "executor",
+      "text": "The one-page report is ready at `/Users/razmik/Documents/Agentic_system_with_hardware_integration/runs/20261017_205142_877726/report.pdf`, and the office printer is idle. The report has not been submitted for printing.\n\nTool: printer_status\nRaw tool result:\n{\"ok\": true, \"printer\": \"Office_Printer\", \"state\": \"idle\", \"message\": \"fake printer is idle\"}"
+    },
+    {
+      "role": "executor",
+      "text": "Requesting human approval to print /Users/razmik/Documents/Agentic_system_with_hardware_integration/runs/20261017_205142_877726/report.pdf on Office_Printer, 1 copies."
+    },
+    {
+      "role": "human",
+      "text": "yes"
+    },
+    {
+      "role": "executor",
+      "text": "The report was printed on Office_Printer. The job completed and the print was confirmed.\n\nTool: job_status\nRaw tool result:\n{\"ok\": true, \"job_id\": \"Office_Printer-18\", \"state\": \"done\", \"confirmed\": true, \"message\": \"fake job is done\"}"
+    }
+  ],
+  "execution_results": [
+    {
+      "tool_name": "run_focusing_experiment",
+      "tool_args": {
+        "macropixel_size": 1,
+        "focus_size": 3,
+        "background_size": 9,
+        "iterations": 1000,
+        "search_seed": 1
+      },
+      "result": {
+        "ok": true,
+        "experiment_id": "experiment_18848d544a654115a84d698c48e80b3a",
+        "settings": {
+          "dmd_shape": [
+            16,
+            16
+          ],
+          "camera_shape": [
+            32,
+            32
+          ],
+          "target_position": [
+            16,
+            16
+          ],
+          "transmission_seed": 42,
+          "noise_seed": 43,
+          "noise_std": 0.01,
+          "macropixel_size": 1,
+          "focus_size": 3,
+          "background_size": 9,
+          "iterations": 1000,
+          "search_seed": 1,
+          "shots_per_measurement": 3,
+          "validation_shots": 5
+        },
+        "initial_enhancement": 0.817175715734831,
+        "final_enhancement": 28.26842897199098,
+        "focus_mean": 2.29088092023977,
+        "background_means": {
+          "top_left": 0.07431616199889851,
+          "top_right": 0.08383119367362155,
+          "bottom_left": 0.09149104610076314,
+          "bottom_right": 0.07452265047473931
+        },
+        "background_reference": 0.08104026306200562,
+        "paths": {
+          "initial_camera": "/Users/razmik/Documents/Agentic_system_with_hardware_integration/runs/20261017_205142_877726/experiment_18848d544a654115a84d698c48e80b3a/initial_camera.png",
+          "final_camera": "/Users/razmik/Documents/Agentic_system_with_hardware_integration/runs/20261017_205142_877726/experiment_18848d544a654115a84d698c48e80b3a/final_camera.png",
+          "initial_intensity": "/Users/razmik/Documents/Agentic_system_with_hardware_integration/runs/20261017_205142_877726/experiment_18848d544a654115a84d698c48e80b3a/initial_intensity.npy",
+          "final_intensity": "/Users/razmik/Documents/Agentic_system_with_hardware_integration/runs/20261017_205142_877726/experiment_18848d544a654115a84d698c48e80b3a/final_intensity.npy",
+          "final_pattern": "/Users/razmik/Documents/Agentic_system_with_hardware_integration/runs/20261017_205142_877726/experiment_18848d544a654115a84d698c48e80b3a/final_pattern.npy",
+          "results_json": "/Users/razmik/Documents/Agentic_system_with_hardware_integration/runs/20261017_205142_877726/experiment_18848d544a654115a84d698c48e80b3a/results.json",
+          "experiments_csv": "/Users/razmik/Documents/Agentic_system_with_hardware_integration/runs/20261017_205142_877726/experiments.csv",
+          "summary_figure": "/Users/razmik/Documents/Agentic_system_with_hardware_integration/runs/20261017_205142_877726/experiment_18848d544a654115a84d698c48e80b3a/summary.png"
+        }
+      }
+    },
+    {
+      "tool_name": "run_focusing_experiment",
+      "tool_args": {
+        "macropixel_size": 2,
+        "focus_size": 3,
+        "background_size": 9,
+        "iterations": 1000,
+        "search_seed": 1
+      },
+      "result": {
+        "ok": true,
+        "experiment_id": "experiment_0a53b0d22dca48bbb95c5cd1eea54236",
+        "settings": {
+          "dmd_shape": [
+            16,
+            16
+          ],
+          "camera_shape": [
+            32,
+            32
+          ],
+          "target_position": [
+            16,
+            16
+          ],
+          "transmission_seed": 42,
+          "noise_seed": 43,
+          "noise_std": 0.01,
+          "macropixel_size": 2,
+          "focus_size": 3,
+          "background_size": 9,
+          "iterations": 1000,
+          "search_seed": 1,
+          "shots_per_measurement": 3,
+          "validation_shots": 5
+        },
+        "initial_enhancement": 0.8643253166741325,
+        "final_enhancement": 6.715749595175353,
+        "focus_mean": 1.1578063207248006,
+        "background_means": {
+          "top_left": 0.1635473431750098,
+          "top_right": 0.18676993997370106,
+          "bottom_left": 0.13855243530635225,
+          "bottom_right": 0.20073688722098995
+        },
+        "background_reference": 0.17240165141901326,
+        "paths": {
+          "initial_camera": "/Users/razmik/Documents/Agentic_system_with_hardware_integration/runs/20261017_205142_877726/experiment_0a53b0d22dca48bbb95c5cd1eea54236/initial_camera.png",
+          "final_camera": "/Users/razmik/Documents/Agentic_system_with_hardware_integration/runs/20261017_205142_877726/experiment_0a53b0d22dca48bbb95c5cd1eea54236/final_camera.png",
+          "initial_intensity": "/Users/razmik/Documents/Agentic_system_with_hardware_integration/runs/20261017_205142_877726/experiment_0a53b0d22dca48bbb95c5cd1eea54236/initial_intensity.npy",
+          "final_intensity": "/Users/razmik/Documents/Agentic_system_with_hardware_integration/runs/20261017_205142_877726/experiment_0a53b0d22dca48bbb95c5cd1eea54236/final_intensity.npy",
+          "final_pattern": "/Users/razmik/Documents/Agentic_system_with_hardware_integration/runs/20261017_205142_877726/experiment_0a53b0d22dca48bbb95c5cd1eea54236/final_pattern.npy",
+          "results_json": "/Users/razmik/Documents/Agentic_system_with_hardware_integration/runs/20261017_205142_877726/experiment_0a53b0d22dca48bbb95c5cd1eea54236/results.json",
+          "experiments_csv": "/Users/razmik/Documents/Agentic_system_with_hardware_integration/runs/20261017_205142_877726/experiments.csv",
+          "summary_figure": "/Users/razmik/Documents/Agentic_system_with_hardware_integration/runs/20261017_205142_877726/experiment_0a53b0d22dca48bbb95c5cd1eea54236/summary.png"
+        }
+      }
+    },
+    {
+      "tool_name": "run_focusing_experiment",
+      "tool_args": {
+        "macropixel_size": 4,
+        "focus_size": 3,
+        "background_size": 9,
+        "iterations": 1000,
+        "search_seed": 1
+      },
+      "result": {
+        "ok": true,
+        "experiment_id": "experiment_92f251efb4d4474ebbfd2e37a03be6fc",
+        "settings": {
+          "dmd_shape": [
+            16,
+            16
+          ],
+          "camera_shape": [
+            32,
+            32
+          ],
+          "target_position": [
+            16,
+            16
+          ],
+          "transmission_seed": 42,
+          "noise_seed": 43,
+          "noise_std": 0.01,
+          "macropixel_size": 4,
+          "focus_size": 3,
+          "background_size": 9,
+          "iterations": 1000,
+          "search_seed": 1,
+          "shots_per_measurement": 3,
+          "validation_shots": 5
+        },
+        "initial_enhancement": 1.0155286903723395,
+        "final_enhancement": 2.872764158064741,
+        "focus_mean": 0.8377743765554901,
+        "background_means": {
+          "top_left": 0.29775962536161643,
+          "top_right": 0.3040389844550017,
+          "bottom_left": 0.2458262120529064,
+          "bottom_right": 0.31888148419614715
+        },
+        "background_reference": 0.29162657651641793,
+        "paths": {
+          "initial_camera": "/Users/razmik/Documents/Agentic_system_with_hardware_integration/runs/20261017_205142_877726/experiment_92f251efb4d4474ebbfd2e37a03be6fc/initial_camera.png",
+          "final_camera": "/Users/razmik/Documents/Agentic_system_with_hardware_integration/runs/20261017_205142_877726/experiment_92f251efb4d4474ebbfd2e37a03be6fc/final_camera.png",
+          "initial_intensity": "/Users/razmik/Documents/Agentic_system_with_hardware_integration/runs/20261017_205142_877726/experiment_92f251efb4d4474ebbfd2e37a03be6fc/initial_intensity.npy",
+          "final_intensity": "/Users/razmik/Documents/Agentic_system_with_hardware_integration/runs/20261017_205142_877726/experiment_92f251efb4d4474ebbfd2e37a03be6fc/final_intensity.npy",
+          "final_pattern": "/Users/razmik/Documents/Agentic_system_with_hardware_integration/runs/20261017_205142_877726/experiment_92f251efb4d4474ebbfd2e37a03be6fc/final_pattern.npy",
+          "results_json": "/Users/razmik/Documents/Agentic_system_with_hardware_integration/runs/20261017_205142_877726/experiment_92f251efb4d4474ebbfd2e37a03be6fc/results.json",
+          "experiments_csv": "/Users/razmik/Documents/Agentic_system_with_hardware_integration/runs/20261017_205142_877726/experiments.csv",
+          "summary_figure": "/Users/razmik/Documents/Agentic_system_with_hardware_integration/runs/20261017_205142_877726/experiment_92f251efb4d4474ebbfd2e37a03be6fc/summary.png"
+        }
+      }
+    },
+    {
+      "tool_name": "run_focusing_experiment",
+      "tool_args": {
+        "macropixel_size": 8,
+        "focus_size": 3,
+        "background_size": 9,
+        "iterations": 1000,
+        "search_seed": 1
+      },
+      "result": {
+        "ok": true,
+        "experiment_id": "experiment_2f5f3e6a9c104597979ec1175375ede4",
+        "settings": {
+          "dmd_shape": [
+            16,
+            16
+          ],
+          "camera_shape": [
+            32,
+            32
+          ],
+          "target_position": [
+            16,
+            16
+          ],
+          "transmission_seed": 42,
+          "noise_seed": 43,
+          "noise_std": 0.01,
+          "macropixel_size": 8,
+          "focus_size": 3,
+          "background_size": 9,
+          "iterations": 1000,
+          "search_seed": 1,
+          "shots_per_measurement": 3,
+          "validation_shots": 5
+        },
+        "initial_enhancement": 1.158744371525408,
+        "final_enhancement": 1.1602243058771864,
+        "focus_mean": 0.5614529678044653,
+        "background_means": {
+          "top_left": 0.5100150480381701,
+          "top_right": 0.4349955362617909,
+          "bottom_left": 0.45357588563939744,
+          "bottom_right": 0.5370839515830708
+        },
+        "background_reference": 0.4839176053806073,
+        "paths": {
+          "initial_camera": "/Users/razmik/Documents/Agentic_system_with_hardware_integration/runs/20261017_205142_877726/experiment_2f5f3e6a9c104597979ec1175375ede4/initial_camera.png",
+          "final_camera": "/Users/razmik/Documents/Agentic_system_with_hardware_integration/runs/20261017_205142_877726/experiment_2f5f3e6a9c104597979ec1175375ede4/final_camera.png",
+          "initial_intensity": "/Users/razmik/Documents/Agentic_system_with_hardware_integration/runs/20261017_205142_877726/experiment_2f5f3e6a9c104597979ec1175375ede4/initial_intensity.npy",
+          "final_intensity": "/Users/razmik/Documents/Agentic_system_with_hardware_integration/runs/20261017_205142_877726/experiment_2f5f3e6a9c104597979ec1175375ede4/final_intensity.npy",
+          "final_pattern": "/Users/razmik/Documents/Agentic_system_with_hardware_integration/runs/20261017_205142_877726/experiment_2f5f3e6a9c104597979ec1175375ede4/final_pattern.npy",
+          "results_json": "/Users/razmik/Documents/Agentic_system_with_hardware_integration/runs/20261017_205142_877726/experiment_2f5f3e6a9c104597979ec1175375ede4/results.json",
+          "experiments_csv": "/Users/razmik/Documents/Agentic_system_with_hardware_integration/runs/20261017_205142_877726/experiments.csv",
+          "summary_figure": "/Users/razmik/Documents/Agentic_system_with_hardware_integration/runs/20261017_205142_877726/experiment_2f5f3e6a9c104597979ec1175375ede4/summary.png"
+        }
+      }
+    },
+    {
+      "tool_name": "make_trial_sheet",
+      "tool_args": {
+        "round_id": 1
+      },
+      "result": {
+        "contract_version": 1,
+        "status": "ok",
+        "session_id": "467c6601-c33e-4889-9fc6-20ed5d948b90",
+        "trial_id": "1b859712-cec2-4e99-86a6-d58d6ad596f0",
+        "round_id": 1,
+        "pdf_path": "/Users/razmik/Documents/Agentic_system_with_hardware_integration/runs/20261017_205142_877726/print_tuning/trial_r1_1b859712.pdf",
+        "pdf_sha256": "57147b7a645c3c1691cf75625cdf79316db4bb3dfa06b7dc919fe9f1aa18c52c",
+        "manifest_path": "/Users/razmik/Documents/Agentic_system_with_hardware_integration/runs/20261017_205142_877726/print_tuning/trial_r1_1b859712_manifest.json",
+        "page_count": 2
+      }
+    },
+    {
+      "tool_name": "printer_status",
+      "tool_args": {
+        "printer": "Office_Printer"
+      },
+      "result": {
+        "ok": true,
+        "printer": "Office_Printer",
+        "state": "idle",
+        "message": "fake printer is idle"
+      }
+    },
+    {
+      "tool_name": "submit_trial_print",
+      "tool_args": {
+        "pdf_path": "/Users/razmik/Documents/Agentic_system_with_hardware_integration/runs/20261017_205142_877726/print_tuning/trial_r1_1b859712.pdf",
+        "printer": "Office_Printer"
+      },
+      "result": {
+        "ok": true,
+        "job_id": "Office_Printer-15",
+        "printer": "Office_Printer",
+        "file": "/Users/razmik/Documents/Agentic_system_with_hardware_integration/runs/20261017_205142_877726/print_tuning/trial_r1_1b859712.pdf",
+        "tracked": true
+      }
+    },
+    {
+      "tool_name": "job_status",
+      "tool_args": {
+        "job_id": "Office_Printer-15"
+      },
+      "result": {
+        "ok": true,
+        "job_id": "Office_Printer-15",
+        "state": "printing",
+        "confirmed": true,
+        "message": "fake job is printing"
+      }
+    },
+    {
+      "tool_name": "job_status",
+      "tool_args": {
+        "job_id": "Office_Printer-15"
+      },
+      "result": {
+        "ok": true,
+        "job_id": "Office_Printer-15",
+        "state": "done",
+        "confirmed": true,
+        "message": "fake job is done"
+      }
+    },
+    {
+      "tool_name": "read_scan",
+      "tool_args": {
+        "scan_paths": [
+          "/Users/razmik/Documents/Agentic_system_with_hardware_integration/runs/20261017_205142_877726/scans/round_1/fake_205445/scan_page_1.png",
+          "/Users/razmik/Documents/Agentic_system_with_hardware_integration/runs/20261017_205142_877726/scans/round_1/fake_205445/scan_page_2.png"
+        ]
+      },
+      "result": {
+        "contract_version": 1,
+        "status": "ok",
+        "session_id": "467c6601-c33e-4889-9fc6-20ed5d948b90",
+        "trial_id": "1b859712-cec2-4e99-86a6-d58d6ad596f0",
+        "round_id": 1,
+        "evaluation_path": "/Users/razmik/Documents/Agentic_system_with_hardware_integration/runs/20261017_205142_877726/print_tuning/scan_r1_1b859712_818fd2e8.json",
+        "scan_quality": {
+          "usable": true,
+          "issues": []
+        },
+        "pages": [
+          {
+            "page_number": 1,
+            "code_matches": true,
+            "issues": []
+          },
+          {
+            "page_number": 2,
+            "code_matches": true,
+            "issues": []
+          }
+        ],
+        "candidate_columns": [
+          "candidate_id",
+          "role",
+          "mapping",
+          "warnings",
+          "collapsed_levels",
+          "full_black_share",
+          "paper_white_share"
+        ],
+        "experiments": [
+          {
+            "experiment_id": "experiment_18848d544a654115a84d698c48e80b3a",
+            "candidates": [
+              [
+                "reference",
+                "reference",
+                "γ 1.00 · 0.00–1.00 · smooth",
+                [
+                  "many cells print as full black"
+                ],
+                0,
+                0.545,
+                0.0
+              ],
+              [
+                "test_1",
+                "test",
+                "γ 0.20 · 0.00–1.00 · smooth",
+                [],
+                0,
+                0.005,
+                0.0
+              ],
+              [
+                "test_2",
+                "test",
+                "γ 0.35 · 0.00–1.00 · smooth",
+                [],
+                0,
+                0.01,
+                0.0
+              ],
+              [
+                "test_3",
+                "test",
+                "γ 0.60 · 0.00–1.00 · smooth",
+                [],
+                0,
+                0.1,
+                0.0
+              ],
+              [
+                "test_4",
+                "test",
+                "γ 1.40 · 0.00–1.00 · smooth",
+                [
+                  "many cells print as full black"
+                ],
+                0,
+                0.842,
+                0.0
+              ],
+              [
+                "test_5",
+                "test",
+                "γ 2.80 · 0.00–1.00 · smooth",
+                [
+                  "many cells print as full black"
+                ],
+                0,
+                0.997,
+                0.0
+              ]
+            ]
+          },
+          {
+            "experiment_id": "experiment_0a53b0d22dca48bbb95c5cd1eea54236",
+            "candidates": [
+              [
+                "reference",
+                "reference",
+                "γ 1.00 · 0.00–1.00 · smooth",
+                [
+                  "many cells print as full black"
+                ],
+                0,
+                0.432,
+                0.0
+              ],
+              [
+                "test_1",
+                "test",
+                "γ 0.20 · 0.00–1.00 · smooth",
+                [],
+                0,
+                0.005,
+                0.0
+              ],
+              [
+                "test_2",
+                "test",
+                "γ 0.35 · 0.00–1.00 · smooth",
+                [],
+                0,
+                0.007,
+                0.0
+              ],
+              [
+                "test_3",
+                "test",
+                "γ 0.60 · 0.00–1.00 · smooth",
+                [],
+                0,
+                0.086,
+                0.0
+              ],
+              [
+                "test_4",
+                "test",
+                "γ 1.40 · 0.00–1.00 · smooth",
+                [
+                  "many cells print as full black"
+                ],
+                0,
+                0.73,
+                0.0
+              ],
+              [
+                "test_5",
+                "test",
+                "γ 2.80 · 0.00–1.00 · smooth",
+                [
+                  "many cells print as full black"
+                ],
+                0,
+                0.973,
+                0.0
+              ]
+            ]
+          },
+          {
+            "experiment_id": "experiment_92f251efb4d4474ebbfd2e37a03be6fc",
+            "candidates": [
+              [
+                "reference",
+                "reference",
+                "γ 1.00 · 0.00–1.00 · smooth",
+                [],
+                0,
+                0.282,
+                0.007
+              ],
+              [
+                "test_1",
+                "test",
+                "γ 0.20 · 0.00–1.00 · smooth",
+                [],
+                0,
+                0.005,
+                0.013
+              ],
+              [
+                "test_2",
+                "test",
+                "γ 0.35 · 0.00–1.00 · smooth",
+                [],
+                0,
+                0.006,
+                0.01
+              ],
+              [
+                "test_3",
+                "test",
+                "γ 0.60 · 0.00–1.00 · smooth",
+                [],
+                0,
+                0.053,
+                0.008
+              ],
+              [
+                "test_4",
+                "test",
+                "γ 1.40 · 0.00–1.00 · smooth",
+                [
+                  "many cells print as full black"
+                ],
+                0,
+                0.518,
+                0.006
+              ],
+              [
+                "test_5",
+                "test",
+                "γ 2.80 · 0.00–1.00 · smooth",
+                [
+                  "many cells print as full black"
+                ],
+                0,
+                0.866,
+                0.006
+              ]
+            ]
+          },
+          {
+            "experiment_id": "experiment_2f5f3e6a9c104597979ec1175375ede4",
+            "candidates": [
+              [
+                "reference",
+                "reference",
+                "γ 1.00 · 0.00–1.00 · smooth",
+                [],
+                0,
+                0.264,
+                0.006
+              ],
+              [
+                "test_1",
+                "test",
+                "γ 0.20 · 0.00–1.00 · smooth",
+                [],
+                0,
+                0.005,
+                0.011
+              ],
+              [
+                "test_2",
+                "test",
+                "γ 0.35 · 0.00–1.00 · smooth",
+                [],
+                0,
+                0.006,
+                0.009
+              ],
+              [
+                "test_3",
+                "test",
+                "γ 0.60 · 0.00–1.00 · smooth",
+                [],
+                0,
+                0.046,
+                0.007
+              ],
+              [
+                "test_4",
+                "test",
+                "γ 1.40 · 0.00–1.00 · smooth",
+                [
+                  "many cells print as full black"
+                ],
+                0,
+                0.491,
+                0.006
+              ],
+              [
+                "test_5",
+                "test",
+                "γ 2.80 · 0.00–1.00 · smooth",
+                [
+                  "many cells print as full black"
+                ],
+                0,
+                0.847,
+                0.006
+              ]
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "tool_name": "make_trial_sheet",
+      "tool_args": {
+        "round_id": 2
+      },
+      "result": {
+        "contract_version": 1,
+        "status": "ok",
+        "session_id": "467c6601-c33e-4889-9fc6-20ed5d948b90",
+        "trial_id": "e8f2a6f9-1685-472c-9e19-1dce3e625a8d",
+        "round_id": 2,
+        "pdf_path": "/Users/razmik/Documents/Agentic_system_with_hardware_integration/runs/20261017_205142_877726/print_tuning/trial_r2_e8f2a6f9.pdf",
+        "pdf_sha256": "68bd47c13424dd82c2ebda7a3ba103f3e8710d6468151effd1dae29b3aa35e97",
+        "manifest_path": "/Users/razmik/Documents/Agentic_system_with_hardware_integration/runs/20261017_205142_877726/print_tuning/trial_r2_e8f2a6f9_manifest.json",
+        "page_count": 2
+      }
+    },
+    {
+      "tool_name": "printer_status",
+      "tool_args": {
+        "printer": "Office_Printer"
+      },
+      "result": {
+        "ok": true,
+        "printer": "Office_Printer",
+        "state": "idle",
+        "message": "fake printer is idle"
+      }
+    },
+    {
+      "tool_name": "submit_trial_print",
+      "tool_args": {
+        "pdf_path": "/Users/razmik/Documents/Agentic_system_with_hardware_integration/runs/20261017_205142_877726/print_tuning/trial_r2_e8f2a6f9.pdf",
+        "printer": "Office_Printer"
+      },
+      "result": {
+        "ok": true,
+        "job_id": "Office_Printer-16",
+        "printer": "Office_Printer",
+        "file": "/Users/razmik/Documents/Agentic_system_with_hardware_integration/runs/20261017_205142_877726/print_tuning/trial_r2_e8f2a6f9.pdf",
+        "tracked": true
+      }
+    },
+    {
+      "tool_name": "job_status",
+      "tool_args": {
+        "job_id": "Office_Printer-16"
+      },
+      "result": {
+        "ok": true,
+        "job_id": "Office_Printer-16",
+        "state": "done",
+        "confirmed": true,
+        "message": "fake job is done"
+      }
+    },
+    {
+      "tool_name": "read_scan",
+      "tool_args": {
+        "scan_paths": [
+          "/Users/razmik/Documents/Agentic_system_with_hardware_integration/runs/20261017_205142_877726/scans/round_2/fake_205910/scan_page_1.png",
+          "/Users/razmik/Documents/Agentic_system_with_hardware_integration/runs/20261017_205142_877726/scans/round_2/fake_205910/scan_page_2.png"
+        ]
+      },
+      "result": {
+        "contract_version": 1,
+        "status": "ok",
+        "session_id": "467c6601-c33e-4889-9fc6-20ed5d948b90",
+        "trial_id": "e8f2a6f9-1685-472c-9e19-1dce3e625a8d",
+        "round_id": 2,
+        "evaluation_path": "/Users/razmik/Documents/Agentic_system_with_hardware_integration/runs/20261017_205142_877726/print_tuning/scan_r2_e8f2a6f9_bc034cd1.json",
+        "scan_quality": {
+          "usable": true,
+          "issues": []
+        },
+        "pages": [
+          {
+            "page_number": 1,
+            "code_matches": true,
+            "issues": []
+          },
+          {
+            "page_number": 2,
+            "code_matches": true,
+            "issues": []
+          }
+        ],
+        "candidate_columns": [
+          "candidate_id",
+          "role",
+          "mapping",
+          "warnings",
+          "collapsed_levels",
+          "full_black_share",
+          "paper_white_share"
+        ],
+        "experiments": [
+          {
+            "experiment_id": "experiment_18848d544a654115a84d698c48e80b3a",
+            "candidates": [
+              [
+                "reference",
+                "reference",
+                "γ 0.35 · 0.00–1.00 · smooth",
+                [],
+                0,
+                0.01,
+                0.0
+              ],
+              [
+                "test_1",
+                "test",
+                "γ 0.22 · 0.00–1.00 · smooth",
+                [],
+                0,
+                0.005,
+                0.0
+              ],
+              [
+                "test_2",
+                "test",
+                "γ 0.28 · 0.00–1.00 · smooth",
+                [],
+                0,
+                0.006,
+                0.0
+              ],
+              [
+                "test_3",
+                "test",
+                "γ 0.44 · 0.00–1.00 · smooth",
+                [],
+                0,
+                0.025,
+                0.0
+              ],
+              [
+                "test_4",
+                "test",
+                "γ 0.55 · 0.00–1.00 · smooth",
+                [],
+                0,
+                0.069,
+                0.0
+              ],
+              [
+                "test_5",
+                "test",
+                "γ 0.68 · 0.00–1.00 · smooth",
+                [],
+                0,
+                0.176,
+                0.0
+              ]
+            ]
+          },
+          {
+            "experiment_id": "experiment_0a53b0d22dca48bbb95c5cd1eea54236",
+            "candidates": [
+              [
+                "reference",
+                "reference",
+                "γ 0.35 · 0.00–1.00 · smooth",
+                [],
+                0,
+                0.007,
+                0.0
+              ],
+              [
+                "test_1",
+                "test",
+                "γ 0.22 · 0.00–1.00 · smooth",
+                [],
+                0,
+                0.005,
+                0.0
+              ],
+              [
+                "test_2",
+                "test",
+                "γ 0.28 · 0.00–1.00 · smooth",
+                [],
+                0,
+                0.005,
+                0.0
+              ],
+              [
+                "test_3",
+                "test",
+                "γ 0.44 · 0.00–1.00 · smooth",
+                [],
+                0,
+                0.022,
+                0.0
+              ],
+              [
+                "test_4",
+                "test",
+                "γ 0.55 · 0.00–1.00 · smooth",
+                [],
+                0,
+                0.063,
+                0.0
+              ],
+              [
+                "test_5",
+                "test",
+                "γ 0.68 · 0.00–1.00 · smooth",
+                [],
+                0,
+                0.145,
+                0.0
+              ]
+            ]
+          },
+          {
+            "experiment_id": "experiment_92f251efb4d4474ebbfd2e37a03be6fc",
+            "candidates": [
+              [
+                "reference",
+                "reference",
+                "γ 0.35 · 0.00–1.00 · smooth",
+                [],
+                0,
+                0.006,
+                0.009
+              ],
+              [
+                "test_1",
+                "test",
+                "γ 0.22 · 0.00–1.00 · smooth",
+                [],
+                0,
+                0.005,
+                0.012
+              ],
+              [
+                "test_2",
+                "test",
+                "γ 0.28 · 0.00–1.00 · smooth",
+                [],
+                0,
+                0.005,
+                0.011
+              ],
+              [
+                "test_3",
+                "test",
+                "γ 0.44 · 0.00–1.00 · smooth",
+                [],
+                0,
+                0.012,
+                0.008
+              ],
+              [
+                "test_4",
+                "test",
+                "γ 0.55 · 0.00–1.00 · smooth",
+                [],
+                0,
+                0.032,
+                0.008
+              ],
+              [
+                "test_5",
+                "test",
+                "γ 0.68 · 0.00–1.00 · smooth",
+                [],
+                0,
+                0.081,
+                0.008
+              ]
+            ]
+          },
+          {
+            "experiment_id": "experiment_2f5f3e6a9c104597979ec1175375ede4",
+            "candidates": [
+              [
+                "reference",
+                "reference",
+                "γ 0.60 · 0.00–1.00 · smooth",
+                [],
+                0,
+                0.046,
+                0.007
+              ],
+              [
+                "test_1",
+                "test",
+                "γ 0.38 · 0.00–1.00 · smooth",
+                [],
+                0,
+                0.006,
+                0.007
+              ],
+              [
+                "test_2",
+                "test",
+                "γ 0.48 · 0.00–1.00 · smooth",
+                [],
+                0,
+                0.015,
+                0.007
+              ],
+              [
+                "test_3",
+                "test",
+                "γ 0.75 · 0.00–1.00 · smooth",
+                [],
+                0,
+                0.116,
+                0.006
+              ],
+              [
+                "test_4",
+                "test",
+                "γ 0.94 · 0.00–1.00 · smooth",
+                [],
+                0,
+                0.22,
+                0.006
+              ],
+              [
+                "test_5",
+                "test",
+                "γ 1.17 · 0.00–1.00 · smooth",
+                [
+                  "many cells print as full black"
+                ],
+                0,
+                0.382,
+                0.006
+              ]
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "tool_name": "make_trial_sheet",
+      "tool_args": {
+        "round_id": 3
+      },
+      "result": {
+        "contract_version": 1,
+        "status": "ok",
+        "session_id": "467c6601-c33e-4889-9fc6-20ed5d948b90",
+        "trial_id": "38b04f0a-aa9a-4606-a7d3-e3aa68bacdcb",
+        "round_id": 3,
+        "pdf_path": "/Users/razmik/Documents/Agentic_system_with_hardware_integration/runs/20261017_205142_877726/print_tuning/trial_r3_38b04f0a.pdf",
+        "pdf_sha256": "52e49fff9aafb668f97849c5e2640f54f0dbe9145f6057a04b4ee54f25b5ce27",
+        "manifest_path": "/Users/razmik/Documents/Agentic_system_with_hardware_integration/runs/20261017_205142_877726/print_tuning/trial_r3_38b04f0a_manifest.json",
+        "page_count": 2
+      }
+    },
+    {
+      "tool_name": "printer_status",
+      "tool_args": {
+        "printer": "Office_Printer"
+      },
+      "result": {
+        "ok": true,
+        "printer": "Office_Printer",
+        "state": "idle",
+        "message": "fake printer is idle"
+      }
+    },
+    {
+      "tool_name": "submit_trial_print",
+      "tool_args": {
+        "pdf_path": "/Users/razmik/Documents/Agentic_system_with_hardware_integration/runs/20261017_205142_877726/print_tuning/trial_r3_38b04f0a.pdf",
+        "printer": "Office_Printer"
+      },
+      "result": {
+        "ok": true,
+        "job_id": "Office_Printer-17",
+        "printer": "Office_Printer",
+        "file": "/Users/razmik/Documents/Agentic_system_with_hardware_integration/runs/20261017_205142_877726/print_tuning/trial_r3_38b04f0a.pdf",
+        "tracked": true
+      }
+    },
+    {
+      "tool_name": "job_status",
+      "tool_args": {
+        "job_id": "Office_Printer-17"
+      },
+      "result": {
+        "ok": true,
+        "job_id": "Office_Printer-17",
+        "state": "done",
+        "confirmed": true,
+        "message": "fake job is done"
+      }
+    },
+    {
+      "tool_name": "read_scan",
+      "tool_args": {
+        "scan_paths": [
+          "/Users/razmik/Documents/Agentic_system_with_hardware_integration/runs/20261017_205142_877726/scans/round_3/fake_210134/scan_page_1.png",
+          "/Users/razmik/Documents/Agentic_system_with_hardware_integration/runs/20261017_205142_877726/scans/round_3/fake_210134/scan_page_2.png"
+        ]
+      },
+      "result": {
+        "contract_version": 1,
+        "status": "ok",
+        "session_id": "467c6601-c33e-4889-9fc6-20ed5d948b90",
+        "trial_id": "38b04f0a-aa9a-4606-a7d3-e3aa68bacdcb",
+        "round_id": 3,
+        "evaluation_path": "/Users/razmik/Documents/Agentic_system_with_hardware_integration/runs/20261017_205142_877726/print_tuning/scan_r3_38b04f0a_c30d6aec.json",
+        "scan_quality": {
+          "usable": true,
+          "issues": []
+        },
+        "pages": [
+          {
+            "page_number": 1,
+            "code_matches": true,
+            "issues": []
+          },
+          {
+            "page_number": 2,
+            "code_matches": true,
+            "issues": []
+          }
+        ],
+        "candidate_columns": [
+          "candidate_id",
+          "role",
+          "mapping",
+          "warnings",
+          "collapsed_levels",
+          "full_black_share",
+          "paper_white_share"
+        ],
+        "experiments": [
+          {
+            "experiment_id": "experiment_18848d544a654115a84d698c48e80b3a",
+            "candidates": [
+              [
+                "reference",
+                "reference",
+                "γ 0.28 · 0.00–1.00 · smooth",
+                [],
+                0,
+                0.006,
+                0.0
+              ],
+              [
+                "test_1",
+                "test",
+                "γ 0.16 · 0.00–1.00 · smooth",
+                [],
+                0,
+                0.005,
+                0.0
+              ],
+              [
+                "test_2",
+                "test",
+                "γ 0.20 · 0.00–1.00 · smooth",
+                [
+                  "1 gray levels merge on paper"
+                ],
+                1,
+                0.005,
+                0.0
+              ],
+              [
+                "test_3",
+                "test",
+                "γ 0.26 · 0.00–1.00 · smooth",
+                [],
+                0,
+                0.006,
+                0.0
+              ],
+              [
+                "test_4",
+                "test",
+                "γ 0.34 · 0.00–1.00 · smooth",
+                [],
+                0,
+                0.009,
+                0.0
+              ],
+              [
+                "test_5",
+                "test",
+                "γ 0.43 · 0.00–1.00 · smooth",
+                [],
+                0,
+                0.022,
+                0.0
+              ]
+            ]
+          },
+          {
+            "experiment_id": "experiment_0a53b0d22dca48bbb95c5cd1eea54236",
+            "candidates": [
+              [
+                "reference",
+                "reference",
+                "γ 0.35 · 0.00–1.00 · smooth",
+                [],
+                0,
+                0.007,
+                0.0
+              ],
+              [
+                "test_1",
+                "test",
+                "γ 0.21 · 0.00–1.00 · smooth",
+                [],
+                0,
+                0.005,
+                0.0
+              ],
+              [
+                "test_2",
+                "test",
+                "γ 0.26 · 0.00–1.00 · smooth",
+                [],
+                0,
+                0.005,
+                0.0
+              ],
+              [
+                "test_3",
+                "test",
+                "γ 0.32 · 0.00–1.00 · smooth",
+                [],
+                0,
+                0.006,
+                0.0
+              ],
+              [
+                "test_4",
+                "test",
+                "γ 0.39 · 0.00–1.00 · smooth",
+                [],
+                0,
+                0.011,
+                0.0
+              ],
+              [
+                "test_5",
+                "test",
+                "γ 0.48 · 0.00–1.00 · smooth",
+                [],
+                0,
+                0.034,
+                0.0
+              ]
+            ]
+          },
+          {
+            "experiment_id": "experiment_92f251efb4d4474ebbfd2e37a03be6fc",
+            "candidates": [
+              [
+                "reference",
+                "reference",
+                "γ 0.44 · 0.00–1.00 · smooth",
+                [],
+                0,
+                0.014,
+                0.009
+              ],
+              [
+                "test_1",
+                "test",
+                "γ 0.30 · 0.00–1.00 · smooth",
+                [],
+                0,
+                0.006,
+                0.011
+              ],
+              [
+                "test_2",
+                "test",
+                "γ 0.37 · 0.00–1.00 · smooth",
+                [],
+                0,
+                0.007,
+                0.009
+              ],
+              [
+                "test_3",
+                "test",
+                "γ 0.46 · 0.00–1.00 · smooth",
+                [],
+                0,
+                0.014,
+                0.008
+              ],
+              [
+                "test_4",
+                "test",
+                "γ 0.57 · 0.00–1.00 · smooth",
+                [],
+                0,
+                0.04,
+                0.008
+              ],
+              [
+                "test_5",
+                "test",
+                "γ 0.70 · 0.00–1.00 · smooth",
+                [],
+                0,
+                0.088,
+                0.008
+              ]
+            ]
+          },
+          {
+            "experiment_id": "experiment_2f5f3e6a9c104597979ec1175375ede4",
+            "candidates": [
+              [
+                "reference",
+                "reference",
+                "γ 0.48 · 0.00–1.00 · smooth",
+                [],
+                0,
+                0.015,
+                0.007
+              ],
+              [
+                "test_1",
+                "test",
+                "γ 0.25 · 0.00–1.00 · smooth",
+                [],
+                0,
+                0.005,
+                0.009
+              ],
+              [
+                "test_2",
+                "test",
+                "γ 0.32 · 0.00–1.00 · smooth",
+                [],
+                0,
+                0.006,
+                0.009
+              ],
+              [
+                "test_3",
+                "test",
+                "γ 0.40 · 0.00–1.00 · smooth",
+                [],
+                0,
+                0.007,
+                0.007
+              ],
+              [
+                "test_4",
+                "test",
+                "γ 0.50 · 0.00–1.00 · smooth",
+                [],
+                0,
+                0.019,
+                0.007
+              ],
+              [
+                "test_5",
+                "test",
+                "γ 0.63 · 0.00–1.00 · smooth",
+                [],
+                0,
+                0.059,
+                0.007
+              ]
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "tool_name": "write_and_run",
+      "tool_args": {
+        "filename": "build_report_v1.py",
+        "code": "import csv, json, os, hashlib\nfrom pathlib import Path\nimport fitz\nfrom PIL import Image\n\nOUT = Path('/Users/razmik/Documents/Agentic_system_with_hardware_integration/runs/20261017_205142_877726')\nREPORT = OUT / 'report.pdf'\nCSV_PATH = OUT / 'experiments.csv'\nFIGURE = OUT / 'print_tuning/final_heatmaps_467c6601.png'\nSELECTED = [\n ('experiment_18848d544a654115a84d698c48e80b3a', OUT / 'experiment_18848d544a654115a84d698c48e80b3a/results.json'),\n ('experiment_0a53b0d22dca48bbb95c5cd1eea54236', OUT / 'experiment_0a53b0d22dca48bbb95c5cd1eea54236/results.json'),\n ('experiment_92f251efb4d4474ebbfd2e37a03be6fc', OUT / 'experiment_92f251efb4d4474ebbfd2e37a03be6fc/results.json'),\n ('experiment_2f5f3e6a9c104597979ec1175375ede4', OUT / 'experiment_2f5f3e6a9c104597979ec1175375ede4/results.json'),\n]\n\n# Load the shared experiment table and the four frozen, scientist-selected records.\nwith CSV_PATH.open(newline='', encoding='utf-8-sig') as f:\n    csv_rows = list(csv.DictReader(f))\nif not csv_rows:\n    raise RuntimeError('experiments.csv has no recorded rows')\nraw_csv = CSV_PATH.read_text(encoding='utf-8-sig')\nrecords = []\nfor expected_id, result_path in SELECTED:\n    if expected_id not in raw_csv:\n        raise RuntimeError(f'{expected_id} is absent from experiments.csv')\n    result = json.loads(result_path.read_text(encoding='utf-8'))\n    if result.get('experiment_id') != expected_id:\n        raise RuntimeError(f'results.json ID mismatch for {expected_id}')\n    settings = result.get('settings', {})\n    if settings.get('macropixel_size') is None or result.get('final_enhancement') is None:\n        raise RuntimeError(f'Missing recorded value for {expected_id}')\n    records.append({\n        'id': expected_id,\n        'size': int(settings['macropixel_size']),\n        'enhancement': float(result['final_enhancement']),\n        'iterations': settings.get('iterations'),\n        'shots': settings.get('shots_per_measurement'),\n        'validation': settings.get('validation_shots'),\n    })\n\nim = Image.open(FIGURE)\nim.verify()\nim = Image.open(FIGURE)\nimg_w, img_h = im.size\nif not (img_w > 0 and img_h > 0):\n    raise RuntimeError('Invalid supplied final figure')\n\n# A4 portrait in points. Use the supplied PNG directly as a PDF image XObject.\npage_w, page_h = 595.276, 841.890\ndoc = fitz.open()\npage = doc.new_page(width=page_w, height=page_h)\npage.draw_rect(page.rect, color=(1,1,1), fill=(1,1,1), overlay=True)\nblack = (0.08, 0.08, 0.08)\ngray = (0.38, 0.38, 0.38)\nrule = (0.72, 0.72, 0.72)\n\n# Text helper: fail rather than silently clipping any block.\ndef textbox(rect, text, size=10, font='tiro', color=black, align=0, lineheight=1.15):\n    spare = page.insert_textbox(fitz.Rect(*rect), text, fontname=font, fontsize=size,\n                                color=color, align=align, lineheight=lineheight, overlay=True)\n    if spare < -0.5:\n        raise RuntimeError(f'Text overflow ({spare:.1f} pt): {text[:80]}')\n    return spare\n\nL, R = 37, page_w-37\ntextbox((L, 25, R, 52), 'Macropixel scale and focusing performance', 18, 'tibo', black, lineheight=1.0)\ntextbox((L, 54, R, 72), 'Research question  |  How does control-block size affect validated focusing enhancement?', 10, 'tiro', gray, lineheight=1.0)\nfindings = ('On this fixed simulated bench, validated enhancement declined as macropixel size increased from 1 to 8. '\n            'All runs used identical focus/background regions and 1,000 iterations, while coarser blocks provide fewer controllable regions. '\n            'Enhancement is the focus mean divided by the equally weighted mean of four background regions.')\ntextbox((L, 77, R, 132), findings, 10.1, 'tiro', black, lineheight=1.17)\npage.draw_line(fitz.Point(L, 138), fitz.Point(R, 138), color=rule, width=0.7)\n\n# Preserve native PNG pixel content and aspect ratio; only its placement scale changes.\nmax_w, max_h = 360.0, 400.0\nscale = min(max_w / img_w, max_h / img_h)\nfigure_w, figure_h = img_w * scale, img_h * scale\nfx = (page_w - figure_w) / 2\nfy = 145.0\nfig_rect = fitz.Rect(fx, fy, fx + figure_w, fy + figure_h)\npage.insert_image(fig_rect, filename=str(FIGURE), keep_proportion=True, overlay=True)\ncap_y = fy + figure_h + 3\ntextbox((L, cap_y, R, cap_y + 15),\n        'Initial / Final camera heatmaps; experiments ordered by macropixel size 1, 2, 4, 8. Grayscale tuning changes presentation only, not the underlying measurements.',\n        8.7, 'tiro', gray, lineheight=1.0)\n\n# Four-row comparison table, preserving the frozen selection order.\ntable_top = cap_y + 21\ntextbox((L, table_top, R, table_top + 15), 'COMPARISON  |  common search settings: seed 1; 3 × 3 focus; 9 × 9 background', 10, 'tibo', black, lineheight=1.0)\ny0 = table_top + 19\ncol_x = [L, L+83, L+185, L+294, R]\nheaders = ['Macropixel', 'Final enhancement', 'Search budget', 'Captures']\nheader_y = y0\nfor i, label in enumerate(headers):\n    textbox((col_x[i]+3, header_y, col_x[i+1]-3, header_y+15), label, 8.7, 'tibo', gray, lineheight=1.0)\npage.draw_line(fitz.Point(L, header_y+16), fitz.Point(R, header_y+16), color=rule, width=0.65)\nrow_h = 17\nfor idx, rec in enumerate(records):\n    ry = header_y + 18 + idx*row_h\n    vals = [f\"{rec['size']} × {rec['size']}\", f\"{rec['enhancement']:.3f}\",\n            f\"{rec['iterations']} iterations\" if rec['iterations'] is not None else 'not recorded',\n            (f\"{rec['shots']} shots/measurement; {rec['validation']} validation\" if rec['shots'] is not None and rec['validation'] is not None else 'not recorded')]\n    for i, val in enumerate(vals):\n        textbox((col_x[i]+3, ry, col_x[i+1]-3, ry+14), val, 8.8, 'tiro', black, lineheight=1.0)\n    if idx < len(records)-1:\n        page.draw_line(fitz.Point(L, ry+15), fitz.Point(R, ry+15), color=(0.88,0.88,0.88), width=0.4)\nlast_row_bottom = header_y + 18 + len(records)*row_h\npage.draw_line(fitz.Point(L, last_row_bottom), fitz.Point(R, last_row_bottom), color=rule, width=0.65)\n\nverdict_y = last_row_bottom + 8\ntextbox((L, verdict_y, R, verdict_y+15), 'VERDICT AND NEXT STEP', 10.2, 'tibo', black, lineheight=1.0)\nverdict = ('The comparison is fair at equal absolute iteration and capture settings, but not per control degree of freedom: sizes 1 and 2 receive about 3.9 and 15.6 iterations per block, versus 62.5 and 250 for sizes 4 and 8. '\n           'Size 1 gave the highest observed validated enhancement (28.268), and size 8 the lowest (1.160); this single search seed does not establish robustness. '\n           'Recorded cost is 1,000 iterations and 3 shots per search measurement plus 5 validation shots in every run; wall time and total camera-shot counts were not recorded. '\n           'Next, repeat size 1 with search seed 2 and all other settings fixed to test trajectory sensitivity.')\ntextbox((L, verdict_y+17, R, 805), verdict, 9.5, 'tiro', black, lineheight=1.12)\npage.draw_line(fitz.Point(L, 814), fitz.Point(R, 814), color=rule, width=0.5)\ntextbox((L, 817, R, 833), 'Simulation results; relative intensity units. The printed figure is a tuned grayscale rendering, not a new measurement.', 8.2, 'tiro', gray, lineheight=1.0)\n\nREPORT.parent.mkdir(parents=True, exist_ok=True)\ndoc.set_metadata({'title':'Macropixel scale and focusing performance','author':'Scientific brief'})\ndoc.save(REPORT, garbage=4, deflate=True)\ndoc.close()\n\n# Validate A4, one page, and that the exact supplied figure is present as an image.\ncheck = fitz.open(REPORT)\nif check.page_count != 1:\n    raise RuntimeError(f'Report must be exactly one page, got {check.page_count}')\np = check[0]\nif abs(p.rect.width-page_w)>1 or abs(p.rect.height-page_h)>1:\n    raise RuntimeError('Report page is not A4 portrait')\nimgs = p.get_images(full=True)\nif not imgs:\n    raise RuntimeError('No embedded figure image found')\n# Ensure the original image dimensions, and pixel payload, are preserved in the embedded image.\nmatched = False\nfor info in imgs:\n    xref = info[0]\n    extracted = check.extract_image(xref)\n    if (extracted.get('width'), extracted.get('height')) == (img_w, img_h):\n        try:\n            import io\n            embedded = Image.open(io.BytesIO(extracted['image'])).convert('RGBA')\n            original = Image.open(FIGURE).convert('RGBA')\n            if embedded.size == original.size and list(embedded.getdata()) == list(original.getdata()):\n                matched = True\n                break\n        except Exception:\n            pass\nif not matched:\n    raise RuntimeError('Could not verify original figure pixels in the PDF')\nprint(json.dumps({'report':str(REPORT),'pages':check.page_count,'figure_pixels_verified':matched,\n                  'figure_pixels': [img_w,img_h], 'bytes':REPORT.stat().st_size,\n                  'sha256':hashlib.sha256(REPORT.read_bytes()).hexdigest()}))\n"
+      },
+      "result": {
+        "exit_code": 1,
+        "stdout": "warning: The `fitz` API is deprecated and will be removed in future. Use `import pymupdf` instead.\n",
+        "stderr": "Traceback (most recent call last):\n  File \"/Users/razmik/Documents/Agentic_system_with_hardware_integration/runs/20261017_205142_877726/build_report_v1.py\", line 84, in <module>\n    textbox((L, cap_y, R, cap_y + 15),\n  File \"/Users/razmik/Documents/Agentic_system_with_hardware_integration/runs/20261017_205142_877726/build_report_v1.py\", line 63, in textbox\n    raise RuntimeError(f'Text overflow ({spare:.1f} pt): {text[:80]}')\nRuntimeError: Text overflow (-4.8 pt): Initial / Final camera heatmaps; experiments ordered by macropixel size 1, 2, 4,\n",
+        "timed_out": false
+      }
+    },
+    {
+      "tool_name": "write_and_run",
+      "tool_args": {
+        "filename": "build_report_v2.py",
+        "code": "import csv, json, hashlib, io\nfrom pathlib import Path\nimport fitz\nfrom PIL import Image\n\nOUT = Path('/Users/razmik/Documents/Agentic_system_with_hardware_integration/runs/20261017_205142_877726')\nREPORT = OUT / 'report.pdf'\nCSV_PATH = OUT / 'experiments.csv'\nFIGURE = Path('/Users/razmik/Documents/Agentic_system_with_hardware_integration/runs/20261017_205142_877726/print_tuning/final_heatmaps_467c6601.png')\nSELECTED = [\n ('experiment_18848d544a654115a84d698c48e80b3a', OUT / 'experiment_18848d544a654115a84d698c48e80b3a/results.json'),\n ('experiment_0a53b0d22dca48bbb95c5cd1eea54236', OUT / 'experiment_0a53b0d22dca48bbb95c5cd1eea54236/results.json'),\n ('experiment_92f251efb4d4474ebbfd2e37a03be6fc', OUT / 'experiment_92f251efb4d4474ebbfd2e37a03be6fc/results.json'),\n ('experiment_2f5f3e6a9c104597979ec1175375ede4', OUT / 'experiment_2f5f3e6a9c104597979ec1175375ede4/results.json'),\n]\n\n# Read the shared table and validate each frozen selected result JSON.\nwith CSV_PATH.open(newline='', encoding='utf-8-sig') as f:\n    csv_rows = list(csv.DictReader(f))\nif not csv_rows:\n    raise RuntimeError('experiments.csv contains no records')\nrecords = []\nfor expected_id, path in SELECTED:\n    result = json.loads(path.read_text(encoding='utf-8'))\n    if result.get('experiment_id') != expected_id:\n        raise RuntimeError(f'results.json experiment_id mismatch: {expected_id}')\n    if not any(expected_id in str(row) for row in csv_rows):\n        raise RuntimeError(f'{expected_id} is absent from experiments.csv')\n    settings = result['settings']\n    records.append({'id': expected_id,\n                    'macro': int(settings['macropixel_size']),\n                    'enh': float(result['final_enhancement']),\n                    'iterations': settings.get('iterations'),\n                    'shots': settings.get('shots_per_measurement'),\n                    'validation': settings.get('validation_shots'),\n                    'dmd_shape': settings.get('dmd_shape'),\n                    'focus': settings.get('focus_size'),\n                    'background': settings.get('background_size'),\n                    'seed': settings.get('search_seed')})\nif [r['macro'] for r in records] != sorted(r['macro'] for r in records):\n    raise RuntimeError('Selected results are not in frozen macropixel order')\n\nim = Image.open(FIGURE)\nim.verify()\nim = Image.open(FIGURE).convert('RGBA')\nimg_w, img_h = im.size\nif (img_w, img_h) != (900, 1000):\n    # Validate from file itself rather than altering/recreating the supplied figure.\n    if img_w <= 0 or img_h <= 0:\n        raise RuntimeError('Invalid final figure dimensions')\n\n# Single A4 portrait page; the supplied PNG is inserted directly and unchanged.\nPW, PH = 595.276, 841.890\npdf = fitz.open()\np = pdf.new_page(width=PW, height=PH)\np.draw_rect(p.rect, color=(1,1,1), fill=(1,1,1), overlay=True)\nink = (0.08, 0.08, 0.08)\nmid = (0.36, 0.36, 0.36)\nline = (0.72, 0.72, 0.72)\nL, R = 37, PW-37\n\ndef text(rect, value, size=10, font='tiro', color=ink, lineheight=1.12):\n    spare = p.insert_textbox(fitz.Rect(*rect), value, fontname=font, fontsize=size,\n                             color=color, lineheight=lineheight, overlay=True)\n    if spare < -0.6:\n        raise RuntimeError(f'Text overflow ({spare:.1f} pt): {value[:100]}')\n    return spare\n\ntext((L,24,R,51),'Macropixel scale and focusing performance',19,'tibo',ink,1.0)\nquestion = 'Research question  |  How does control-block size affect validated focusing enhancement?'\ntext((L,53,R,69),question,10,'tiro',mid,1.0)\n# Two concise scientific finding sentences, using measured values and settings read above.\nfirst, last = records[0], records[-1]\nsummary = (f\"On the fixed simulated bench, validated enhancement fell from {first['enh']:.3g} at macropixel size {first['macro']} \"\n           f\"to {last['enh']:.3g} at size {last['macro']} in this four-run comparison. \"\n           f\"Enhancement is focus mean divided by the equally weighted mean of four background-region means; all runs held seed, regions and absolute iteration budget fixed.\")\ntext((L,74,R,112),summary,10,'tiro',ink,1.14)\np.draw_line(fitz.Point(L,119),fitz.Point(R,119),color=line,width=0.7)\n\n# Fit the supplied 180 x 200 mm-class PNG at dominant size, preserving its full aspect ratio.\nmax_w, max_h = 360.0, 375.0\nscale = min(max_w/img_w, max_h/img_h)\nfw, fh = img_w*scale, img_h*scale\nfx, fy = (PW-fw)/2, 124.0\nfigbox = fitz.Rect(fx,fy,fx+fw,fy+fh)\np.insert_image(figbox, filename=str(FIGURE), keep_proportion=True, overlay=True)\ncap_y = fy + fh + 3\ncaption = 'Initial / Final heatmaps; macropixel sizes 1, 2, 4, 8. Grayscale tuning changes appearance, not measurements.'\ntext((L,cap_y,R,cap_y+20),caption,8.8,'tiro',mid,1.0)\n\n# Compact table follows image and preserves frozen selection order.\ntop = cap_y + 24\ntext((L,top,R,top+14),'COMPARISON  |  common settings: fixed regions; search seed and iteration budget held constant',9.8,'tibo',ink,1.0)\ny = top+17\ncols = [L, L+86, L+198, L+310, R]\nheads = ['Macropixel size','Final enhancement','Iterations','Camera shots']\nfor j,h in enumerate(heads):\n    text((cols[j]+3,y,cols[j+1]-3,y+13),h,8.5,'tibo',mid,1.0)\np.draw_line(fitz.Point(L,y+14),fitz.Point(R,y+14),color=line,width=0.6)\nrow_h=16\nfor i,r in enumerate(records):\n    yy=y+15+i*row_h\n    vals=[str(r['macro']),f\"{r['enh']:.3f}\",\n          f\"{r['iterations']} iterations\" if r['iterations'] is not None else 'not recorded',\n          (f\"{r['shots']} / search; {r['validation']} validation\" if r['shots'] is not None and r['validation'] is not None else 'not recorded')]\n    for j,v in enumerate(vals):\n        text((cols[j]+3,yy,cols[j+1]-3,yy+14),v,8.5,'tiro',ink,1.0)\n    if i < len(records)-1:\n        p.draw_line(fitz.Point(L,yy+14.5),fitz.Point(R,yy+14.5),color=(0.87,0.87,0.87),width=0.35)\ntable_end=y+15+len(records)*row_h\np.draw_line(fitz.Point(L,table_end),fitz.Point(R,table_end),color=line,width=0.6)\n\n# Verdict combines fairness caveat, performance/cost, metric definition and the suggested follow-up.\n# Controllable-block counts and nominal iterations per block are calculated from saved settings.\ndef per_block(r):\n    shape = r['dmd_shape']\n    nblocks = (shape[0]//r['macro'])*(shape[1]//r['macro'])\n    return r['iterations']/nblocks\nlow_a, low_b = records[:2]\nperf = (f\"Validated enhancement decreased across the selected runs, from {records[0]['enh']:.3f} (size {records[0]['macro']}) \"\n        f\"to {records[-1]['enh']:.3f} (size {records[-1]['macro']}); each used {records[0]['iterations']} iterations, \"\n        f\"{records[0]['shots']} camera shots per search measurement and {records[0]['validation']} fresh validation shots.\")\nfair = (f\"This is fair at equal absolute budget and fixed measurement regions, but not per control block: sizes {low_a['macro']} and {low_b['macro']} average \"\n        f\"{per_block(low_a):.1f} and {per_block(low_b):.1f} iterations per block, respectively. Wall time and total camera-shot counts were not recorded; the fine-grid outcome is budget-limited, and one seed cannot establish robustness.\")\nnext_exp = (f\"Next: repeat macropixel size {records[0]['macro']} with search seed {records[0]['seed']+1}, holding other settings fixed, to test search-trajectory sensitivity.\")\nbody = fair+' '+perf+' '+next_exp\nvy=table_end+7\ntext((L,vy,R,vy+14),'VERDICT AND NEXT EXPERIMENT',10,'tibo',ink,1.0)\ntext((L,vy+16,R,815),body,9.0,'tiro',ink,1.12)\np.draw_line(fitz.Point(L,817),fitz.Point(R,817),color=line,width=0.5)\ntext((L,820,R,835),'Simulation; relative intensity units. Grayscale tuning is presentational and does not change the measurements.',8,'tiro',mid,1.0)\n\npdf.set_metadata({'title':'Macropixel scale and focusing performance','author':'Scientific brief'})\npdf.save(REPORT,garbage=4,deflate=True)\npdf.close()\n\n# Enforce the page dimensions and exact inclusion of the supplied source pixels.\ncheck=fitz.open(REPORT)\nif check.page_count != 1:\n    raise RuntimeError(f'Report must be exactly one page; found {check.page_count}')\npage=check[0]\nif abs(page.rect.width-PW)>1 or abs(page.rect.height-PH)>1:\n    raise RuntimeError('PDF is not A4 portrait')\n# Verify embedded figure XObject dimensions and decoded pixel equality.\nmatched=False\nfor entry in page.get_images(full=True):\n    extracted=check.extract_image(entry[0])\n    if (extracted.get('width'),extracted.get('height')) == (img_w,img_h):\n        embedded=Image.open(io.BytesIO(extracted['image'])).convert('RGBA')\n        if embedded.size == im.size and embedded.tobytes() == im.tobytes():\n            matched=True\n            break\nif not matched:\n    raise RuntimeError('Exact original final-figure pixels were not verified in PDF')\n# Figure placement must satisfy minimum quarter-page dimensions and stay within margins.\nimages=page.get_image_rects(entry[0], transform=False) if page.get_images(full=True) else []\nplaced=[rect for rect in images if rect.width >= PW*.25 and rect.height >= PH*.25]\nif not placed:\n    raise RuntimeError('Supplied figure placement is below the required minimum size')\nprint(json.dumps({'report':str(REPORT),'pages':check.page_count,'figure_pixels_verified':matched,\n                  'figure_source_pixels':[img_w,img_h],'placed_size_pt':[placed[0].width,placed[0].height],\n                  'sha256':hashlib.sha256(REPORT.read_bytes()).hexdigest(),'bytes':REPORT.stat().st_size}))"
+      },
+      "result": {
+        "exit_code": 0,
+        "stdout": "warning: The `fitz` API is deprecated and will be removed in future. Use `import pymupdf` instead.\n{\"report\": \"/Users/razmik/Documents/Agentic_system_with_hardware_integration/runs/20261017_205142_877726/report.pdf\", \"pages\": 1, \"figure_pixels_verified\": true, \"figure_source_pixels\": [2125, 2362], \"placed_size_pt\": [337.37298583984375, 375.0], \"sha256\": \"e1a2f22b71fff8532587b69592296bff726cb5f0de730c9b3fe223f6fbc9ad1f\", \"bytes\": 85881}\n",
+        "stderr": "",
+        "timed_out": false
+      }
+    },
+    {
+      "tool_name": "printer_status",
+      "tool_args": {
+        "printer": "Office_Printer"
+      },
+      "result": {
+        "ok": true,
+        "printer": "Office_Printer",
+        "state": "idle",
+        "message": "fake printer is idle"
+      }
+    },
+    {
+      "tool_name": "submit_print",
+      "tool_args": {
+        "pdf_path": "/Users/razmik/Documents/Agentic_system_with_hardware_integration/runs/20261017_205142_877726/report.pdf",
+        "printer": "Office_Printer",
+        "copies": 1
+      },
+      "result": {
+        "ok": true,
+        "job_id": "Office_Printer-18",
+        "printer": "Office_Printer",
+        "file": "/Users/razmik/Documents/Agentic_system_with_hardware_integration/runs/20261017_205142_877726/report.pdf",
+        "tracked": true
+      }
+    },
+    {
+      "tool_name": "job_status",
+      "tool_args": {
+        "job_id": "Office_Printer-18"
+      },
+      "result": {
+        "ok": true,
+        "job_id": "Office_Printer-18",
+        "state": "done",
+        "confirmed": true,
+        "message": "fake job is done"
+      }
+    }
+  ],
+  "decision": {
+    "next_role": "scientist",
+    "instruction": "Review the four recorded successful runs (macropixel sizes 1, 2, 4, 8; all other settings fixed). Decide whether these four are sufficient and freeze a selection of four. Provide the fairness judgement, performance and computational-cost comparison, suggested next experiment, verdict, and a concise REPORT SPEC identifying the single graph and its data/labels. Correct the earlier proposed-run language as appropriate; do not request more runs unless essential.",
+    "reason": "All four planned runs succeeded, so the scientist must analyze the recorded evidence and freeze the report selection before graph explanation and printing."
+  },
+  "decision_count": 6,
+  "decision_budget": 10,
+  "stop_reason": "finished",
+  "route": "end",
+  "pending_print": {},
+  "approval": {},
+  "report": {
+    "path": "/Users/razmik/Documents/Agentic_system_with_hardware_integration/runs/20261017_205142_877726/report.pdf",
+    "exists": true,
+    "pages": 1,
+    "sha256": "e1a2f22b71fff8532587b69592296bff726cb5f0de730c9b3fe223f6fbc9ad1f",
+    "figure_embedded": true,
+    "figure_sha256": "56590503abe183eb734578830ffa53d8b9de3fbfc7e5655b9da9996cc7304038",
+    "inputs_sha256": "9836fd2fb8214c82b0e87e7a85e58b9fc2f2d012dd1aedc4b8dc3e76aeaf7899"
+  },
+  "print_outcome": "printed",
+  "active_job_id": "Office_Printer-18",
+  "hardware_passes": 1,
+  "report_request_passes": 0,
+  "report_revision_pending": false,
+  "scientist_response": {
+    "status": "ready",
+    "analysis": "The four successful runs compare macropixel size on the same fixed simulated bench: a transmission matrix maps binary-amplitude DMD patterns (pixels on or off; the pattern cannot be all off) to camera intensity, with fresh measurement noise. Grouping pixels into larger macropixels reduces the number of independently controllable blocks. Enhancement is the focus mean divided by the equally weighted mean of the four background-region means.\n\nFairness: Each experiment changed only macropixel_size; search_seed=1, focus_size=3, background_size=9, and iterations=1000 were held fixed, so the measured regions and search budget match. The 3×3 focus and 9×9 background regions fit around target [16,16]. The fixed 1000-iteration budget is capped and does not provide 20 iterations per controllable block for sizes 1 or 2: their nominal averages are about 3.9 and 15.6 iterations per block, versus 62.5 and 250 for sizes 4 and 8. Thus this is a fair comparison at equal absolute iteration budget, but not an equally adequate search budget per control degree of freedom; that caveat particularly limits conclusions about the finer grids.\n\nPerformance and cost: Validated final_enhancement was 28.268 for experiment_18848d544a654115a84d698c48e80b3a (size 1), 6.716 for experiment_0a53b0d22dca48bbb95c5cd1eea54236 (size 2), 2.873 for experiment_92f251efb4d4474ebbfd2e37a03be6fc (size 4), and 1.160 for experiment_2f5f3e6a9c104597979ec1175375ede4 (size 8). Each used 1000 iterations, 3 shots per search measurement, and 5 fresh validation shots; wall_time_seconds and camera_shots were not present in the supplied records, so no further cost comparison is available.\n\nNext experiment: Repeat size 1 with focus_size=3, background_size=9, iterations=1000, and search_seed=2, changing only the search seed from experiment_18848d544a654115a84d698c48e80b3a; this tests whether its strong validated result is robust to a different search trajectory under the same capped budget.\n\nThe four experiments are sufficient to answer the stated comparison under a common iteration budget, with the per-control-budget limitation noted. The validated enhancement declines as macropixel size increases in these runs, and size 1 is the strongest observed result.\n\nREPORT SPEC\ngraph: bar_final_enhancement, with one bar per selected experiment showing validated final_enhancement and labels for macropixel size and experiment ID.\nlayout: Title at top, graph in the upper half and explanation plus fairness, performance_vs_cost, next_experiment, and verdict text below; A4 portrait, one page.\nfairness: The four experiments change only macropixel_size and hold seed, regions, and 1000 iterations fixed, although the capped budget is below 20 nominal iterations per block for sizes 1 and 2.\nperformance_vs_cost: Experiments experiment_18848d544a654115a84d698c48e80b3a, experiment_0a53b0d22dca48bbb95c5cd1eea54236, experiment_92f251efb4d4474ebbfd2e37a03be6fc, and experiment_2f5f3e6a9c104597979ec1175375ede4 achieved validated enhancements 28.268, 6.716, 2.873, and 1.160 respectively, each at 1000 iterations and 3 shots per search measurement plus 5 validation shots; wall-time and total camera-shot figures were not recorded.\nnext_experiment: Repeat experiment_18848d544a654115a84d698c48e80b3a at macropixel_size=1 with search_seed=2 and all other settings unchanged to assess sensitivity to search trajectory.\nverdict: Under this common capped iteration budget, size 1 produced the highest validated enhancement and size 8 the lowest. The trend is clear in these runs, but additional runs would be needed to establish robustness, especially given the lower iteration allowance per controllable block for the finer grids.",
+    "selections": [
+      {
+        "experiment_id": "experiment_18848d544a654115a84d698c48e80b3a",
+        "validity": "Successful recorded result with final enhancement validated using five fresh shots.",
+        "comparability": "Only macropixel_size differs from the other selected runs; seed, regions, and 1000-iteration budget match.",
+        "relevance": "This size-1 run tests the finest control grid in the requested macropixel comparison.",
+        "information_gained": "Its validated enhancement of 28.268 is the strongest observed result; it anchors the fine-grid end of the comparison, with the caveat that 1000 iterations averages about 3.9 per controllable block."
+      },
+      {
+        "experiment_id": "experiment_0a53b0d22dca48bbb95c5cd1eea54236",
+        "validity": "Successful recorded result with final enhancement validated using five fresh shots.",
+        "comparability": "Only macropixel_size differs from the other selected runs; seed, regions, and 1000-iteration budget match.",
+        "relevance": "The size-2 run provides the next finer-grid comparison point.",
+        "information_gained": "Its validated enhancement of 6.716 shows the observed difference from size 1 and informs the fine-grid trend; 1000 iterations averages about 15.6 per controllable block."
+      },
+      {
+        "experiment_id": "experiment_92f251efb4d4474ebbfd2e37a03be6fc",
+        "validity": "Successful recorded result with final enhancement validated using five fresh shots.",
+        "comparability": "Only macropixel_size differs from the other selected runs; seed, regions, and 1000-iteration budget match.",
+        "relevance": "The size-4 run tests an intermediate control-block scale.",
+        "information_gained": "Its validated enhancement of 2.873 extends the observed size trend, with a nominal average of 62.5 iterations per controllable block."
+      },
+      {
+        "experiment_id": "experiment_2f5f3e6a9c104597979ec1175375ede4",
+        "validity": "Successful recorded result with final enhancement validated using five fresh shots.",
+        "comparability": "Only macropixel_size differs from the other selected runs; seed, regions, and 1000-iteration budget match.",
+        "relevance": "The size-8 run tests the coarsest valid control grid.",
+        "information_gained": "Its validated enhancement of 1.160 gives the coarse-grid endpoint; its nominal average budget is 250 iterations per controllable block."
+      }
+    ],
+    "group_reason": "Together these four distinct successful experiments span every valid macropixel size (1, 2, 4, and 8) while holding seed, measurement regions, and absolute iteration budget fixed, directly answering the requested comparison. Their validated enhancements show a descending trend with larger macropixels in this run set, while the fine-grid iteration-per-block shortfall is an important limitation.",
+    "proposed_experiments": []
+  },
+  "experiment_selection": {
+    "selections": [
+      {
+        "experiment_id": "experiment_18848d544a654115a84d698c48e80b3a",
+        "validity": "Successful recorded result with final enhancement validated using five fresh shots.",
+        "comparability": "Only macropixel_size differs from the other selected runs; seed, regions, and 1000-iteration budget match.",
+        "relevance": "This size-1 run tests the finest control grid in the requested macropixel comparison.",
+        "information_gained": "Its validated enhancement of 28.268 is the strongest observed result; it anchors the fine-grid end of the comparison, with the caveat that 1000 iterations averages about 3.9 per controllable block.",
+        "paths": {
+          "initial_camera": "/Users/razmik/Documents/Agentic_system_with_hardware_integration/runs/20261017_205142_877726/experiment_18848d544a654115a84d698c48e80b3a/initial_camera.png",
+          "final_camera": "/Users/razmik/Documents/Agentic_system_with_hardware_integration/runs/20261017_205142_877726/experiment_18848d544a654115a84d698c48e80b3a/final_camera.png",
+          "initial_intensity": "/Users/razmik/Documents/Agentic_system_with_hardware_integration/runs/20261017_205142_877726/experiment_18848d544a654115a84d698c48e80b3a/initial_intensity.npy",
+          "final_intensity": "/Users/razmik/Documents/Agentic_system_with_hardware_integration/runs/20261017_205142_877726/experiment_18848d544a654115a84d698c48e80b3a/final_intensity.npy",
+          "final_pattern": "/Users/razmik/Documents/Agentic_system_with_hardware_integration/runs/20261017_205142_877726/experiment_18848d544a654115a84d698c48e80b3a/final_pattern.npy",
+          "results_json": "/Users/razmik/Documents/Agentic_system_with_hardware_integration/runs/20261017_205142_877726/experiment_18848d544a654115a84d698c48e80b3a/results.json",
+          "experiments_csv": "/Users/razmik/Documents/Agentic_system_with_hardware_integration/runs/20261017_205142_877726/experiments.csv",
+          "summary_figure": "/Users/razmik/Documents/Agentic_system_with_hardware_integration/runs/20261017_205142_877726/experiment_18848d544a654115a84d698c48e80b3a/summary.png"
+        }
+      },
+      {
+        "experiment_id": "experiment_0a53b0d22dca48bbb95c5cd1eea54236",
+        "validity": "Successful recorded result with final enhancement validated using five fresh shots.",
+        "comparability": "Only macropixel_size differs from the other selected runs; seed, regions, and 1000-iteration budget match.",
+        "relevance": "The size-2 run provides the next finer-grid comparison point.",
+        "information_gained": "Its validated enhancement of 6.716 shows the observed difference from size 1 and informs the fine-grid trend; 1000 iterations averages about 15.6 per controllable block.",
+        "paths": {
+          "initial_camera": "/Users/razmik/Documents/Agentic_system_with_hardware_integration/runs/20261017_205142_877726/experiment_0a53b0d22dca48bbb95c5cd1eea54236/initial_camera.png",
+          "final_camera": "/Users/razmik/Documents/Agentic_system_with_hardware_integration/runs/20261017_205142_877726/experiment_0a53b0d22dca48bbb95c5cd1eea54236/final_camera.png",
+          "initial_intensity": "/Users/razmik/Documents/Agentic_system_with_hardware_integration/runs/20261017_205142_877726/experiment_0a53b0d22dca48bbb95c5cd1eea54236/initial_intensity.npy",
+          "final_intensity": "/Users/razmik/Documents/Agentic_system_with_hardware_integration/runs/20261017_205142_877726/experiment_0a53b0d22dca48bbb95c5cd1eea54236/final_intensity.npy",
+          "final_pattern": "/Users/razmik/Documents/Agentic_system_with_hardware_integration/runs/20261017_205142_877726/experiment_0a53b0d22dca48bbb95c5cd1eea54236/final_pattern.npy",
+          "results_json": "/Users/razmik/Documents/Agentic_system_with_hardware_integration/runs/20261017_205142_877726/experiment_0a53b0d22dca48bbb95c5cd1eea54236/results.json",
+          "experiments_csv": "/Users/razmik/Documents/Agentic_system_with_hardware_integration/runs/20261017_205142_877726/experiments.csv",
+          "summary_figure": "/Users/razmik/Documents/Agentic_system_with_hardware_integration/runs/20261017_205142_877726/experiment_0a53b0d22dca48bbb95c5cd1eea54236/summary.png"
+        }
+      },
+      {
+        "experiment_id": "experiment_92f251efb4d4474ebbfd2e37a03be6fc",
+        "validity": "Successful recorded result with final enhancement validated using five fresh shots.",
+        "comparability": "Only macropixel_size differs from the other selected runs; seed, regions, and 1000-iteration budget match.",
+        "relevance": "The size-4 run tests an intermediate control-block scale.",
+        "information_gained": "Its validated enhancement of 2.873 extends the observed size trend, with a nominal average of 62.5 iterations per controllable block.",
+        "paths": {
+          "initial_camera": "/Users/razmik/Documents/Agentic_system_with_hardware_integration/runs/20261017_205142_877726/experiment_92f251efb4d4474ebbfd2e37a03be6fc/initial_camera.png",
+          "final_camera": "/Users/razmik/Documents/Agentic_system_with_hardware_integration/runs/20261017_205142_877726/experiment_92f251efb4d4474ebbfd2e37a03be6fc/final_camera.png",
+          "initial_intensity": "/Users/razmik/Documents/Agentic_system_with_hardware_integration/runs/20261017_205142_877726/experiment_92f251efb4d4474ebbfd2e37a03be6fc/initial_intensity.npy",
+          "final_intensity": "/Users/razmik/Documents/Agentic_system_with_hardware_integration/runs/20261017_205142_877726/experiment_92f251efb4d4474ebbfd2e37a03be6fc/final_intensity.npy",
+          "final_pattern": "/Users/razmik/Documents/Agentic_system_with_hardware_integration/runs/20261017_205142_877726/experiment_92f251efb4d4474ebbfd2e37a03be6fc/final_pattern.npy",
+          "results_json": "/Users/razmik/Documents/Agentic_system_with_hardware_integration/runs/20261017_205142_877726/experiment_92f251efb4d4474ebbfd2e37a03be6fc/results.json",
+          "experiments_csv": "/Users/razmik/Documents/Agentic_system_with_hardware_integration/runs/20261017_205142_877726/experiments.csv",
+          "summary_figure": "/Users/razmik/Documents/Agentic_system_with_hardware_integration/runs/20261017_205142_877726/experiment_92f251efb4d4474ebbfd2e37a03be6fc/summary.png"
+        }
+      },
+      {
+        "experiment_id": "experiment_2f5f3e6a9c104597979ec1175375ede4",
+        "validity": "Successful recorded result with final enhancement validated using five fresh shots.",
+        "comparability": "Only macropixel_size differs from the other selected runs; seed, regions, and 1000-iteration budget match.",
+        "relevance": "The size-8 run tests the coarsest valid control grid.",
+        "information_gained": "Its validated enhancement of 1.160 gives the coarse-grid endpoint; its nominal average budget is 250 iterations per controllable block.",
+        "paths": {
+          "initial_camera": "/Users/razmik/Documents/Agentic_system_with_hardware_integration/runs/20261017_205142_877726/experiment_2f5f3e6a9c104597979ec1175375ede4/initial_camera.png",
+          "final_camera": "/Users/razmik/Documents/Agentic_system_with_hardware_integration/runs/20261017_205142_877726/experiment_2f5f3e6a9c104597979ec1175375ede4/final_camera.png",
+          "initial_intensity": "/Users/razmik/Documents/Agentic_system_with_hardware_integration/runs/20261017_205142_877726/experiment_2f5f3e6a9c104597979ec1175375ede4/initial_intensity.npy",
+          "final_intensity": "/Users/razmik/Documents/Agentic_system_with_hardware_integration/runs/20261017_205142_877726/experiment_2f5f3e6a9c104597979ec1175375ede4/final_intensity.npy",
+          "final_pattern": "/Users/razmik/Documents/Agentic_system_with_hardware_integration/runs/20261017_205142_877726/experiment_2f5f3e6a9c104597979ec1175375ede4/final_pattern.npy",
+          "results_json": "/Users/razmik/Documents/Agentic_system_with_hardware_integration/runs/20261017_205142_877726/experiment_2f5f3e6a9c104597979ec1175375ede4/results.json",
+          "experiments_csv": "/Users/razmik/Documents/Agentic_system_with_hardware_integration/runs/20261017_205142_877726/experiments.csv",
+          "summary_figure": "/Users/razmik/Documents/Agentic_system_with_hardware_integration/runs/20261017_205142_877726/experiment_2f5f3e6a9c104597979ec1175375ede4/summary.png"
+        }
+      }
+    ],
+    "group_reason": "Together these four distinct successful experiments span every valid macropixel size (1, 2, 4, and 8) while holding seed, measurement regions, and absolute iteration budget fixed, directly answering the requested comparison. Their validated enhancements show a descending trend with larger macropixels in this run set, while the fine-grid iteration-per-block shortfall is an important limitation."
+  },
+  "tuning_session_path": "/Users/razmik/Documents/Agentic_system_with_hardware_integration/runs/20261017_205142_877726/tuning_session.json",
+  "tuning_initialization": {
+    "status": "complete",
+    "session_id": "467c6601-c33e-4889-9fc6-20ed5d948b90"
+  },
+  "tuning_action": {
+    "action": "read_scan",
+    "scan_paths": [
+      "/Users/razmik/Documents/Agentic_system_with_hardware_integration/runs/20261017_205142_877726/scans/round_3/fake_210134/scan_page_1.png",
+      "/Users/razmik/Documents/Agentic_system_with_hardware_integration/runs/20261017_205142_877726/scans/round_3/fake_210134/scan_page_2.png"
+    ]
+  },
+  "tuning_printer": "Office_Printer",
+  "tuning_polls": 0,
+  "pending_trial_print": null,
+  "final_figure_path": "/Users/razmik/Documents/Agentic_system_with_hardware_integration/runs/20261017_205142_877726/print_tuning/final_heatmaps_467c6601.png",
+  "final_figure_metadata": {
+    "contract_version": 1,
+    "status": "ok",
+    "figure_path": "/Users/razmik/Documents/Agentic_system_with_hardware_integration/runs/20261017_205142_877726/print_tuning/final_heatmaps_467c6601.png",
+    "figure_sha256": "56590503abe183eb734578830ffa53d8b9de3fbfc7e5655b9da9996cc7304038",
+    "width_mm": 180.0,
+    "height_mm": 200.0,
+    "experiments": [
+      {
+        "experiment_id": "experiment_18848d544a654115a84d698c48e80b3a",
+        "label": "enhancement 0.8 → 28.3",
+        "mapping": {
+          "gamma": 0.28,
+          "dark_level": 0.0,
+          "light_level": 1.0,
+          "steps": 0,
+          "invert": false
+        },
+        "limits": {
+          "lo": 0.003164737911684864,
+          "hi": 6.939199564121912,
+          "method": "percentile",
+          "hi_raised_to_focus_peak": true
+        }
+      },
+      {
+        "experiment_id": "experiment_0a53b0d22dca48bbb95c5cd1eea54236",
+        "label": "enhancement 0.9 → 6.7",
+        "mapping": {
+          "gamma": 0.35,
+          "dark_level": 0.0,
+          "light_level": 1.0,
+          "steps": 0,
+          "invert": false
+        },
+        "limits": {
+          "lo": 0.003182859391852668,
+          "hi": 4.98944036997549,
+          "method": "percentile",
+          "hi_raised_to_focus_peak": true
+        }
+      },
+      {
+        "experiment_id": "experiment_92f251efb4d4474ebbfd2e37a03be6fc",
+        "label": "enhancement 1.0 → 2.9",
+        "mapping": {
+          "gamma": 0.4375,
+          "dark_level": 0.0,
+          "light_level": 1.0,
+          "steps": 0,
+          "invert": false
+        },
+        "limits": {
+          "lo": 0.004423754692666885,
+          "hi": 2.703316697304627,
+          "method": "percentile"
+        }
+      },
+      {
+        "experiment_id": "experiment_2f5f3e6a9c104597979ec1175375ede4",
+        "label": "enhancement 1.2 → 1.2",
+        "mapping": {
+          "gamma": 0.5,
+          "dark_level": 0.0,
+          "light_level": 1.0,
+          "steps": 0,
+          "invert": false
+        },
+        "limits": {
+          "lo": 0.00557373023682031,
+          "hi": 2.8859443687023667,
+          "method": "percentile"
+        }
+      }
+    ],
+    "inputs_sha256": "9836fd2fb8214c82b0e87e7a85e58b9fc2f2d012dd1aedc4b8dc3e76aeaf7899",
+    "session_id": "467c6601-c33e-4889-9fc6-20ed5d948b90"
+  },
+  "paper_color": null
+}

@@ -1,0 +1,196 @@
+{
+  "contract_version": 1,
+  "figure": {
+    "contract_version": 1,
+    "status": "ok",
+    "figure_path": "/Users/razmik/Documents/Agentic_system_with_hardware_integration/runs/20261017_205142_877726/print_tuning/final_heatmaps_467c6601.png",
+    "figure_sha256": "56590503abe183eb734578830ffa53d8b9de3fbfc7e5655b9da9996cc7304038",
+    "width_mm": 180.0,
+    "height_mm": 200.0,
+    "experiments": [
+      {
+        "experiment_id": "experiment_18848d544a654115a84d698c48e80b3a",
+        "label": "enhancement 0.8 → 28.3",
+        "mapping": {
+          "gamma": 0.28,
+          "dark_level": 0.0,
+          "light_level": 1.0,
+          "steps": 0,
+          "invert": false
+        },
+        "limits": {
+          "lo": 0.003164737911684864,
+          "hi": 6.939199564121912,
+          "method": "percentile",
+          "hi_raised_to_focus_peak": true
+        }
+      },
+      {
+        "experiment_id": "experiment_0a53b0d22dca48bbb95c5cd1eea54236",
+        "label": "enhancement 0.9 → 6.7",
+        "mapping": {
+          "gamma": 0.35,
+          "dark_level": 0.0,
+          "light_level": 1.0,
+          "steps": 0,
+          "invert": false
+        },
+        "limits": {
+          "lo": 0.003182859391852668,
+          "hi": 4.98944036997549,
+          "method": "percentile",
+          "hi_raised_to_focus_peak": true
+        }
+      },
+      {
+        "experiment_id": "experiment_92f251efb4d4474ebbfd2e37a03be6fc",
+        "label": "enhancement 1.0 → 2.9",
+        "mapping": {
+          "gamma": 0.4375,
+          "dark_level": 0.0,
+          "light_level": 1.0,
+          "steps": 0,
+          "invert": false
+        },
+        "limits": {
+          "lo": 0.004423754692666885,
+          "hi": 2.703316697304627,
+          "method": "percentile"
+        }
+      },
+      {
+        "experiment_id": "experiment_2f5f3e6a9c104597979ec1175375ede4",
+        "label": "enhancement 1.2 → 1.2",
+        "mapping": {
+          "gamma": 0.5,
+          "dark_level": 0.0,
+          "light_level": 1.0,
+          "steps": 0,
+          "invert": false
+        },
+        "limits": {
+          "lo": 0.00557373023682031,
+          "hi": 2.8859443687023667,
+          "method": "percentile"
+        }
+      }
+    ],
+    "inputs_sha256": "9836fd2fb8214c82b0e87e7a85e58b9fc2f2d012dd1aedc4b8dc3e76aeaf7899",
+    "session_id": "467c6601-c33e-4889-9fc6-20ed5d948b90"
+  },
+  "figure_history": [
+    {
+      "contract_version": 1,
+      "status": "ok",
+      "figure_path": "/Users/razmik/Documents/Agentic_system_with_hardware_integration/runs/20261017_205142_877726/print_tuning/final_heatmaps_467c6601.png",
+      "figure_sha256": "56590503abe183eb734578830ffa53d8b9de3fbfc7e5655b9da9996cc7304038",
+      "width_mm": 180.0,
+      "height_mm": 200.0,
+      "experiments": [
+        {
+          "experiment_id": "experiment_18848d544a654115a84d698c48e80b3a",
+          "label": "enhancement 0.8 → 28.3",
+          "mapping": {
+            "gamma": 0.28,
+            "dark_level": 0.0,
+            "light_level": 1.0,
+            "steps": 0,
+            "invert": false
+          },
+          "limits": {
+            "lo": 0.003164737911684864,
+            "hi": 6.939199564121912,
+            "method": "percentile",
+            "hi_raised_to_focus_peak": true
+          }
+        },
+        {
+          "experiment_id": "experiment_0a53b0d22dca48bbb95c5cd1eea54236",
+          "label": "enhancement 0.9 → 6.7",
+          "mapping": {
+            "gamma": 0.35,
+            "dark_level": 0.0,
+            "light_level": 1.0,
+            "steps": 0,
+            "invert": false
+          },
+          "limits": {
+            "lo": 0.003182859391852668,
+            "hi": 4.98944036997549,
+            "method": "percentile",
+            "hi_raised_to_focus_peak": true
+          }
+        },
+        {
+          "experiment_id": "experiment_92f251efb4d4474ebbfd2e37a03be6fc",
+          "label": "enhancement 1.0 → 2.9",
+          "mapping": {
+            "gamma": 0.4375,
+            "dark_level": 0.0,
+            "light_level": 1.0,
+            "steps": 0,
+            "invert": false
+          },
+          "limits": {
+            "lo": 0.004423754692666885,
+            "hi": 2.703316697304627,
+            "method": "percentile"
+          }
+        },
+        {
+          "experiment_id": "experiment_2f5f3e6a9c104597979ec1175375ede4",
+          "label": "enhancement 1.2 → 1.2",
+          "mapping": {
+            "gamma": 0.5,
+            "dark_level": 0.0,
+            "light_level": 1.0,
+            "steps": 0,
+            "invert": false
+          },
+          "limits": {
+            "lo": 0.00557373023682031,
+            "hi": 2.8859443687023667,
+            "method": "percentile"
+          }
+        }
+      ],
+      "inputs_sha256": "9836fd2fb8214c82b0e87e7a85e58b9fc2f2d012dd1aedc4b8dc3e76aeaf7899",
+      "session_id": "467c6601-c33e-4889-9fc6-20ed5d948b90"
+    }
+  ],
+  "pending": null,
+  "attempts": [
+    {
+      "args": {
+        "pdf_path": "/Users/razmik/Documents/Agentic_system_with_hardware_integration/runs/20261017_205142_877726/report.pdf",
+        "printer": "Office_Printer",
+        "copies": 1
+      },
+      "report_sha256": "e1a2f22b71fff8532587b69592296bff726cb5f0de730c9b3fe223f6fbc9ad1f",
+      "figure_sha256": "56590503abe183eb734578830ffa53d8b9de3fbfc7e5655b9da9996cc7304038",
+      "inputs_sha256": "9836fd2fb8214c82b0e87e7a85e58b9fc2f2d012dd1aedc4b8dc3e76aeaf7899",
+      "attempt_id": "d32fa1f719494069b7201ac3412834bf",
+      "approved_at": "2026-10-17T17:05:06.904984+00:00",
+      "intent_at": "2026-10-17T17:05:06.904999+00:00",
+      "result": {
+        "ok": true,
+        "job_id": "Office_Printer-18",
+        "printer": "Office_Printer",
+        "file": "/Users/razmik/Documents/Agentic_system_with_hardware_integration/runs/20261017_205142_877726/report.pdf",
+        "tracked": true
+      },
+      "readings": [
+        {
+          "ok": true,
+          "job_id": "Office_Printer-18",
+          "state": "done",
+          "confirmed": true,
+          "message": "fake job is done"
+        }
+      ],
+      "resolution": {}
+    }
+  ],
+  "skip": null,
+  "stopped": false
+}

@@ -1,0 +1,2885 @@
+{
+  "contract_version": 1,
+  "session_id": "467c6601-c33e-4889-9fc6-20ed5d948b90",
+  "run_id": "20261017_205142_877726",
+  "session_path": "/Users/razmik/Documents/Agentic_system_with_hardware_integration/runs/20261017_205142_877726/tuning_session.json",
+  "selection_path": "/Users/razmik/Documents/Agentic_system_with_hardware_integration/runs/20261017_205142_877726/print_tuning/selection_468be234.json",
+  "selection_sha256": "19a5deb363847b07915da1a16afdea914506a340d72be99c149eaa2676cfe4c8",
+  "selection_id": "468be234-bf13-5523-a254-4a8f72b159a1",
+  "selection_version": 1,
+  "accepted_selection": {
+    "selections": [
+      {
+        "experiment_id": "experiment_18848d544a654115a84d698c48e80b3a",
+        "validity": "Successful recorded result with final enhancement validated using five fresh shots.",
+        "comparability": "Only macropixel_size differs from the other selected runs; seed, regions, and 1000-iteration budget match.",
+        "relevance": "This size-1 run tests the finest control grid in the requested macropixel comparison.",
+        "information_gained": "Its validated enhancement of 28.268 is the strongest observed result; it anchors the fine-grid end of the comparison, with the caveat that 1000 iterations averages about 3.9 per controllable block.",
+        "paths": {
+          "initial_camera": "/Users/razmik/Documents/Agentic_system_with_hardware_integration/runs/20261017_205142_877726/experiment_18848d544a654115a84d698c48e80b3a/initial_camera.png",
+          "final_camera": "/Users/razmik/Documents/Agentic_system_with_hardware_integration/runs/20261017_205142_877726/experiment_18848d544a654115a84d698c48e80b3a/final_camera.png",
+          "initial_intensity": "/Users/razmik/Documents/Agentic_system_with_hardware_integration/runs/20261017_205142_877726/experiment_18848d544a654115a84d698c48e80b3a/initial_intensity.npy",
+          "final_intensity": "/Users/razmik/Documents/Agentic_system_with_hardware_integration/runs/20261017_205142_877726/experiment_18848d544a654115a84d698c48e80b3a/final_intensity.npy",
+          "final_pattern": "/Users/razmik/Documents/Agentic_system_with_hardware_integration/runs/20261017_205142_877726/experiment_18848d544a654115a84d698c48e80b3a/final_pattern.npy",
+          "results_json": "/Users/razmik/Documents/Agentic_system_with_hardware_integration/runs/20261017_205142_877726/experiment_18848d544a654115a84d698c48e80b3a/results.json",
+          "experiments_csv": "/Users/razmik/Documents/Agentic_system_with_hardware_integration/runs/20261017_205142_877726/experiments.csv",
+          "summary_figure": "/Users/razmik/Documents/Agentic_system_with_hardware_integration/runs/20261017_205142_877726/experiment_18848d544a654115a84d698c48e80b3a/summary.png"
+        }
+      },
+      {
+        "experiment_id": "experiment_0a53b0d22dca48bbb95c5cd1eea54236",
+        "validity": "Successful recorded result with final enhancement validated using five fresh shots.",
+        "comparability": "Only macropixel_size differs from the other selected runs; seed, regions, and 1000-iteration budget match.",
+        "relevance": "The size-2 run provides the next finer-grid comparison point.",
+        "information_gained": "Its validated enhancement of 6.716 shows the observed difference from size 1 and informs the fine-grid trend; 1000 iterations averages about 15.6 per controllable block.",
+        "paths": {
+          "initial_camera": "/Users/razmik/Documents/Agentic_system_with_hardware_integration/runs/20261017_205142_877726/experiment_0a53b0d22dca48bbb95c5cd1eea54236/initial_camera.png",
+          "final_camera": "/Users/razmik/Documents/Agentic_system_with_hardware_integration/runs/20261017_205142_877726/experiment_0a53b0d22dca48bbb95c5cd1eea54236/final_camera.png",
+          "initial_intensity": "/Users/razmik/Documents/Agentic_system_with_hardware_integration/runs/20261017_205142_877726/experiment_0a53b0d22dca48bbb95c5cd1eea54236/initial_intensity.npy",
+          "final_intensity": "/Users/razmik/Documents/Agentic_system_with_hardware_integration/runs/20261017_205142_877726/experiment_0a53b0d22dca48bbb95c5cd1eea54236/final_intensity.npy",
+          "final_pattern": "/Users/razmik/Documents/Agentic_system_with_hardware_integration/runs/20261017_205142_877726/experiment_0a53b0d22dca48bbb95c5cd1eea54236/final_pattern.npy",
+          "results_json": "/Users/razmik/Documents/Agentic_system_with_hardware_integration/runs/20261017_205142_877726/experiment_0a53b0d22dca48bbb95c5cd1eea54236/results.json",
+          "experiments_csv": "/Users/razmik/Documents/Agentic_system_with_hardware_integration/runs/20261017_205142_877726/experiments.csv",
+          "summary_figure": "/Users/razmik/Documents/Agentic_system_with_hardware_integration/runs/20261017_205142_877726/experiment_0a53b0d22dca48bbb95c5cd1eea54236/summary.png"
+        }
+      },
+      {
+        "experiment_id": "experiment_92f251efb4d4474ebbfd2e37a03be6fc",
+        "validity": "Successful recorded result with final enhancement validated using five fresh shots.",
+        "comparability": "Only macropixel_size differs from the other selected runs; seed, regions, and 1000-iteration budget match.",
+        "relevance": "The size-4 run tests an intermediate control-block scale.",
+        "information_gained": "Its validated enhancement of 2.873 extends the observed size trend, with a nominal average of 62.5 iterations per controllable block.",
+        "paths": {
+          "initial_camera": "/Users/razmik/Documents/Agentic_system_with_hardware_integration/runs/20261017_205142_877726/experiment_92f251efb4d4474ebbfd2e37a03be6fc/initial_camera.png",
+          "final_camera": "/Users/razmik/Documents/Agentic_system_with_hardware_integration/runs/20261017_205142_877726/experiment_92f251efb4d4474ebbfd2e37a03be6fc/final_camera.png",
+          "initial_intensity": "/Users/razmik/Documents/Agentic_system_with_hardware_integration/runs/20261017_205142_877726/experiment_92f251efb4d4474ebbfd2e37a03be6fc/initial_intensity.npy",
+          "final_intensity": "/Users/razmik/Documents/Agentic_system_with_hardware_integration/runs/20261017_205142_877726/experiment_92f251efb4d4474ebbfd2e37a03be6fc/final_intensity.npy",
+          "final_pattern": "/Users/razmik/Documents/Agentic_system_with_hardware_integration/runs/20261017_205142_877726/experiment_92f251efb4d4474ebbfd2e37a03be6fc/final_pattern.npy",
+          "results_json": "/Users/razmik/Documents/Agentic_system_with_hardware_integration/runs/20261017_205142_877726/experiment_92f251efb4d4474ebbfd2e37a03be6fc/results.json",
+          "experiments_csv": "/Users/razmik/Documents/Agentic_system_with_hardware_integration/runs/20261017_205142_877726/experiments.csv",
+          "summary_figure": "/Users/razmik/Documents/Agentic_system_with_hardware_integration/runs/20261017_205142_877726/experiment_92f251efb4d4474ebbfd2e37a03be6fc/summary.png"
+        }
+      },
+      {
+        "experiment_id": "experiment_2f5f3e6a9c104597979ec1175375ede4",
+        "validity": "Successful recorded result with final enhancement validated using five fresh shots.",
+        "comparability": "Only macropixel_size differs from the other selected runs; seed, regions, and 1000-iteration budget match.",
+        "relevance": "The size-8 run tests the coarsest valid control grid.",
+        "information_gained": "Its validated enhancement of 1.160 gives the coarse-grid endpoint; its nominal average budget is 250 iterations per controllable block.",
+        "paths": {
+          "initial_camera": "/Users/razmik/Documents/Agentic_system_with_hardware_integration/runs/20261017_205142_877726/experiment_2f5f3e6a9c104597979ec1175375ede4/initial_camera.png",
+          "final_camera": "/Users/razmik/Documents/Agentic_system_with_hardware_integration/runs/20261017_205142_877726/experiment_2f5f3e6a9c104597979ec1175375ede4/final_camera.png",
+          "initial_intensity": "/Users/razmik/Documents/Agentic_system_with_hardware_integration/runs/20261017_205142_877726/experiment_2f5f3e6a9c104597979ec1175375ede4/initial_intensity.npy",
+          "final_intensity": "/Users/razmik/Documents/Agentic_system_with_hardware_integration/runs/20261017_205142_877726/experiment_2f5f3e6a9c104597979ec1175375ede4/final_intensity.npy",
+          "final_pattern": "/Users/razmik/Documents/Agentic_system_with_hardware_integration/runs/20261017_205142_877726/experiment_2f5f3e6a9c104597979ec1175375ede4/final_pattern.npy",
+          "results_json": "/Users/razmik/Documents/Agentic_system_with_hardware_integration/runs/20261017_205142_877726/experiment_2f5f3e6a9c104597979ec1175375ede4/results.json",
+          "experiments_csv": "/Users/razmik/Documents/Agentic_system_with_hardware_integration/runs/20261017_205142_877726/experiments.csv",
+          "summary_figure": "/Users/razmik/Documents/Agentic_system_with_hardware_integration/runs/20261017_205142_877726/experiment_2f5f3e6a9c104597979ec1175375ede4/summary.png"
+        }
+      }
+    ],
+    "group_reason": "Together these four distinct successful experiments span every valid macropixel size (1, 2, 4, and 8) while holding seed, measurement regions, and absolute iteration budget fixed, directly answering the requested comparison. Their validated enhancements show a descending trend with larger macropixels in this run set, while the fine-grid iteration-per-block shortfall is an important limitation."
+  },
+  "config_snapshot": {
+    "schema_version": "tuning_config/1",
+    "name": "photonic_focus_heatmaps",
+    "description": "Grayscale print tuning for the focusing experiments: each item is one experiment with its Initial and Final camera heatmaps, printed in several grayscale variations per round, scanned by the user and judged by the agents to pick a better gamma. Only gamma is tuned, in all three rounds.",
+    "page": {
+      "size": "A4",
+      "orientation": "portrait",
+      "items_per_page": 2,
+      "variations_per_item": 6,
+      "margin_mm": 10,
+      "description": "Each page shows items_per_page items, each printed in variations_per_item variations, so one page has items_per_page x variations_per_item tiles."
+    },
+    "panels": {
+      "allowed_kinds": [
+        "heatmap"
+      ],
+      "min_per_item": 1,
+      "max_per_item": 3,
+      "description": "The figures inside one item. For this project an item has 2 heatmap panels: the Initial and the Final camera image."
+    },
+    "limits": {
+      "method": "percentile",
+      "low_percentile": 0.5,
+      "high_percentile": 99.5,
+      "scope": "per_item",
+      "description": "The value limits that map data to gray are computed once from all panels of an item together and stay fixed for the whole calibration session, so the panels of an item stay comparable and only gamma changes between rounds."
+    },
+    "parameters": {
+      "gamma": {
+        "type": "float",
+        "min": 0.1,
+        "max": 5.0,
+        "default": 1.0,
+        "spacing": "log",
+        "scope": "per_item",
+        "tuned": true,
+        "description": "Tone curve applied to the normalized data; values below 1 brighten the low values, above 1 darken them. Test values are spaced on a log scale."
+      },
+      "gray_levels": {
+        "type": "range",
+        "dark": {
+          "min": 0.0,
+          "max": 0.4,
+          "default": 0.0
+        },
+        "light": {
+          "min": 0.6,
+          "max": 1.0,
+          "default": 1.0
+        },
+        "min_gap": 0.3,
+        "scope": "shared",
+        "tuned": false,
+        "description": "The printed gray for the lowest (dark) and highest (light) data values, where 0 means black and 1 means white. Not tuned: always printed with the defaults, dark 0.0 and light 1.0."
+      },
+      "steps": {
+        "type": "int",
+        "min": 2,
+        "max": 32,
+        "default": 0,
+        "special_values": {
+          "0": "smooth"
+        },
+        "scope": "per_item",
+        "tuned": false,
+        "description": "Number of discrete gray bands. 0 means smooth (no banding). Not tuned: always printed with the default 0 (smooth)."
+      },
+      "invert": {
+        "type": "bool",
+        "default": false,
+        "scope": "per_item",
+        "tuned": false,
+        "description": "If true, high data values print dark instead of light. Not tuned; set by hand if needed."
+      }
+    },
+    "rounds": [
+      {
+        "round_id": 1,
+        "parameter": "gamma"
+      },
+      {
+        "round_id": 2,
+        "parameter": "gamma"
+      },
+      {
+        "round_id": 3,
+        "parameter": "gamma"
+      }
+    ],
+    "variation_rules": {
+      "reference_count": 1,
+      "tests_change_only_round_parameter": true,
+      "shared_parameters_same_tests_for_all_items": true,
+      "description": "Each item's variations include reference_count copies of the best settings so far; the other variations change only the parameter of the current round. A shared parameter gets the same test values in every item."
+    },
+    "references": {
+      "gray_patches": 11,
+      "paper_refs": 2,
+      "black_patch": true,
+      "markers": 4,
+      "page_code": true,
+      "description": "Printed on every page for reading the scan: gray_patches patches evenly spaced from 0 to 1, paper_refs blank paper areas, one full black patch, and markers corner markers for aligning the scan, with a page code that identifies the page and round."
+    },
+    "scan": {
+      "min_dpi": 150,
+      "recommended_dpi": 300,
+      "accepted_formats": [
+        "pdf",
+        "png",
+        "jpg",
+        "jpeg"
+      ],
+      "description": "Requirements for the scanned page the user returns."
+    }
+  },
+  "paper_session_id": "default",
+  "paper_session": {
+    "paper_session_id": "default",
+    "description": "Unspecified paper; no paper-color assumption"
+  },
+  "paper_color": null,
+  "selected_experiments": [
+    {
+      "experiment_id": "experiment_18848d544a654115a84d698c48e80b3a",
+      "item_id": "experiment_18848d544a654115a84d698c48e80b3a",
+      "limits": {
+        "lo": 0.003164737911684864,
+        "hi": 6.939199564121912,
+        "method": "percentile",
+        "hi_raised_to_focus_peak": true
+      },
+      "source": {
+        "experiment_id": "experiment_18848d544a654115a84d698c48e80b3a",
+        "settings": {
+          "dmd_shape": [
+            16,
+            16
+          ],
+          "camera_shape": [
+            32,
+            32
+          ],
+          "target_position": [
+            16,
+            16
+          ],
+          "transmission_seed": 42,
+          "noise_seed": 43,
+          "noise_std": 0.01,
+          "macropixel_size": 1,
+          "focus_size": 3,
+          "background_size": 9,
+          "iterations": 1000,
+          "search_seed": 1,
+          "shots_per_measurement": 3,
+          "validation_shots": 5
+        },
+        "initial_enhancement": 0.817175715734831,
+        "final_enhancement": 28.26842897199098,
+        "results_json": "/Users/razmik/Documents/Agentic_system_with_hardware_integration/runs/20261017_205142_877726/experiment_18848d544a654115a84d698c48e80b3a/results.json",
+        "reasons": {
+          "validity": "Successful recorded result with final enhancement validated using five fresh shots.",
+          "comparability": "Only macropixel_size differs from the other selected runs; seed, regions, and 1000-iteration budget match.",
+          "relevance": "This size-1 run tests the finest control grid in the requested macropixel comparison.",
+          "information_gained": "Its validated enhancement of 28.268 is the strongest observed result; it anchors the fine-grid end of the comparison, with the caveat that 1000 iterations averages about 3.9 per controllable block."
+        }
+      },
+      "panels": [
+        {
+          "name": "Initial",
+          "kind": "heatmap",
+          "data_path": "/Users/razmik/Documents/Agentic_system_with_hardware_integration/runs/20261017_205142_877726/experiment_18848d544a654115a84d698c48e80b3a/initial_intensity.npy",
+          "sha256": "a36d6a98936eec1c154285f03f479beddf0b0b97fa522554dc3cd29f7864c731",
+          "marks": [
+            {
+              "type": "box",
+              "row": 16,
+              "col": 16,
+              "size": 3
+            }
+          ]
+        },
+        {
+          "name": "Final",
+          "kind": "heatmap",
+          "data_path": "/Users/razmik/Documents/Agentic_system_with_hardware_integration/runs/20261017_205142_877726/experiment_18848d544a654115a84d698c48e80b3a/final_intensity.npy",
+          "sha256": "d9c3452ef223481e9aa3db9d5a6514f421bd2388aa535a7dc971e3b23cbefacc",
+          "marks": [
+            {
+              "type": "box",
+              "row": 16,
+              "col": 16,
+              "size": 3
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "experiment_id": "experiment_0a53b0d22dca48bbb95c5cd1eea54236",
+      "item_id": "experiment_0a53b0d22dca48bbb95c5cd1eea54236",
+      "limits": {
+        "lo": 0.003182859391852668,
+        "hi": 4.98944036997549,
+        "method": "percentile",
+        "hi_raised_to_focus_peak": true
+      },
+      "source": {
+        "experiment_id": "experiment_0a53b0d22dca48bbb95c5cd1eea54236",
+        "settings": {
+          "dmd_shape": [
+            16,
+            16
+          ],
+          "camera_shape": [
+            32,
+            32
+          ],
+          "target_position": [
+            16,
+            16
+          ],
+          "transmission_seed": 42,
+          "noise_seed": 43,
+          "noise_std": 0.01,
+          "macropixel_size": 2,
+          "focus_size": 3,
+          "background_size": 9,
+          "iterations": 1000,
+          "search_seed": 1,
+          "shots_per_measurement": 3,
+          "validation_shots": 5
+        },
+        "initial_enhancement": 0.8643253166741325,
+        "final_enhancement": 6.715749595175353,
+        "results_json": "/Users/razmik/Documents/Agentic_system_with_hardware_integration/runs/20261017_205142_877726/experiment_0a53b0d22dca48bbb95c5cd1eea54236/results.json",
+        "reasons": {
+          "validity": "Successful recorded result with final enhancement validated using five fresh shots.",
+          "comparability": "Only macropixel_size differs from the other selected runs; seed, regions, and 1000-iteration budget match.",
+          "relevance": "The size-2 run provides the next finer-grid comparison point.",
+          "information_gained": "Its validated enhancement of 6.716 shows the observed difference from size 1 and informs the fine-grid trend; 1000 iterations averages about 15.6 per controllable block."
+        }
+      },
+      "panels": [
+        {
+          "name": "Initial",
+          "kind": "heatmap",
+          "data_path": "/Users/razmik/Documents/Agentic_system_with_hardware_integration/runs/20261017_205142_877726/experiment_0a53b0d22dca48bbb95c5cd1eea54236/initial_intensity.npy",
+          "sha256": "7412ed6aa60bed3f6583ac520fd2ecfdd82a5f1e07d8fc74b7421adca79bcd6c",
+          "marks": [
+            {
+              "type": "box",
+              "row": 16,
+              "col": 16,
+              "size": 3
+            }
+          ]
+        },
+        {
+          "name": "Final",
+          "kind": "heatmap",
+          "data_path": "/Users/razmik/Documents/Agentic_system_with_hardware_integration/runs/20261017_205142_877726/experiment_0a53b0d22dca48bbb95c5cd1eea54236/final_intensity.npy",
+          "sha256": "16a58f7d31c0d288ebce7048b588bf3c4d8539b6e6c54187df595b707280ddc2",
+          "marks": [
+            {
+              "type": "box",
+              "row": 16,
+              "col": 16,
+              "size": 3
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "experiment_id": "experiment_92f251efb4d4474ebbfd2e37a03be6fc",
+      "item_id": "experiment_92f251efb4d4474ebbfd2e37a03be6fc",
+      "limits": {
+        "lo": 0.004423754692666885,
+        "hi": 2.703316697304627,
+        "method": "percentile"
+      },
+      "source": {
+        "experiment_id": "experiment_92f251efb4d4474ebbfd2e37a03be6fc",
+        "settings": {
+          "dmd_shape": [
+            16,
+            16
+          ],
+          "camera_shape": [
+            32,
+            32
+          ],
+          "target_position": [
+            16,
+            16
+          ],
+          "transmission_seed": 42,
+          "noise_seed": 43,
+          "noise_std": 0.01,
+          "macropixel_size": 4,
+          "focus_size": 3,
+          "background_size": 9,
+          "iterations": 1000,
+          "search_seed": 1,
+          "shots_per_measurement": 3,
+          "validation_shots": 5
+        },
+        "initial_enhancement": 1.0155286903723395,
+        "final_enhancement": 2.872764158064741,
+        "results_json": "/Users/razmik/Documents/Agentic_system_with_hardware_integration/runs/20261017_205142_877726/experiment_92f251efb4d4474ebbfd2e37a03be6fc/results.json",
+        "reasons": {
+          "validity": "Successful recorded result with final enhancement validated using five fresh shots.",
+          "comparability": "Only macropixel_size differs from the other selected runs; seed, regions, and 1000-iteration budget match.",
+          "relevance": "The size-4 run tests an intermediate control-block scale.",
+          "information_gained": "Its validated enhancement of 2.873 extends the observed size trend, with a nominal average of 62.5 iterations per controllable block."
+        }
+      },
+      "panels": [
+        {
+          "name": "Initial",
+          "kind": "heatmap",
+          "data_path": "/Users/razmik/Documents/Agentic_system_with_hardware_integration/runs/20261017_205142_877726/experiment_92f251efb4d4474ebbfd2e37a03be6fc/initial_intensity.npy",
+          "sha256": "ecdf1f6691c2f99c719243c80523d506405000843149cb503f6ff5f863972123",
+          "marks": [
+            {
+              "type": "box",
+              "row": 16,
+              "col": 16,
+              "size": 3
+            }
+          ]
+        },
+        {
+          "name": "Final",
+          "kind": "heatmap",
+          "data_path": "/Users/razmik/Documents/Agentic_system_with_hardware_integration/runs/20261017_205142_877726/experiment_92f251efb4d4474ebbfd2e37a03be6fc/final_intensity.npy",
+          "sha256": "66e1f7e0fe8c680b54b4d00c1100e738fd82fa68afb8d94612a831a1e0098c58",
+          "marks": [
+            {
+              "type": "box",
+              "row": 16,
+              "col": 16,
+              "size": 3
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "experiment_id": "experiment_2f5f3e6a9c104597979ec1175375ede4",
+      "item_id": "experiment_2f5f3e6a9c104597979ec1175375ede4",
+      "limits": {
+        "lo": 0.00557373023682031,
+        "hi": 2.8859443687023667,
+        "method": "percentile"
+      },
+      "source": {
+        "experiment_id": "experiment_2f5f3e6a9c104597979ec1175375ede4",
+        "settings": {
+          "dmd_shape": [
+            16,
+            16
+          ],
+          "camera_shape": [
+            32,
+            32
+          ],
+          "target_position": [
+            16,
+            16
+          ],
+          "transmission_seed": 42,
+          "noise_seed": 43,
+          "noise_std": 0.01,
+          "macropixel_size": 8,
+          "focus_size": 3,
+          "background_size": 9,
+          "iterations": 1000,
+          "search_seed": 1,
+          "shots_per_measurement": 3,
+          "validation_shots": 5
+        },
+        "initial_enhancement": 1.158744371525408,
+        "final_enhancement": 1.1602243058771864,
+        "results_json": "/Users/razmik/Documents/Agentic_system_with_hardware_integration/runs/20261017_205142_877726/experiment_2f5f3e6a9c104597979ec1175375ede4/results.json",
+        "reasons": {
+          "validity": "Successful recorded result with final enhancement validated using five fresh shots.",
+          "comparability": "Only macropixel_size differs from the other selected runs; seed, regions, and 1000-iteration budget match.",
+          "relevance": "The size-8 run tests the coarsest valid control grid.",
+          "information_gained": "Its validated enhancement of 1.160 gives the coarse-grid endpoint; its nominal average budget is 250 iterations per controllable block."
+        }
+      },
+      "panels": [
+        {
+          "name": "Initial",
+          "kind": "heatmap",
+          "data_path": "/Users/razmik/Documents/Agentic_system_with_hardware_integration/runs/20261017_205142_877726/experiment_2f5f3e6a9c104597979ec1175375ede4/initial_intensity.npy",
+          "sha256": "ab87c38aacd2297950b37319d0a842d52235118549baf42010a71fe26aab63a2",
+          "marks": [
+            {
+              "type": "box",
+              "row": 16,
+              "col": 16,
+              "size": 3
+            }
+          ]
+        },
+        {
+          "name": "Final",
+          "kind": "heatmap",
+          "data_path": "/Users/razmik/Documents/Agentic_system_with_hardware_integration/runs/20261017_205142_877726/experiment_2f5f3e6a9c104597979ec1175375ede4/final_intensity.npy",
+          "sha256": "90288ffbf57662ced674aabe26922ea232c0cf48f5e182d3791571c8ac235fd1",
+          "marks": [
+            {
+              "type": "box",
+              "row": 16,
+              "col": 16,
+              "size": 3
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "accepted_settings": {
+    "experiment_18848d544a654115a84d698c48e80b3a": {
+      "gamma": 0.28,
+      "dark_level": 0.0,
+      "light_level": 1.0,
+      "steps": 0,
+      "invert": false
+    },
+    "experiment_0a53b0d22dca48bbb95c5cd1eea54236": {
+      "gamma": 0.35,
+      "dark_level": 0.0,
+      "light_level": 1.0,
+      "steps": 0,
+      "invert": false
+    },
+    "experiment_92f251efb4d4474ebbfd2e37a03be6fc": {
+      "gamma": 0.4375,
+      "dark_level": 0.0,
+      "light_level": 1.0,
+      "steps": 0,
+      "invert": false
+    },
+    "experiment_2f5f3e6a9c104597979ec1175375ede4": {
+      "gamma": 0.5,
+      "dark_level": 0.0,
+      "light_level": 1.0,
+      "steps": 0,
+      "invert": false
+    }
+  },
+  "final_settings": {
+    "experiment_18848d544a654115a84d698c48e80b3a": {
+      "gamma": 0.28,
+      "dark_level": 0.0,
+      "light_level": 1.0,
+      "steps": 0,
+      "invert": false
+    },
+    "experiment_0a53b0d22dca48bbb95c5cd1eea54236": {
+      "gamma": 0.35,
+      "dark_level": 0.0,
+      "light_level": 1.0,
+      "steps": 0,
+      "invert": false
+    },
+    "experiment_92f251efb4d4474ebbfd2e37a03be6fc": {
+      "gamma": 0.4375,
+      "dark_level": 0.0,
+      "light_level": 1.0,
+      "steps": 0,
+      "invert": false
+    },
+    "experiment_2f5f3e6a9c104597979ec1175375ede4": {
+      "gamma": 0.5,
+      "dark_level": 0.0,
+      "light_level": 1.0,
+      "steps": 0,
+      "invert": false
+    }
+  },
+  "previews": {
+    "contract_version": 1,
+    "previews": [
+      {
+        "experiment_id": "experiment_18848d544a654115a84d698c48e80b3a",
+        "panel": "Initial",
+        "path": "/Users/razmik/Documents/Agentic_system_with_hardware_integration/runs/20261017_205142_877726/print_tuning/previews/467c6601-c33e-4889-9fc6-20ed5d948b90/1/preview_experiment_18848d544a654115a84d698c48e80b3a_Initial.png",
+        "sha256": "b6e790d51ed561fa5ab609ee04e9627c17444a8699f820cc7a7ae41352c3eccc"
+      },
+      {
+        "experiment_id": "experiment_18848d544a654115a84d698c48e80b3a",
+        "panel": "Final",
+        "path": "/Users/razmik/Documents/Agentic_system_with_hardware_integration/runs/20261017_205142_877726/print_tuning/previews/467c6601-c33e-4889-9fc6-20ed5d948b90/1/preview_experiment_18848d544a654115a84d698c48e80b3a_Final.png",
+        "sha256": "ba3d95b886b47fbde18c75d6d330bc2f7a8ba2f2c2187e9784612d2c9df98c05"
+      },
+      {
+        "experiment_id": "experiment_0a53b0d22dca48bbb95c5cd1eea54236",
+        "panel": "Initial",
+        "path": "/Users/razmik/Documents/Agentic_system_with_hardware_integration/runs/20261017_205142_877726/print_tuning/previews/467c6601-c33e-4889-9fc6-20ed5d948b90/1/preview_experiment_0a53b0d22dca48bbb95c5cd1eea54236_Initial.png",
+        "sha256": "2fa61c58aaa6e1483945e603ac3932119eb037695e5ea124b424621bfe78c23f"
+      },
+      {
+        "experiment_id": "experiment_0a53b0d22dca48bbb95c5cd1eea54236",
+        "panel": "Final",
+        "path": "/Users/razmik/Documents/Agentic_system_with_hardware_integration/runs/20261017_205142_877726/print_tuning/previews/467c6601-c33e-4889-9fc6-20ed5d948b90/1/preview_experiment_0a53b0d22dca48bbb95c5cd1eea54236_Final.png",
+        "sha256": "52166ce3636f420152417f1f4336f4110621da6aa0634322ef25eb23b9feeb59"
+      },
+      {
+        "experiment_id": "experiment_92f251efb4d4474ebbfd2e37a03be6fc",
+        "panel": "Initial",
+        "path": "/Users/razmik/Documents/Agentic_system_with_hardware_integration/runs/20261017_205142_877726/print_tuning/previews/467c6601-c33e-4889-9fc6-20ed5d948b90/1/preview_experiment_92f251efb4d4474ebbfd2e37a03be6fc_Initial.png",
+        "sha256": "e30c700c1cfa66e8b07d7bd286f893259cf7e9d91ec75bf7266674caf982a6d4"
+      },
+      {
+        "experiment_id": "experiment_92f251efb4d4474ebbfd2e37a03be6fc",
+        "panel": "Final",
+        "path": "/Users/razmik/Documents/Agentic_system_with_hardware_integration/runs/20261017_205142_877726/print_tuning/previews/467c6601-c33e-4889-9fc6-20ed5d948b90/1/preview_experiment_92f251efb4d4474ebbfd2e37a03be6fc_Final.png",
+        "sha256": "4d5adf0a15c4dc3c825a19bdee7fee7b1fc98adc8316774cbafaaee5e0ee608a"
+      },
+      {
+        "experiment_id": "experiment_2f5f3e6a9c104597979ec1175375ede4",
+        "panel": "Initial",
+        "path": "/Users/razmik/Documents/Agentic_system_with_hardware_integration/runs/20261017_205142_877726/print_tuning/previews/467c6601-c33e-4889-9fc6-20ed5d948b90/1/preview_experiment_2f5f3e6a9c104597979ec1175375ede4_Initial.png",
+        "sha256": "db2978745a17e4ff7d6d5e6c82bdcce014cf5aaf6807783a30e11d3ff829aa3d"
+      },
+      {
+        "experiment_id": "experiment_2f5f3e6a9c104597979ec1175375ede4",
+        "panel": "Final",
+        "path": "/Users/razmik/Documents/Agentic_system_with_hardware_integration/runs/20261017_205142_877726/print_tuning/previews/467c6601-c33e-4889-9fc6-20ed5d948b90/1/preview_experiment_2f5f3e6a9c104597979ec1175375ede4_Final.png",
+        "sha256": "f2d08ca0d0c1f8431758f802dbf65f02cecb7eba1166c1b5a33499abaf897bf1"
+      }
+    ],
+    "normalization_limits": {
+      "experiment_18848d544a654115a84d698c48e80b3a": {
+        "lo": 0.003164737911684864,
+        "hi": 6.939199564121912,
+        "method": "percentile",
+        "hi_raised_to_focus_peak": true
+      },
+      "experiment_0a53b0d22dca48bbb95c5cd1eea54236": {
+        "lo": 0.003182859391852668,
+        "hi": 4.98944036997549,
+        "method": "percentile",
+        "hi_raised_to_focus_peak": true
+      },
+      "experiment_92f251efb4d4474ebbfd2e37a03be6fc": {
+        "lo": 0.004423754692666885,
+        "hi": 2.703316697304627,
+        "method": "percentile"
+      },
+      "experiment_2f5f3e6a9c104597979ec1175375ede4": {
+        "lo": 0.00557373023682031,
+        "hi": 2.8859443687023667,
+        "method": "percentile"
+      }
+    },
+    "reference_mappings": {
+      "experiment_18848d544a654115a84d698c48e80b3a": {
+        "gamma": 1.0,
+        "dark_level": 0.0,
+        "light_level": 1.0,
+        "steps": 0,
+        "invert": false
+      },
+      "experiment_0a53b0d22dca48bbb95c5cd1eea54236": {
+        "gamma": 1.0,
+        "dark_level": 0.0,
+        "light_level": 1.0,
+        "steps": 0,
+        "invert": false
+      },
+      "experiment_92f251efb4d4474ebbfd2e37a03be6fc": {
+        "gamma": 1.0,
+        "dark_level": 0.0,
+        "light_level": 1.0,
+        "steps": 0,
+        "invert": false
+      },
+      "experiment_2f5f3e6a9c104597979ec1175375ede4": {
+        "gamma": 1.0,
+        "dark_level": 0.0,
+        "light_level": 1.0,
+        "steps": 0,
+        "invert": false
+      }
+    },
+    "paper_color": null
+  },
+  "status": "completed",
+  "phase": "completed",
+  "active_round": 3,
+  "active_trial_id": "38b04f0a-aa9a-4606-a7d3-e3aa68bacdcb",
+  "retry_limits": {
+    "rescans": 3,
+    "reprints": 1,
+    "trial_regenerations": 2
+  },
+  "initialization": {
+    "status": "complete",
+    "attempts": [
+      {
+        "started_at": "2026-10-17T16:53:37.755835+00:00",
+        "status": "complete",
+        "finished_at": "2026-10-17T16:53:37.812378+00:00"
+      }
+    ]
+  },
+  "rounds": {
+    "1": {
+      "proposal": {
+        "stage": "propose_gamma",
+        "experiments": [
+          {
+            "experiment_id": "experiment_18848d544a654115a84d698c48e80b3a",
+            "tests": [
+              {
+                "candidate_id": "test_1",
+                "gamma": 0.2,
+                "reason": "Explore strong brightening of the predominantly dark Initial and Final previews to reveal low-intensity structure."
+              },
+              {
+                "candidate_id": "test_2",
+                "gamma": 0.35,
+                "reason": "Test substantial brightening while retaining more separation from the isolated bright focus spot."
+              },
+              {
+                "candidate_id": "test_3",
+                "gamma": 0.6,
+                "reason": "Probe moderate brightening for a balance between faint texture visibility and focus-spot detail."
+              },
+              {
+                "candidate_id": "test_4",
+                "gamma": 1.4,
+                "reason": "Check whether modest darkening improves separation without losing the already dim background detail."
+              },
+              {
+                "candidate_id": "test_5",
+                "gamma": 2.8,
+                "reason": "Include a stronger darkening comparison to assess whether background texture is currently too prominent."
+              }
+            ]
+          },
+          {
+            "experiment_id": "experiment_0a53b0d22dca48bbb95c5cd1eea54236",
+            "tests": [
+              {
+                "candidate_id": "test_1",
+                "gamma": 0.2,
+                "reason": "Explore strong brightening of the dark Initial and Final previews to make low-intensity detail more legible."
+              },
+              {
+                "candidate_id": "test_2",
+                "gamma": 0.35,
+                "reason": "Test substantial brightening while checking whether the sparse bright feature remains distinct."
+              },
+              {
+                "candidate_id": "test_3",
+                "gamma": 0.6,
+                "reason": "Probe moderate brightening as a compromise between revealing faint structure and preserving level separation."
+              },
+              {
+                "candidate_id": "test_4",
+                "gamma": 1.4,
+                "reason": "Check modest darkening against the current appearance to see whether it clarifies the noisy texture."
+              },
+              {
+                "candidate_id": "test_5",
+                "gamma": 2.8,
+                "reason": "Include stronger darkening to test whether reduced prominence of the texture improves readability."
+              }
+            ]
+          },
+          {
+            "experiment_id": "experiment_92f251efb4d4474ebbfd2e37a03be6fc",
+            "tests": [
+              {
+                "candidate_id": "test_1",
+                "gamma": 0.2,
+                "reason": "Test strong brightening for low-intensity detail, while checking the already prominent light pixels for washout."
+              },
+              {
+                "candidate_id": "test_2",
+                "gamma": 0.35,
+                "reason": "Explore substantial brightening to assess faint structure without assuming the bright Initial texture is faithful detail."
+              },
+              {
+                "candidate_id": "test_3",
+                "gamma": 0.6,
+                "reason": "Probe moderate brightening as an initial balance between low-level visibility and bright-region separation."
+              },
+              {
+                "candidate_id": "test_4",
+                "gamma": 1.4,
+                "reason": "Test modest darkening to evaluate whether the bright Initial levels become better separated."
+              },
+              {
+                "candidate_id": "test_5",
+                "gamma": 2.8,
+                "reason": "Include stronger darkening to compare bright-region detail and overall readability in both panels."
+              }
+            ]
+          },
+          {
+            "experiment_id": "experiment_2f5f3e6a9c104597979ec1175375ede4",
+            "tests": [
+              {
+                "candidate_id": "test_1",
+                "gamma": 0.2,
+                "reason": "Test strong brightening for faint detail, while checking whether the comparatively bright texture becomes washed out."
+              },
+              {
+                "candidate_id": "test_2",
+                "gamma": 0.35,
+                "reason": "Explore substantial brightening to assess low-intensity visibility and preservation of bright-level distinctions."
+              },
+              {
+                "candidate_id": "test_3",
+                "gamma": 0.6,
+                "reason": "Probe moderate brightening as a balance between revealing dark detail and retaining texture separation."
+              },
+              {
+                "candidate_id": "test_4",
+                "gamma": 1.4,
+                "reason": "Test modest darkening to evaluate whether the brighter appearance gains useful level separation."
+              },
+              {
+                "candidate_id": "test_5",
+                "gamma": 2.8,
+                "reason": "Include stronger darkening as a comparison for bright-region detail and the readability of both panels."
+              }
+            ]
+          }
+        ]
+      },
+      "trial_result": {
+        "contract_version": 1,
+        "status": "ok",
+        "session_id": "467c6601-c33e-4889-9fc6-20ed5d948b90",
+        "trial_id": "1b859712-cec2-4e99-86a6-d58d6ad596f0",
+        "round_id": 1,
+        "pdf_path": "/Users/razmik/Documents/Agentic_system_with_hardware_integration/runs/20261017_205142_877726/print_tuning/trial_r1_1b859712.pdf",
+        "pdf_sha256": "57147b7a645c3c1691cf75625cdf79316db4bb3dfa06b7dc919fe9f1aa18c52c",
+        "manifest_path": "/Users/razmik/Documents/Agentic_system_with_hardware_integration/runs/20261017_205142_877726/print_tuning/trial_r1_1b859712_manifest.json",
+        "page_count": 2
+      },
+      "trials": [
+        {
+          "result": {
+            "contract_version": 1,
+            "status": "ok",
+            "session_id": "467c6601-c33e-4889-9fc6-20ed5d948b90",
+            "trial_id": "1b859712-cec2-4e99-86a6-d58d6ad596f0",
+            "round_id": 1,
+            "pdf_path": "/Users/razmik/Documents/Agentic_system_with_hardware_integration/runs/20261017_205142_877726/print_tuning/trial_r1_1b859712.pdf",
+            "pdf_sha256": "57147b7a645c3c1691cf75625cdf79316db4bb3dfa06b7dc919fe9f1aa18c52c",
+            "manifest_path": "/Users/razmik/Documents/Agentic_system_with_hardware_integration/runs/20261017_205142_877726/print_tuning/trial_r1_1b859712_manifest.json",
+            "page_count": 2
+          },
+          "manifest_sha256": "8d4356608d7a3c5e0db2460c257a66859c67b07f73748b59c7e6eb4e92cc9900",
+          "recorded_at": "2026-10-17T16:53:59.817742+00:00"
+        }
+      ],
+      "evaluations": [
+        {
+          "record_id": "/Users/razmik/Documents/Agentic_system_with_hardware_integration/runs/20261017_205142_877726/print_tuning/scan_r1_1b859712_818fd2e8.json",
+          "result": {
+            "contract_version": 1,
+            "status": "ok",
+            "session_id": "467c6601-c33e-4889-9fc6-20ed5d948b90",
+            "trial_id": "1b859712-cec2-4e99-86a6-d58d6ad596f0",
+            "round_id": 1,
+            "evaluation_path": "/Users/razmik/Documents/Agentic_system_with_hardware_integration/runs/20261017_205142_877726/print_tuning/scan_r1_1b859712_818fd2e8.json",
+            "scan_quality": {
+              "usable": true,
+              "issues": []
+            },
+            "scan_files": [
+              {
+                "path": "/Users/razmik/Documents/Agentic_system_with_hardware_integration/runs/20261017_205142_877726/scans/round_1/fake_205445/scan_page_1.png",
+                "sha256": "21b386bf44d59d979e461ddeaf50a88a8127a99d71adf2612c263ccbf0c5768e"
+              },
+              {
+                "path": "/Users/razmik/Documents/Agentic_system_with_hardware_integration/runs/20261017_205142_877726/scans/round_1/fake_205445/scan_page_2.png",
+                "sha256": "164e4ed19b3825dd4febf4ffb3438cf84bb46c1c78a39b6e83b4d56a3319508e"
+              }
+            ]
+          },
+          "result_sha256": "38bdd05577535da56b85ec5292da2991100775112c7070b168f290158042f3ec",
+          "evaluation_sha256": "b1f34e94a807231538d53566e1cbaa7a163bc4de59af189d08289e183248f105",
+          "recorded_at": "2026-10-17T16:55:19.167776+00:00"
+        }
+      ],
+      "active_evaluation_id": "/Users/razmik/Documents/Agentic_system_with_hardware_integration/runs/20261017_205142_877726/print_tuning/scan_r1_1b859712_818fd2e8.json",
+      "reviews": [
+        {
+          "response": {
+            "stage": "review_gamma",
+            "assessment": "usable",
+            "issues": [],
+            "gamma_winners": [
+              {
+                "experiment_id": "experiment_18848d544a654115a84d698c48e80b3a",
+                "candidate_id": "test_2",
+                "reason": "Gamma 0.35 is a better balance across Initial and Final than the very bright gamma 0.2: both panels retain distinct intensity levels and useful detail, while avoiding the severe dark crush seen at higher gamma. It is the best tested balance, although gamma 0.2 offers strong contrast as well.",
+                "confidence": "medium",
+                "tie_explanation": null
+              },
+              {
+                "experiment_id": "experiment_0a53b0d22dca48bbb95c5cd1eea54236",
+                "candidate_id": "test_2",
+                "reason": "Gamma 0.35 gives the strongest aggregate contrast among the tested candidates and keeps detail visible in both Initial and Final. The brighter gamma 0.2 remains a plausible alternative, but looks more prone to flattening intensity distinctions; the darkened candidates lose useful detail.",
+                "confidence": "medium",
+                "tie_explanation": null
+              },
+              {
+                "experiment_id": "experiment_92f251efb4d4474ebbfd2e37a03be6fc",
+                "candidate_id": "test_2",
+                "reason": "Gamma 0.35 is a balanced choice for the unlike panels: it improves Final detail over the reference while retaining separation in the already bright Initial panel. Gamma 0.6 gives slightly more aggregate contrast, but does so less evenly across the two panels.",
+                "confidence": "medium",
+                "tie_explanation": null
+              },
+              {
+                "experiment_id": "experiment_2f5f3e6a9c104597979ec1175375ede4",
+                "candidate_id": "test_3",
+                "reason": "Gamma 0.6 has the highest measured aggregate contrast among the tested options and preserves readable intensity variation in both Initial and Final. Gamma 0.35 is close, but gamma 0.6 appears to provide a slightly clearer balance without the detail loss of stronger darkening.",
+                "confidence": "medium",
+                "tie_explanation": null
+              }
+            ],
+            "gamma_tests": [
+              {
+                "experiment_id": "experiment_18848d544a654115a84d698c48e80b3a",
+                "tests": [
+                  {
+                    "candidate_id": "test_1",
+                    "gamma": 0.224,
+                    "reason": "Refine below the gamma 0.35 winner to check whether slightly stronger brightening reveals useful low-level detail in both panels without flattening their level distinctions."
+                  },
+                  {
+                    "candidate_id": "test_2",
+                    "gamma": 0.28,
+                    "reason": "Probe a nearby brighter setting between the current winner and the more strongly brightened candidate."
+                  },
+                  {
+                    "candidate_id": "test_3",
+                    "gamma": 0.4375,
+                    "reason": "Probe a modestly darker setting to see whether Initial and Final retain detail with improved separation."
+                  },
+                  {
+                    "candidate_id": "test_4",
+                    "gamma": 0.546875,
+                    "reason": "Test a further step toward darker rendering while checking both panels for lost faint structure."
+                  },
+                  {
+                    "candidate_id": "test_5",
+                    "gamma": 0.683594,
+                    "reason": "Extend the local refinement toward darker tones to assess whether either panel benefits without losing readable low-intensity detail."
+                  }
+                ]
+              },
+              {
+                "experiment_id": "experiment_0a53b0d22dca48bbb95c5cd1eea54236",
+                "tests": [
+                  {
+                    "candidate_id": "test_1",
+                    "gamma": 0.224,
+                    "reason": "Refine below the gamma 0.35 winner to check whether slightly stronger brightening reveals useful low-level detail in both panels without flattening their level distinctions."
+                  },
+                  {
+                    "candidate_id": "test_2",
+                    "gamma": 0.28,
+                    "reason": "Probe a nearby brighter setting between the current winner and the more strongly brightened candidate."
+                  },
+                  {
+                    "candidate_id": "test_3",
+                    "gamma": 0.4375,
+                    "reason": "Probe a modestly darker setting to see whether Initial and Final retain detail with improved separation."
+                  },
+                  {
+                    "candidate_id": "test_4",
+                    "gamma": 0.546875,
+                    "reason": "Test a further step toward darker rendering while checking both panels for lost faint structure."
+                  },
+                  {
+                    "candidate_id": "test_5",
+                    "gamma": 0.683594,
+                    "reason": "Extend the local refinement toward darker tones to assess whether either panel benefits without losing readable low-intensity detail."
+                  }
+                ]
+              },
+              {
+                "experiment_id": "experiment_92f251efb4d4474ebbfd2e37a03be6fc",
+                "tests": [
+                  {
+                    "candidate_id": "test_1",
+                    "gamma": 0.224,
+                    "reason": "Refine below the gamma 0.35 winner to check whether slightly stronger brightening improves Final while retaining useful separation in Initial."
+                  },
+                  {
+                    "candidate_id": "test_2",
+                    "gamma": 0.28,
+                    "reason": "Probe a nearby brighter setting between the current winner and the more strongly brightened candidate."
+                  },
+                  {
+                    "candidate_id": "test_3",
+                    "gamma": 0.4375,
+                    "reason": "Probe a modestly darker setting to check whether bright-region distinctions improve without compromising Final detail."
+                  },
+                  {
+                    "candidate_id": "test_4",
+                    "gamma": 0.546875,
+                    "reason": "Test a further step toward darker rendering, considering the different readability needs of Initial and Final."
+                  },
+                  {
+                    "candidate_id": "test_5",
+                    "gamma": 0.683594,
+                    "reason": "Extend local refinement toward darker tones while checking that the Final panel retains useful low-intensity structure."
+                  }
+                ]
+              },
+              {
+                "experiment_id": "experiment_2f5f3e6a9c104597979ec1175375ede4",
+                "tests": [
+                  {
+                    "candidate_id": "test_1",
+                    "gamma": 0.384,
+                    "reason": "Refine below the gamma 0.6 winner to test whether a little more brightening improves low-intensity visibility in both panels."
+                  },
+                  {
+                    "candidate_id": "test_2",
+                    "gamma": 0.48,
+                    "reason": "Probe a nearby brighter setting while checking for retained separation across the bright intensity levels."
+                  },
+                  {
+                    "candidate_id": "test_3",
+                    "gamma": 0.75,
+                    "reason": "Probe a modestly darker setting to see whether bright-region detail improves without obscuring faint structure."
+                  },
+                  {
+                    "candidate_id": "test_4",
+                    "gamma": 0.9375,
+                    "reason": "Test a further darker setting near the linear mapping, checking both panels for excessive darkening."
+                  },
+                  {
+                    "candidate_id": "test_5",
+                    "gamma": 1.171875,
+                    "reason": "Extend local refinement toward darker rendering while monitoring whether useful detail remains legible in Initial and Final."
+                  }
+                ]
+              }
+            ]
+          },
+          "trial_id": "1b859712-cec2-4e99-86a6-d58d6ad596f0",
+          "evaluation_record_id": "/Users/razmik/Documents/Agentic_system_with_hardware_integration/runs/20261017_205142_877726/print_tuning/scan_r1_1b859712_818fd2e8.json"
+        }
+      ],
+      "review": {
+        "stage": "review_gamma",
+        "assessment": "usable",
+        "issues": [],
+        "gamma_winners": [
+          {
+            "experiment_id": "experiment_18848d544a654115a84d698c48e80b3a",
+            "candidate_id": "test_2",
+            "reason": "Gamma 0.35 is a better balance across Initial and Final than the very bright gamma 0.2: both panels retain distinct intensity levels and useful detail, while avoiding the severe dark crush seen at higher gamma. It is the best tested balance, although gamma 0.2 offers strong contrast as well.",
+            "confidence": "medium",
+            "tie_explanation": null
+          },
+          {
+            "experiment_id": "experiment_0a53b0d22dca48bbb95c5cd1eea54236",
+            "candidate_id": "test_2",
+            "reason": "Gamma 0.35 gives the strongest aggregate contrast among the tested candidates and keeps detail visible in both Initial and Final. The brighter gamma 0.2 remains a plausible alternative, but looks more prone to flattening intensity distinctions; the darkened candidates lose useful detail.",
+            "confidence": "medium",
+            "tie_explanation": null
+          },
+          {
+            "experiment_id": "experiment_92f251efb4d4474ebbfd2e37a03be6fc",
+            "candidate_id": "test_2",
+            "reason": "Gamma 0.35 is a balanced choice for the unlike panels: it improves Final detail over the reference while retaining separation in the already bright Initial panel. Gamma 0.6 gives slightly more aggregate contrast, but does so less evenly across the two panels.",
+            "confidence": "medium",
+            "tie_explanation": null
+          },
+          {
+            "experiment_id": "experiment_2f5f3e6a9c104597979ec1175375ede4",
+            "candidate_id": "test_3",
+            "reason": "Gamma 0.6 has the highest measured aggregate contrast among the tested options and preserves readable intensity variation in both Initial and Final. Gamma 0.35 is close, but gamma 0.6 appears to provide a slightly clearer balance without the detail loss of stronger darkening.",
+            "confidence": "medium",
+            "tie_explanation": null
+          }
+        ],
+        "gamma_tests": [
+          {
+            "experiment_id": "experiment_18848d544a654115a84d698c48e80b3a",
+            "tests": [
+              {
+                "candidate_id": "test_1",
+                "gamma": 0.224,
+                "reason": "Refine below the gamma 0.35 winner to check whether slightly stronger brightening reveals useful low-level detail in both panels without flattening their level distinctions."
+              },
+              {
+                "candidate_id": "test_2",
+                "gamma": 0.28,
+                "reason": "Probe a nearby brighter setting between the current winner and the more strongly brightened candidate."
+              },
+              {
+                "candidate_id": "test_3",
+                "gamma": 0.4375,
+                "reason": "Probe a modestly darker setting to see whether Initial and Final retain detail with improved separation."
+              },
+              {
+                "candidate_id": "test_4",
+                "gamma": 0.546875,
+                "reason": "Test a further step toward darker rendering while checking both panels for lost faint structure."
+              },
+              {
+                "candidate_id": "test_5",
+                "gamma": 0.683594,
+                "reason": "Extend the local refinement toward darker tones to assess whether either panel benefits without losing readable low-intensity detail."
+              }
+            ]
+          },
+          {
+            "experiment_id": "experiment_0a53b0d22dca48bbb95c5cd1eea54236",
+            "tests": [
+              {
+                "candidate_id": "test_1",
+                "gamma": 0.224,
+                "reason": "Refine below the gamma 0.35 winner to check whether slightly stronger brightening reveals useful low-level detail in both panels without flattening their level distinctions."
+              },
+              {
+                "candidate_id": "test_2",
+                "gamma": 0.28,
+                "reason": "Probe a nearby brighter setting between the current winner and the more strongly brightened candidate."
+              },
+              {
+                "candidate_id": "test_3",
+                "gamma": 0.4375,
+                "reason": "Probe a modestly darker setting to see whether Initial and Final retain detail with improved separation."
+              },
+              {
+                "candidate_id": "test_4",
+                "gamma": 0.546875,
+                "reason": "Test a further step toward darker rendering while checking both panels for lost faint structure."
+              },
+              {
+                "candidate_id": "test_5",
+                "gamma": 0.683594,
+                "reason": "Extend the local refinement toward darker tones to assess whether either panel benefits without losing readable low-intensity detail."
+              }
+            ]
+          },
+          {
+            "experiment_id": "experiment_92f251efb4d4474ebbfd2e37a03be6fc",
+            "tests": [
+              {
+                "candidate_id": "test_1",
+                "gamma": 0.224,
+                "reason": "Refine below the gamma 0.35 winner to check whether slightly stronger brightening improves Final while retaining useful separation in Initial."
+              },
+              {
+                "candidate_id": "test_2",
+                "gamma": 0.28,
+                "reason": "Probe a nearby brighter setting between the current winner and the more strongly brightened candidate."
+              },
+              {
+                "candidate_id": "test_3",
+                "gamma": 0.4375,
+                "reason": "Probe a modestly darker setting to check whether bright-region distinctions improve without compromising Final detail."
+              },
+              {
+                "candidate_id": "test_4",
+                "gamma": 0.546875,
+                "reason": "Test a further step toward darker rendering, considering the different readability needs of Initial and Final."
+              },
+              {
+                "candidate_id": "test_5",
+                "gamma": 0.683594,
+                "reason": "Extend local refinement toward darker tones while checking that the Final panel retains useful low-intensity structure."
+              }
+            ]
+          },
+          {
+            "experiment_id": "experiment_2f5f3e6a9c104597979ec1175375ede4",
+            "tests": [
+              {
+                "candidate_id": "test_1",
+                "gamma": 0.384,
+                "reason": "Refine below the gamma 0.6 winner to test whether a little more brightening improves low-intensity visibility in both panels."
+              },
+              {
+                "candidate_id": "test_2",
+                "gamma": 0.48,
+                "reason": "Probe a nearby brighter setting while checking for retained separation across the bright intensity levels."
+              },
+              {
+                "candidate_id": "test_3",
+                "gamma": 0.75,
+                "reason": "Probe a modestly darker setting to see whether bright-region detail improves without obscuring faint structure."
+              },
+              {
+                "candidate_id": "test_4",
+                "gamma": 0.9375,
+                "reason": "Test a further darker setting near the linear mapping, checking both panels for excessive darkening."
+              },
+              {
+                "candidate_id": "test_5",
+                "gamma": 1.171875,
+                "reason": "Extend local refinement toward darker rendering while monitoring whether useful detail remains legible in Initial and Final."
+              }
+            ]
+          }
+        ]
+      },
+      "winners": {
+        "experiment_18848d544a654115a84d698c48e80b3a": {
+          "gamma": 0.35,
+          "dark_level": 0.0,
+          "light_level": 1.0,
+          "steps": 0,
+          "invert": false
+        },
+        "experiment_0a53b0d22dca48bbb95c5cd1eea54236": {
+          "gamma": 0.35,
+          "dark_level": 0.0,
+          "light_level": 1.0,
+          "steps": 0,
+          "invert": false
+        },
+        "experiment_92f251efb4d4474ebbfd2e37a03be6fc": {
+          "gamma": 0.35,
+          "dark_level": 0.0,
+          "light_level": 1.0,
+          "steps": 0,
+          "invert": false
+        },
+        "experiment_2f5f3e6a9c104597979ec1175375ede4": {
+          "gamma": 0.6,
+          "dark_level": 0.0,
+          "light_level": 1.0,
+          "steps": 0,
+          "invert": false
+        }
+      },
+      "reference_settings": {
+        "experiment_18848d544a654115a84d698c48e80b3a": {
+          "gamma": 1.0,
+          "dark_level": 0.0,
+          "light_level": 1.0,
+          "steps": 0,
+          "invert": false
+        },
+        "experiment_0a53b0d22dca48bbb95c5cd1eea54236": {
+          "gamma": 1.0,
+          "dark_level": 0.0,
+          "light_level": 1.0,
+          "steps": 0,
+          "invert": false
+        },
+        "experiment_92f251efb4d4474ebbfd2e37a03be6fc": {
+          "gamma": 1.0,
+          "dark_level": 0.0,
+          "light_level": 1.0,
+          "steps": 0,
+          "invert": false
+        },
+        "experiment_2f5f3e6a9c104597979ec1175375ede4": {
+          "gamma": 1.0,
+          "dark_level": 0.0,
+          "light_level": 1.0,
+          "steps": 0,
+          "invert": false
+        }
+      },
+      "approvals": [
+        {
+          "metadata": {
+            "approval_id": "aeec5fd05a104b2496ceeb31ee1d5df6",
+            "trial_id": "1b859712-cec2-4e99-86a6-d58d6ad596f0",
+            "pdf_sha256": "57147b7a645c3c1691cf75625cdf79316db4bb3dfa06b7dc919fe9f1aa18c52c",
+            "printer": "Office_Printer",
+            "print_settings": {
+              "pdf_path": "/Users/razmik/Documents/Agentic_system_with_hardware_integration/runs/20261017_205142_877726/print_tuning/trial_r1_1b859712.pdf",
+              "printer": "Office_Printer",
+              "copies": 1,
+              "paper": "A4",
+              "color_mode": "grayscale",
+              "sides": "one-sided",
+              "scale": "100%"
+            },
+            "approved_by": "graph human interrupt",
+            "reprint": false
+          },
+          "recorded_at": "2026-10-17T16:54:23.788568+00:00"
+        }
+      ],
+      "print_attempts": [
+        {
+          "attempt_id": "aeec5fd05a104b2496ceeb31ee1d5df6:submission",
+          "approval_id": "aeec5fd05a104b2496ceeb31ee1d5df6",
+          "trial_id": "1b859712-cec2-4e99-86a6-d58d6ad596f0",
+          "submission_state": "result_recorded",
+          "result": {
+            "ok": true,
+            "job_id": "Office_Printer-15",
+            "printer": "Office_Printer",
+            "file": "/Users/razmik/Documents/Agentic_system_with_hardware_integration/runs/20261017_205142_877726/print_tuning/trial_r1_1b859712.pdf",
+            "tracked": true
+          },
+          "job_results": [
+            {
+              "ok": true,
+              "job_id": "Office_Printer-15",
+              "state": "printing",
+              "confirmed": true,
+              "message": "fake job is printing"
+            },
+            {
+              "ok": true,
+              "job_id": "Office_Printer-15",
+              "state": "done",
+              "confirmed": true,
+              "message": "fake job is done"
+            }
+          ],
+          "recorded_at": "2026-10-17T16:54:23.797678+00:00"
+        }
+      ],
+      "retries": {
+        "rescans": 0,
+        "reprints": 0,
+        "trial_regenerations": 0
+      },
+      "reprint_requested": false
+    },
+    "2": {
+      "proposal": {
+        "stage": "review_gamma",
+        "assessment": "usable",
+        "issues": [],
+        "gamma_winners": [
+          {
+            "experiment_id": "experiment_18848d544a654115a84d698c48e80b3a",
+            "candidate_id": "test_2",
+            "reason": "Gamma 0.35 is a better balance across Initial and Final than the very bright gamma 0.2: both panels retain distinct intensity levels and useful detail, while avoiding the severe dark crush seen at higher gamma. It is the best tested balance, although gamma 0.2 offers strong contrast as well.",
+            "confidence": "medium",
+            "tie_explanation": null
+          },
+          {
+            "experiment_id": "experiment_0a53b0d22dca48bbb95c5cd1eea54236",
+            "candidate_id": "test_2",
+            "reason": "Gamma 0.35 gives the strongest aggregate contrast among the tested candidates and keeps detail visible in both Initial and Final. The brighter gamma 0.2 remains a plausible alternative, but looks more prone to flattening intensity distinctions; the darkened candidates lose useful detail.",
+            "confidence": "medium",
+            "tie_explanation": null
+          },
+          {
+            "experiment_id": "experiment_92f251efb4d4474ebbfd2e37a03be6fc",
+            "candidate_id": "test_2",
+            "reason": "Gamma 0.35 is a balanced choice for the unlike panels: it improves Final detail over the reference while retaining separation in the already bright Initial panel. Gamma 0.6 gives slightly more aggregate contrast, but does so less evenly across the two panels.",
+            "confidence": "medium",
+            "tie_explanation": null
+          },
+          {
+            "experiment_id": "experiment_2f5f3e6a9c104597979ec1175375ede4",
+            "candidate_id": "test_3",
+            "reason": "Gamma 0.6 has the highest measured aggregate contrast among the tested options and preserves readable intensity variation in both Initial and Final. Gamma 0.35 is close, but gamma 0.6 appears to provide a slightly clearer balance without the detail loss of stronger darkening.",
+            "confidence": "medium",
+            "tie_explanation": null
+          }
+        ],
+        "gamma_tests": [
+          {
+            "experiment_id": "experiment_18848d544a654115a84d698c48e80b3a",
+            "tests": [
+              {
+                "candidate_id": "test_1",
+                "gamma": 0.224,
+                "reason": "Refine below the gamma 0.35 winner to check whether slightly stronger brightening reveals useful low-level detail in both panels without flattening their level distinctions."
+              },
+              {
+                "candidate_id": "test_2",
+                "gamma": 0.28,
+                "reason": "Probe a nearby brighter setting between the current winner and the more strongly brightened candidate."
+              },
+              {
+                "candidate_id": "test_3",
+                "gamma": 0.4375,
+                "reason": "Probe a modestly darker setting to see whether Initial and Final retain detail with improved separation."
+              },
+              {
+                "candidate_id": "test_4",
+                "gamma": 0.546875,
+                "reason": "Test a further step toward darker rendering while checking both panels for lost faint structure."
+              },
+              {
+                "candidate_id": "test_5",
+                "gamma": 0.683594,
+                "reason": "Extend the local refinement toward darker tones to assess whether either panel benefits without losing readable low-intensity detail."
+              }
+            ]
+          },
+          {
+            "experiment_id": "experiment_0a53b0d22dca48bbb95c5cd1eea54236",
+            "tests": [
+              {
+                "candidate_id": "test_1",
+                "gamma": 0.224,
+                "reason": "Refine below the gamma 0.35 winner to check whether slightly stronger brightening reveals useful low-level detail in both panels without flattening their level distinctions."
+              },
+              {
+                "candidate_id": "test_2",
+                "gamma": 0.28,
+                "reason": "Probe a nearby brighter setting between the current winner and the more strongly brightened candidate."
+              },
+              {
+                "candidate_id": "test_3",
+                "gamma": 0.4375,
+                "reason": "Probe a modestly darker setting to see whether Initial and Final retain detail with improved separation."
+              },
+              {
+                "candidate_id": "test_4",
+                "gamma": 0.546875,
+                "reason": "Test a further step toward darker rendering while checking both panels for lost faint structure."
+              },
+              {
+                "candidate_id": "test_5",
+                "gamma": 0.683594,
+                "reason": "Extend the local refinement toward darker tones to assess whether either panel benefits without losing readable low-intensity detail."
+              }
+            ]
+          },
+          {
+            "experiment_id": "experiment_92f251efb4d4474ebbfd2e37a03be6fc",
+            "tests": [
+              {
+                "candidate_id": "test_1",
+                "gamma": 0.224,
+                "reason": "Refine below the gamma 0.35 winner to check whether slightly stronger brightening improves Final while retaining useful separation in Initial."
+              },
+              {
+                "candidate_id": "test_2",
+                "gamma": 0.28,
+                "reason": "Probe a nearby brighter setting between the current winner and the more strongly brightened candidate."
+              },
+              {
+                "candidate_id": "test_3",
+                "gamma": 0.4375,
+                "reason": "Probe a modestly darker setting to check whether bright-region distinctions improve without compromising Final detail."
+              },
+              {
+                "candidate_id": "test_4",
+                "gamma": 0.546875,
+                "reason": "Test a further step toward darker rendering, considering the different readability needs of Initial and Final."
+              },
+              {
+                "candidate_id": "test_5",
+                "gamma": 0.683594,
+                "reason": "Extend local refinement toward darker tones while checking that the Final panel retains useful low-intensity structure."
+              }
+            ]
+          },
+          {
+            "experiment_id": "experiment_2f5f3e6a9c104597979ec1175375ede4",
+            "tests": [
+              {
+                "candidate_id": "test_1",
+                "gamma": 0.384,
+                "reason": "Refine below the gamma 0.6 winner to test whether a little more brightening improves low-intensity visibility in both panels."
+              },
+              {
+                "candidate_id": "test_2",
+                "gamma": 0.48,
+                "reason": "Probe a nearby brighter setting while checking for retained separation across the bright intensity levels."
+              },
+              {
+                "candidate_id": "test_3",
+                "gamma": 0.75,
+                "reason": "Probe a modestly darker setting to see whether bright-region detail improves without obscuring faint structure."
+              },
+              {
+                "candidate_id": "test_4",
+                "gamma": 0.9375,
+                "reason": "Test a further darker setting near the linear mapping, checking both panels for excessive darkening."
+              },
+              {
+                "candidate_id": "test_5",
+                "gamma": 1.171875,
+                "reason": "Extend local refinement toward darker rendering while monitoring whether useful detail remains legible in Initial and Final."
+              }
+            ]
+          }
+        ]
+      },
+      "trial_result": {
+        "contract_version": 1,
+        "status": "ok",
+        "session_id": "467c6601-c33e-4889-9fc6-20ed5d948b90",
+        "trial_id": "e8f2a6f9-1685-472c-9e19-1dce3e625a8d",
+        "round_id": 2,
+        "pdf_path": "/Users/razmik/Documents/Agentic_system_with_hardware_integration/runs/20261017_205142_877726/print_tuning/trial_r2_e8f2a6f9.pdf",
+        "pdf_sha256": "68bd47c13424dd82c2ebda7a3ba103f3e8710d6468151effd1dae29b3aa35e97",
+        "manifest_path": "/Users/razmik/Documents/Agentic_system_with_hardware_integration/runs/20261017_205142_877726/print_tuning/trial_r2_e8f2a6f9_manifest.json",
+        "page_count": 2
+      },
+      "trials": [
+        {
+          "result": {
+            "contract_version": 1,
+            "status": "ok",
+            "session_id": "467c6601-c33e-4889-9fc6-20ed5d948b90",
+            "trial_id": "e8f2a6f9-1685-472c-9e19-1dce3e625a8d",
+            "round_id": 2,
+            "pdf_path": "/Users/razmik/Documents/Agentic_system_with_hardware_integration/runs/20261017_205142_877726/print_tuning/trial_r2_e8f2a6f9.pdf",
+            "pdf_sha256": "68bd47c13424dd82c2ebda7a3ba103f3e8710d6468151effd1dae29b3aa35e97",
+            "manifest_path": "/Users/razmik/Documents/Agentic_system_with_hardware_integration/runs/20261017_205142_877726/print_tuning/trial_r2_e8f2a6f9_manifest.json",
+            "page_count": 2
+          },
+          "manifest_sha256": "d6d28714a3a74a69853d4ac62dd0a53ce89f6219e5e8f537900244ffd93aae62",
+          "recorded_at": "2026-10-17T16:58:23.372957+00:00"
+        }
+      ],
+      "evaluations": [
+        {
+          "record_id": "/Users/razmik/Documents/Agentic_system_with_hardware_integration/runs/20261017_205142_877726/print_tuning/scan_r2_e8f2a6f9_bc034cd1.json",
+          "result": {
+            "contract_version": 1,
+            "status": "ok",
+            "session_id": "467c6601-c33e-4889-9fc6-20ed5d948b90",
+            "trial_id": "e8f2a6f9-1685-472c-9e19-1dce3e625a8d",
+            "round_id": 2,
+            "evaluation_path": "/Users/razmik/Documents/Agentic_system_with_hardware_integration/runs/20261017_205142_877726/print_tuning/scan_r2_e8f2a6f9_bc034cd1.json",
+            "scan_quality": {
+              "usable": true,
+              "issues": []
+            },
+            "scan_files": [
+              {
+                "path": "/Users/razmik/Documents/Agentic_system_with_hardware_integration/runs/20261017_205142_877726/scans/round_2/fake_205910/scan_page_1.png",
+                "sha256": "a377d6fa5354bb0c726aca959026db5014b39711bdaa28128c179aefa0adce46"
+              },
+              {
+                "path": "/Users/razmik/Documents/Agentic_system_with_hardware_integration/runs/20261017_205142_877726/scans/round_2/fake_205910/scan_page_2.png",
+                "sha256": "af4ecd8353e11bb4f0c2c096aa9d071105ceb26a36effda1e7efc2040a30a4e3"
+              }
+            ]
+          },
+          "result_sha256": "56da71a2e589b4acd0f3fe3571c2d8d9396c409f0bffdb3cec552e725cb77626",
+          "evaluation_sha256": "b608f5c40ef2b313beb8af373ba163061db4afe79f04772eabb09ff673057d09",
+          "recorded_at": "2026-10-17T16:59:44.438982+00:00"
+        }
+      ],
+      "active_evaluation_id": "/Users/razmik/Documents/Agentic_system_with_hardware_integration/runs/20261017_205142_877726/print_tuning/scan_r2_e8f2a6f9_bc034cd1.json",
+      "reviews": [
+        {
+          "response": {
+            "stage": "review_gamma",
+            "assessment": "usable",
+            "issues": [],
+            "gamma_winners": [
+              {
+                "experiment_id": "experiment_18848d544a654115a84d698c48e80b3a",
+                "candidate_id": "test_2",
+                "reason": "Gamma 0.28 gives the strongest aggregate contrast among the tested candidates and improves the measured contrast in both Initial and Final over the reference. Printed levels remain separated, without the increased darkening and black share of the higher-gamma tests.",
+                "confidence": "medium",
+                "tie_explanation": null
+              },
+              {
+                "experiment_id": "experiment_0a53b0d22dca48bbb95c5cd1eea54236",
+                "candidate_id": "reference",
+                "reason": "The reference at gamma 0.35 has the slightly higher aggregate contrast. Gamma 0.28 improves Final modestly but reduces Initial contrast; the difference is small and both renderings retain separated levels and readable detail in both panels.",
+                "confidence": "low",
+                "tie_explanation": "The reference and test_2 (gamma 0.28) are effectively tied: test_2 favors Final slightly while the reference favors Initial and has marginally higher aggregate contrast. Retain the reference for this refinement round."
+              },
+              {
+                "experiment_id": "experiment_92f251efb4d4474ebbfd2e37a03be6fc",
+                "candidate_id": "test_3",
+                "reason": "Gamma 0.4375 has the highest aggregate contrast among tested candidates and notably improves Initial separation. Final contrast is slightly below the reference, but remains close, with distinct printed levels and readable detail in both panels.",
+                "confidence": "medium",
+                "tie_explanation": null
+              },
+              {
+                "experiment_id": "experiment_2f5f3e6a9c104597979ec1175375ede4",
+                "candidate_id": "test_2",
+                "reason": "Gamma 0.48 improves measured contrast in both Initial and Final over the reference and has the highest aggregate contrast tested. The darker tests lose useful distinction, with test_5 also showing a substantial full-black share.",
+                "confidence": "medium",
+                "tie_explanation": null
+              }
+            ],
+            "gamma_tests": [
+              {
+                "experiment_id": "experiment_18848d544a654115a84d698c48e80b3a",
+                "tests": [
+                  {
+                    "candidate_id": "test_1",
+                    "gamma": 0.16,
+                    "reason": "Probe stronger brightening to check whether faint detail improves without flattening distinctions in either panel."
+                  },
+                  {
+                    "candidate_id": "test_2",
+                    "gamma": 0.205,
+                    "reason": "Test a nearby brighter setting below the current winner."
+                  },
+                  {
+                    "candidate_id": "test_3",
+                    "gamma": 0.263,
+                    "reason": "Refine just below the winner to assess low-intensity detail and level separation across both panels."
+                  },
+                  {
+                    "candidate_id": "test_4",
+                    "gamma": 0.337,
+                    "reason": "Probe just above the winner for a possible improvement in balance between Initial and Final."
+                  },
+                  {
+                    "candidate_id": "test_5",
+                    "gamma": 0.432,
+                    "reason": "Test a darker local setting while checking that useful faint detail is retained."
+                  }
+                ]
+              },
+              {
+                "experiment_id": "experiment_0a53b0d22dca48bbb95c5cd1eea54236",
+                "tests": [
+                  {
+                    "candidate_id": "test_1",
+                    "gamma": 0.21,
+                    "reason": "Explore stronger brightening for low-intensity detail in both panels while monitoring separation."
+                  },
+                  {
+                    "candidate_id": "test_2",
+                    "gamma": 0.26,
+                    "reason": "Refine below the reference setting, balancing the modest Final improvement against Initial separation."
+                  },
+                  {
+                    "candidate_id": "test_3",
+                    "gamma": 0.32,
+                    "reason": "Test a setting just below the reference to check for a more even Initial and Final balance."
+                  },
+                  {
+                    "candidate_id": "test_4",
+                    "gamma": 0.39,
+                    "reason": "Probe slightly above the reference for improved separation without losing detail."
+                  },
+                  {
+                    "candidate_id": "test_5",
+                    "gamma": 0.48,
+                    "reason": "Extend the local refinement toward darker tones while checking both panels for loss of faint structure."
+                  }
+                ]
+              },
+              {
+                "experiment_id": "experiment_92f251efb4d4474ebbfd2e37a03be6fc",
+                "tests": [
+                  {
+                    "candidate_id": "test_1",
+                    "gamma": 0.3,
+                    "reason": "Check whether somewhat stronger brightening reveals useful detail in Final while retaining Initial separation."
+                  },
+                  {
+                    "candidate_id": "test_2",
+                    "gamma": 0.37,
+                    "reason": "Probe below the winner for a possible improvement to Final readability."
+                  },
+                  {
+                    "candidate_id": "test_3",
+                    "gamma": 0.46,
+                    "reason": "Test just above the winner to refine the balance between Initial contrast and Final detail."
+                  },
+                  {
+                    "candidate_id": "test_4",
+                    "gamma": 0.57,
+                    "reason": "Assess a moderately darker setting for greater Initial separation without obscuring Final."
+                  },
+                  {
+                    "candidate_id": "test_5",
+                    "gamma": 0.7,
+                    "reason": "Extend the local search toward darker tones while monitoring Final detail and black coverage."
+                  }
+                ]
+              },
+              {
+                "experiment_id": "experiment_2f5f3e6a9c104597979ec1175375ede4",
+                "tests": [
+                  {
+                    "candidate_id": "test_1",
+                    "gamma": 0.25,
+                    "reason": "Test stronger brightening to see whether low-intensity detail improves without reducing useful level separation."
+                  },
+                  {
+                    "candidate_id": "test_2",
+                    "gamma": 0.315,
+                    "reason": "Probe below the winner for a potential improvement in faint detail across both panels."
+                  },
+                  {
+                    "candidate_id": "test_3",
+                    "gamma": 0.397,
+                    "reason": "Refine below the winner while checking whether both panels retain their observed intensity distinctions."
+                  },
+                  {
+                    "candidate_id": "test_4",
+                    "gamma": 0.5,
+                    "reason": "Test just above the winner to see if slightly darker rendering provides a better balance."
+                  },
+                  {
+                    "candidate_id": "test_5",
+                    "gamma": 0.63,
+                    "reason": "Probe a darker local setting while watching for loss of detail and increasing black coverage."
+                  }
+                ]
+              }
+            ]
+          },
+          "trial_id": "e8f2a6f9-1685-472c-9e19-1dce3e625a8d",
+          "evaluation_record_id": "/Users/razmik/Documents/Agentic_system_with_hardware_integration/runs/20261017_205142_877726/print_tuning/scan_r2_e8f2a6f9_bc034cd1.json"
+        }
+      ],
+      "review": {
+        "stage": "review_gamma",
+        "assessment": "usable",
+        "issues": [],
+        "gamma_winners": [
+          {
+            "experiment_id": "experiment_18848d544a654115a84d698c48e80b3a",
+            "candidate_id": "test_2",
+            "reason": "Gamma 0.28 gives the strongest aggregate contrast among the tested candidates and improves the measured contrast in both Initial and Final over the reference. Printed levels remain separated, without the increased darkening and black share of the higher-gamma tests.",
+            "confidence": "medium",
+            "tie_explanation": null
+          },
+          {
+            "experiment_id": "experiment_0a53b0d22dca48bbb95c5cd1eea54236",
+            "candidate_id": "reference",
+            "reason": "The reference at gamma 0.35 has the slightly higher aggregate contrast. Gamma 0.28 improves Final modestly but reduces Initial contrast; the difference is small and both renderings retain separated levels and readable detail in both panels.",
+            "confidence": "low",
+            "tie_explanation": "The reference and test_2 (gamma 0.28) are effectively tied: test_2 favors Final slightly while the reference favors Initial and has marginally higher aggregate contrast. Retain the reference for this refinement round."
+          },
+          {
+            "experiment_id": "experiment_92f251efb4d4474ebbfd2e37a03be6fc",
+            "candidate_id": "test_3",
+            "reason": "Gamma 0.4375 has the highest aggregate contrast among tested candidates and notably improves Initial separation. Final contrast is slightly below the reference, but remains close, with distinct printed levels and readable detail in both panels.",
+            "confidence": "medium",
+            "tie_explanation": null
+          },
+          {
+            "experiment_id": "experiment_2f5f3e6a9c104597979ec1175375ede4",
+            "candidate_id": "test_2",
+            "reason": "Gamma 0.48 improves measured contrast in both Initial and Final over the reference and has the highest aggregate contrast tested. The darker tests lose useful distinction, with test_5 also showing a substantial full-black share.",
+            "confidence": "medium",
+            "tie_explanation": null
+          }
+        ],
+        "gamma_tests": [
+          {
+            "experiment_id": "experiment_18848d544a654115a84d698c48e80b3a",
+            "tests": [
+              {
+                "candidate_id": "test_1",
+                "gamma": 0.16,
+                "reason": "Probe stronger brightening to check whether faint detail improves without flattening distinctions in either panel."
+              },
+              {
+                "candidate_id": "test_2",
+                "gamma": 0.205,
+                "reason": "Test a nearby brighter setting below the current winner."
+              },
+              {
+                "candidate_id": "test_3",
+                "gamma": 0.263,
+                "reason": "Refine just below the winner to assess low-intensity detail and level separation across both panels."
+              },
+              {
+                "candidate_id": "test_4",
+                "gamma": 0.337,
+                "reason": "Probe just above the winner for a possible improvement in balance between Initial and Final."
+              },
+              {
+                "candidate_id": "test_5",
+                "gamma": 0.432,
+                "reason": "Test a darker local setting while checking that useful faint detail is retained."
+              }
+            ]
+          },
+          {
+            "experiment_id": "experiment_0a53b0d22dca48bbb95c5cd1eea54236",
+            "tests": [
+              {
+                "candidate_id": "test_1",
+                "gamma": 0.21,
+                "reason": "Explore stronger brightening for low-intensity detail in both panels while monitoring separation."
+              },
+              {
+                "candidate_id": "test_2",
+                "gamma": 0.26,
+                "reason": "Refine below the reference setting, balancing the modest Final improvement against Initial separation."
+              },
+              {
+                "candidate_id": "test_3",
+                "gamma": 0.32,
+                "reason": "Test a setting just below the reference to check for a more even Initial and Final balance."
+              },
+              {
+                "candidate_id": "test_4",
+                "gamma": 0.39,
+                "reason": "Probe slightly above the reference for improved separation without losing detail."
+              },
+              {
+                "candidate_id": "test_5",
+                "gamma": 0.48,
+                "reason": "Extend the local refinement toward darker tones while checking both panels for loss of faint structure."
+              }
+            ]
+          },
+          {
+            "experiment_id": "experiment_92f251efb4d4474ebbfd2e37a03be6fc",
+            "tests": [
+              {
+                "candidate_id": "test_1",
+                "gamma": 0.3,
+                "reason": "Check whether somewhat stronger brightening reveals useful detail in Final while retaining Initial separation."
+              },
+              {
+                "candidate_id": "test_2",
+                "gamma": 0.37,
+                "reason": "Probe below the winner for a possible improvement to Final readability."
+              },
+              {
+                "candidate_id": "test_3",
+                "gamma": 0.46,
+                "reason": "Test just above the winner to refine the balance between Initial contrast and Final detail."
+              },
+              {
+                "candidate_id": "test_4",
+                "gamma": 0.57,
+                "reason": "Assess a moderately darker setting for greater Initial separation without obscuring Final."
+              },
+              {
+                "candidate_id": "test_5",
+                "gamma": 0.7,
+                "reason": "Extend the local search toward darker tones while monitoring Final detail and black coverage."
+              }
+            ]
+          },
+          {
+            "experiment_id": "experiment_2f5f3e6a9c104597979ec1175375ede4",
+            "tests": [
+              {
+                "candidate_id": "test_1",
+                "gamma": 0.25,
+                "reason": "Test stronger brightening to see whether low-intensity detail improves without reducing useful level separation."
+              },
+              {
+                "candidate_id": "test_2",
+                "gamma": 0.315,
+                "reason": "Probe below the winner for a potential improvement in faint detail across both panels."
+              },
+              {
+                "candidate_id": "test_3",
+                "gamma": 0.397,
+                "reason": "Refine below the winner while checking whether both panels retain their observed intensity distinctions."
+              },
+              {
+                "candidate_id": "test_4",
+                "gamma": 0.5,
+                "reason": "Test just above the winner to see if slightly darker rendering provides a better balance."
+              },
+              {
+                "candidate_id": "test_5",
+                "gamma": 0.63,
+                "reason": "Probe a darker local setting while watching for loss of detail and increasing black coverage."
+              }
+            ]
+          }
+        ]
+      },
+      "winners": {
+        "experiment_18848d544a654115a84d698c48e80b3a": {
+          "gamma": 0.28,
+          "dark_level": 0.0,
+          "light_level": 1.0,
+          "steps": 0,
+          "invert": false
+        },
+        "experiment_0a53b0d22dca48bbb95c5cd1eea54236": {
+          "gamma": 0.35,
+          "dark_level": 0.0,
+          "light_level": 1.0,
+          "steps": 0,
+          "invert": false
+        },
+        "experiment_92f251efb4d4474ebbfd2e37a03be6fc": {
+          "gamma": 0.4375,
+          "dark_level": 0.0,
+          "light_level": 1.0,
+          "steps": 0,
+          "invert": false
+        },
+        "experiment_2f5f3e6a9c104597979ec1175375ede4": {
+          "gamma": 0.48,
+          "dark_level": 0.0,
+          "light_level": 1.0,
+          "steps": 0,
+          "invert": false
+        }
+      },
+      "reference_settings": {
+        "experiment_18848d544a654115a84d698c48e80b3a": {
+          "gamma": 0.35,
+          "dark_level": 0.0,
+          "light_level": 1.0,
+          "steps": 0,
+          "invert": false
+        },
+        "experiment_0a53b0d22dca48bbb95c5cd1eea54236": {
+          "gamma": 0.35,
+          "dark_level": 0.0,
+          "light_level": 1.0,
+          "steps": 0,
+          "invert": false
+        },
+        "experiment_92f251efb4d4474ebbfd2e37a03be6fc": {
+          "gamma": 0.35,
+          "dark_level": 0.0,
+          "light_level": 1.0,
+          "steps": 0,
+          "invert": false
+        },
+        "experiment_2f5f3e6a9c104597979ec1175375ede4": {
+          "gamma": 0.6,
+          "dark_level": 0.0,
+          "light_level": 1.0,
+          "steps": 0,
+          "invert": false
+        }
+      },
+      "approvals": [
+        {
+          "metadata": {
+            "approval_id": "3e59cd3ee5d74a378b65855dfa0631ea",
+            "trial_id": "e8f2a6f9-1685-472c-9e19-1dce3e625a8d",
+            "pdf_sha256": "68bd47c13424dd82c2ebda7a3ba103f3e8710d6468151effd1dae29b3aa35e97",
+            "printer": "Office_Printer",
+            "print_settings": {
+              "pdf_path": "/Users/razmik/Documents/Agentic_system_with_hardware_integration/runs/20261017_205142_877726/print_tuning/trial_r2_e8f2a6f9.pdf",
+              "printer": "Office_Printer",
+              "copies": 1,
+              "paper": "A4",
+              "color_mode": "grayscale",
+              "sides": "one-sided",
+              "scale": "100%"
+            },
+            "approved_by": "graph human interrupt",
+            "reprint": false
+          },
+          "recorded_at": "2026-10-17T16:58:44.829312+00:00"
+        }
+      ],
+      "print_attempts": [
+        {
+          "attempt_id": "3e59cd3ee5d74a378b65855dfa0631ea:submission",
+          "approval_id": "3e59cd3ee5d74a378b65855dfa0631ea",
+          "trial_id": "e8f2a6f9-1685-472c-9e19-1dce3e625a8d",
+          "submission_state": "result_recorded",
+          "result": {
+            "ok": true,
+            "job_id": "Office_Printer-16",
+            "printer": "Office_Printer",
+            "file": "/Users/razmik/Documents/Agentic_system_with_hardware_integration/runs/20261017_205142_877726/print_tuning/trial_r2_e8f2a6f9.pdf",
+            "tracked": true
+          },
+          "job_results": [
+            {
+              "ok": true,
+              "job_id": "Office_Printer-16",
+              "state": "done",
+              "confirmed": true,
+              "message": "fake job is done"
+            }
+          ],
+          "recorded_at": "2026-10-17T16:58:44.842458+00:00"
+        }
+      ],
+      "retries": {
+        "rescans": 0,
+        "reprints": 0,
+        "trial_regenerations": 0
+      },
+      "reprint_requested": false
+    },
+    "3": {
+      "proposal": {
+        "stage": "review_gamma",
+        "assessment": "usable",
+        "issues": [],
+        "gamma_winners": [
+          {
+            "experiment_id": "experiment_18848d544a654115a84d698c48e80b3a",
+            "candidate_id": "test_2",
+            "reason": "Gamma 0.28 gives the strongest aggregate contrast among the tested candidates and improves the measured contrast in both Initial and Final over the reference. Printed levels remain separated, without the increased darkening and black share of the higher-gamma tests.",
+            "confidence": "medium",
+            "tie_explanation": null
+          },
+          {
+            "experiment_id": "experiment_0a53b0d22dca48bbb95c5cd1eea54236",
+            "candidate_id": "reference",
+            "reason": "The reference at gamma 0.35 has the slightly higher aggregate contrast. Gamma 0.28 improves Final modestly but reduces Initial contrast; the difference is small and both renderings retain separated levels and readable detail in both panels.",
+            "confidence": "low",
+            "tie_explanation": "The reference and test_2 (gamma 0.28) are effectively tied: test_2 favors Final slightly while the reference favors Initial and has marginally higher aggregate contrast. Retain the reference for this refinement round."
+          },
+          {
+            "experiment_id": "experiment_92f251efb4d4474ebbfd2e37a03be6fc",
+            "candidate_id": "test_3",
+            "reason": "Gamma 0.4375 has the highest aggregate contrast among tested candidates and notably improves Initial separation. Final contrast is slightly below the reference, but remains close, with distinct printed levels and readable detail in both panels.",
+            "confidence": "medium",
+            "tie_explanation": null
+          },
+          {
+            "experiment_id": "experiment_2f5f3e6a9c104597979ec1175375ede4",
+            "candidate_id": "test_2",
+            "reason": "Gamma 0.48 improves measured contrast in both Initial and Final over the reference and has the highest aggregate contrast tested. The darker tests lose useful distinction, with test_5 also showing a substantial full-black share.",
+            "confidence": "medium",
+            "tie_explanation": null
+          }
+        ],
+        "gamma_tests": [
+          {
+            "experiment_id": "experiment_18848d544a654115a84d698c48e80b3a",
+            "tests": [
+              {
+                "candidate_id": "test_1",
+                "gamma": 0.16,
+                "reason": "Probe stronger brightening to check whether faint detail improves without flattening distinctions in either panel."
+              },
+              {
+                "candidate_id": "test_2",
+                "gamma": 0.205,
+                "reason": "Test a nearby brighter setting below the current winner."
+              },
+              {
+                "candidate_id": "test_3",
+                "gamma": 0.263,
+                "reason": "Refine just below the winner to assess low-intensity detail and level separation across both panels."
+              },
+              {
+                "candidate_id": "test_4",
+                "gamma": 0.337,
+                "reason": "Probe just above the winner for a possible improvement in balance between Initial and Final."
+              },
+              {
+                "candidate_id": "test_5",
+                "gamma": 0.432,
+                "reason": "Test a darker local setting while checking that useful faint detail is retained."
+              }
+            ]
+          },
+          {
+            "experiment_id": "experiment_0a53b0d22dca48bbb95c5cd1eea54236",
+            "tests": [
+              {
+                "candidate_id": "test_1",
+                "gamma": 0.21,
+                "reason": "Explore stronger brightening for low-intensity detail in both panels while monitoring separation."
+              },
+              {
+                "candidate_id": "test_2",
+                "gamma": 0.26,
+                "reason": "Refine below the reference setting, balancing the modest Final improvement against Initial separation."
+              },
+              {
+                "candidate_id": "test_3",
+                "gamma": 0.32,
+                "reason": "Test a setting just below the reference to check for a more even Initial and Final balance."
+              },
+              {
+                "candidate_id": "test_4",
+                "gamma": 0.39,
+                "reason": "Probe slightly above the reference for improved separation without losing detail."
+              },
+              {
+                "candidate_id": "test_5",
+                "gamma": 0.48,
+                "reason": "Extend the local refinement toward darker tones while checking both panels for loss of faint structure."
+              }
+            ]
+          },
+          {
+            "experiment_id": "experiment_92f251efb4d4474ebbfd2e37a03be6fc",
+            "tests": [
+              {
+                "candidate_id": "test_1",
+                "gamma": 0.3,
+                "reason": "Check whether somewhat stronger brightening reveals useful detail in Final while retaining Initial separation."
+              },
+              {
+                "candidate_id": "test_2",
+                "gamma": 0.37,
+                "reason": "Probe below the winner for a possible improvement to Final readability."
+              },
+              {
+                "candidate_id": "test_3",
+                "gamma": 0.46,
+                "reason": "Test just above the winner to refine the balance between Initial contrast and Final detail."
+              },
+              {
+                "candidate_id": "test_4",
+                "gamma": 0.57,
+                "reason": "Assess a moderately darker setting for greater Initial separation without obscuring Final."
+              },
+              {
+                "candidate_id": "test_5",
+                "gamma": 0.7,
+                "reason": "Extend the local search toward darker tones while monitoring Final detail and black coverage."
+              }
+            ]
+          },
+          {
+            "experiment_id": "experiment_2f5f3e6a9c104597979ec1175375ede4",
+            "tests": [
+              {
+                "candidate_id": "test_1",
+                "gamma": 0.25,
+                "reason": "Test stronger brightening to see whether low-intensity detail improves without reducing useful level separation."
+              },
+              {
+                "candidate_id": "test_2",
+                "gamma": 0.315,
+                "reason": "Probe below the winner for a potential improvement in faint detail across both panels."
+              },
+              {
+                "candidate_id": "test_3",
+                "gamma": 0.397,
+                "reason": "Refine below the winner while checking whether both panels retain their observed intensity distinctions."
+              },
+              {
+                "candidate_id": "test_4",
+                "gamma": 0.5,
+                "reason": "Test just above the winner to see if slightly darker rendering provides a better balance."
+              },
+              {
+                "candidate_id": "test_5",
+                "gamma": 0.63,
+                "reason": "Probe a darker local setting while watching for loss of detail and increasing black coverage."
+              }
+            ]
+          }
+        ]
+      },
+      "trial_result": {
+        "contract_version": 1,
+        "status": "ok",
+        "session_id": "467c6601-c33e-4889-9fc6-20ed5d948b90",
+        "trial_id": "38b04f0a-aa9a-4606-a7d3-e3aa68bacdcb",
+        "round_id": 3,
+        "pdf_path": "/Users/razmik/Documents/Agentic_system_with_hardware_integration/runs/20261017_205142_877726/print_tuning/trial_r3_38b04f0a.pdf",
+        "pdf_sha256": "52e49fff9aafb668f97849c5e2640f54f0dbe9145f6057a04b4ee54f25b5ce27",
+        "manifest_path": "/Users/razmik/Documents/Agentic_system_with_hardware_integration/runs/20261017_205142_877726/print_tuning/trial_r3_38b04f0a_manifest.json",
+        "page_count": 2
+      },
+      "trials": [
+        {
+          "result": {
+            "contract_version": 1,
+            "status": "ok",
+            "session_id": "467c6601-c33e-4889-9fc6-20ed5d948b90",
+            "trial_id": "38b04f0a-aa9a-4606-a7d3-e3aa68bacdcb",
+            "round_id": 3,
+            "pdf_path": "/Users/razmik/Documents/Agentic_system_with_hardware_integration/runs/20261017_205142_877726/print_tuning/trial_r3_38b04f0a.pdf",
+            "pdf_sha256": "52e49fff9aafb668f97849c5e2640f54f0dbe9145f6057a04b4ee54f25b5ce27",
+            "manifest_path": "/Users/razmik/Documents/Agentic_system_with_hardware_integration/runs/20261017_205142_877726/print_tuning/trial_r3_38b04f0a_manifest.json",
+            "page_count": 2
+          },
+          "manifest_sha256": "b121fff22e947d90295d32e9f15ebe5f7c29f4346d8b61bcd7a6238c025f096f",
+          "recorded_at": "2026-10-17T17:00:58.347068+00:00"
+        }
+      ],
+      "evaluations": [
+        {
+          "record_id": "/Users/razmik/Documents/Agentic_system_with_hardware_integration/runs/20261017_205142_877726/print_tuning/scan_r3_38b04f0a_c30d6aec.json",
+          "result": {
+            "contract_version": 1,
+            "status": "ok",
+            "session_id": "467c6601-c33e-4889-9fc6-20ed5d948b90",
+            "trial_id": "38b04f0a-aa9a-4606-a7d3-e3aa68bacdcb",
+            "round_id": 3,
+            "evaluation_path": "/Users/razmik/Documents/Agentic_system_with_hardware_integration/runs/20261017_205142_877726/print_tuning/scan_r3_38b04f0a_c30d6aec.json",
+            "scan_quality": {
+              "usable": true,
+              "issues": []
+            },
+            "scan_files": [
+              {
+                "path": "/Users/razmik/Documents/Agentic_system_with_hardware_integration/runs/20261017_205142_877726/scans/round_3/fake_210134/scan_page_1.png",
+                "sha256": "abde934af21a86c2e92bd1fd3750a5315882303a99720a0ce827039f76309d4e"
+              },
+              {
+                "path": "/Users/razmik/Documents/Agentic_system_with_hardware_integration/runs/20261017_205142_877726/scans/round_3/fake_210134/scan_page_2.png",
+                "sha256": "ec02399a05e697ca948d2719f8a4380dae9cb7b0a3118c2cb0493b37cb1455db"
+              }
+            ]
+          },
+          "result_sha256": "72541d6c6cbcad189cb34c61c21693be93ac29139f4cb1ca2a9036169186138d",
+          "evaluation_sha256": "aeea453b0608ec554ad45fd1cf22f120177bdcead21d05855b6ff25ef3e9ea15",
+          "recorded_at": "2026-10-17T17:02:10.643917+00:00"
+        }
+      ],
+      "active_evaluation_id": "/Users/razmik/Documents/Agentic_system_with_hardware_integration/runs/20261017_205142_877726/print_tuning/scan_r3_38b04f0a_c30d6aec.json",
+      "reviews": [
+        {
+          "response": {
+            "stage": "review_gamma_final",
+            "assessment": "usable",
+            "issues": [],
+            "gamma_winners": [
+              {
+                "experiment_id": "experiment_18848d544a654115a84d698c48e80b3a",
+                "candidate_id": "reference",
+                "reason": "Retain gamma 0.28: it has the highest measured aggregate contrast in this set, with all intended levels separated in both panels and little full-black coverage. Tests 3 and 4 are close, but do not provide a meaningful readability improvement across Initial and Final.",
+                "confidence": "low",
+                "tie_explanation": "The reference and tests 3 and 4 are effectively tied in contrast and visual readability; the reference has a small aggregate advantage and no level-collapse warning."
+              },
+              {
+                "experiment_id": "experiment_0a53b0d22dca48bbb95c5cd1eea54236",
+                "candidate_id": "reference",
+                "reason": "Retain gamma 0.35. It has the highest measured aggregate contrast, while preserving separated levels and readable detail in both Initial and Final. Test 3 is nearly equivalent, with only a slight shift in favor of Final over Initial.",
+                "confidence": "low",
+                "tie_explanation": "The reference and test 3 are effectively tied: their aggregate contrast is nearly the same, with small opposing panel-level differences. Retain the reference."
+              },
+              {
+                "experiment_id": "experiment_92f251efb4d4474ebbfd2e37a03be6fc",
+                "candidate_id": "reference",
+                "reason": "Retain gamma 0.4375 for the best overall balance across the bright, varied Initial and darker Final panels. Test 3 has marginally higher Initial contrast, but slightly lower Final contrast; the reference also has less full-black coverage than the darker settings. All intended levels remain separated.",
+                "confidence": "low",
+                "tie_explanation": "The reference and test 3 are effectively tied in aggregate contrast and both retain readable levels in both panels. The reference has a slight aggregate advantage and favors Final modestly."
+              },
+              {
+                "experiment_id": "experiment_2f5f3e6a9c104597979ec1175375ede4",
+                "candidate_id": "test_4",
+                "reason": "Choose test 4, gamma 0.5. It has the highest measured aggregate contrast and slightly improves contrast in both Initial and Final over the reference. The increase in full-black coverage is modest, and all intended levels remain separated.",
+                "confidence": "medium",
+                "tie_explanation": null
+              }
+            ]
+          },
+          "trial_id": "38b04f0a-aa9a-4606-a7d3-e3aa68bacdcb",
+          "evaluation_record_id": "/Users/razmik/Documents/Agentic_system_with_hardware_integration/runs/20261017_205142_877726/print_tuning/scan_r3_38b04f0a_c30d6aec.json"
+        }
+      ],
+      "review": {
+        "stage": "review_gamma_final",
+        "assessment": "usable",
+        "issues": [],
+        "gamma_winners": [
+          {
+            "experiment_id": "experiment_18848d544a654115a84d698c48e80b3a",
+            "candidate_id": "reference",
+            "reason": "Retain gamma 0.28: it has the highest measured aggregate contrast in this set, with all intended levels separated in both panels and little full-black coverage. Tests 3 and 4 are close, but do not provide a meaningful readability improvement across Initial and Final.",
+            "confidence": "low",
+            "tie_explanation": "The reference and tests 3 and 4 are effectively tied in contrast and visual readability; the reference has a small aggregate advantage and no level-collapse warning."
+          },
+          {
+            "experiment_id": "experiment_0a53b0d22dca48bbb95c5cd1eea54236",
+            "candidate_id": "reference",
+            "reason": "Retain gamma 0.35. It has the highest measured aggregate contrast, while preserving separated levels and readable detail in both Initial and Final. Test 3 is nearly equivalent, with only a slight shift in favor of Final over Initial.",
+            "confidence": "low",
+            "tie_explanation": "The reference and test 3 are effectively tied: their aggregate contrast is nearly the same, with small opposing panel-level differences. Retain the reference."
+          },
+          {
+            "experiment_id": "experiment_92f251efb4d4474ebbfd2e37a03be6fc",
+            "candidate_id": "reference",
+            "reason": "Retain gamma 0.4375 for the best overall balance across the bright, varied Initial and darker Final panels. Test 3 has marginally higher Initial contrast, but slightly lower Final contrast; the reference also has less full-black coverage than the darker settings. All intended levels remain separated.",
+            "confidence": "low",
+            "tie_explanation": "The reference and test 3 are effectively tied in aggregate contrast and both retain readable levels in both panels. The reference has a slight aggregate advantage and favors Final modestly."
+          },
+          {
+            "experiment_id": "experiment_2f5f3e6a9c104597979ec1175375ede4",
+            "candidate_id": "test_4",
+            "reason": "Choose test 4, gamma 0.5. It has the highest measured aggregate contrast and slightly improves contrast in both Initial and Final over the reference. The increase in full-black coverage is modest, and all intended levels remain separated.",
+            "confidence": "medium",
+            "tie_explanation": null
+          }
+        ]
+      },
+      "winners": {
+        "experiment_18848d544a654115a84d698c48e80b3a": {
+          "gamma": 0.28,
+          "dark_level": 0.0,
+          "light_level": 1.0,
+          "steps": 0,
+          "invert": false
+        },
+        "experiment_0a53b0d22dca48bbb95c5cd1eea54236": {
+          "gamma": 0.35,
+          "dark_level": 0.0,
+          "light_level": 1.0,
+          "steps": 0,
+          "invert": false
+        },
+        "experiment_92f251efb4d4474ebbfd2e37a03be6fc": {
+          "gamma": 0.4375,
+          "dark_level": 0.0,
+          "light_level": 1.0,
+          "steps": 0,
+          "invert": false
+        },
+        "experiment_2f5f3e6a9c104597979ec1175375ede4": {
+          "gamma": 0.5,
+          "dark_level": 0.0,
+          "light_level": 1.0,
+          "steps": 0,
+          "invert": false
+        }
+      },
+      "reference_settings": {
+        "experiment_18848d544a654115a84d698c48e80b3a": {
+          "gamma": 0.28,
+          "dark_level": 0.0,
+          "light_level": 1.0,
+          "steps": 0,
+          "invert": false
+        },
+        "experiment_0a53b0d22dca48bbb95c5cd1eea54236": {
+          "gamma": 0.35,
+          "dark_level": 0.0,
+          "light_level": 1.0,
+          "steps": 0,
+          "invert": false
+        },
+        "experiment_92f251efb4d4474ebbfd2e37a03be6fc": {
+          "gamma": 0.4375,
+          "dark_level": 0.0,
+          "light_level": 1.0,
+          "steps": 0,
+          "invert": false
+        },
+        "experiment_2f5f3e6a9c104597979ec1175375ede4": {
+          "gamma": 0.48,
+          "dark_level": 0.0,
+          "light_level": 1.0,
+          "steps": 0,
+          "invert": false
+        }
+      },
+      "approvals": [
+        {
+          "metadata": {
+            "approval_id": "5dac82f910114b74833f537ea35de085",
+            "trial_id": "38b04f0a-aa9a-4606-a7d3-e3aa68bacdcb",
+            "pdf_sha256": "52e49fff9aafb668f97849c5e2640f54f0dbe9145f6057a04b4ee54f25b5ce27",
+            "printer": "Office_Printer",
+            "print_settings": {
+              "pdf_path": "/Users/razmik/Documents/Agentic_system_with_hardware_integration/runs/20261017_205142_877726/print_tuning/trial_r3_38b04f0a.pdf",
+              "printer": "Office_Printer",
+              "copies": 1,
+              "paper": "A4",
+              "color_mode": "grayscale",
+              "sides": "one-sided",
+              "scale": "100%"
+            },
+            "approved_by": "graph human interrupt",
+            "reprint": false
+          },
+          "recorded_at": "2026-10-17T17:01:13.013786+00:00"
+        }
+      ],
+      "print_attempts": [
+        {
+          "attempt_id": "5dac82f910114b74833f537ea35de085:submission",
+          "approval_id": "5dac82f910114b74833f537ea35de085",
+          "trial_id": "38b04f0a-aa9a-4606-a7d3-e3aa68bacdcb",
+          "submission_state": "result_recorded",
+          "result": {
+            "ok": true,
+            "job_id": "Office_Printer-17",
+            "printer": "Office_Printer",
+            "file": "/Users/razmik/Documents/Agentic_system_with_hardware_integration/runs/20261017_205142_877726/print_tuning/trial_r3_38b04f0a.pdf",
+            "tracked": true
+          },
+          "job_results": [
+            {
+              "ok": true,
+              "job_id": "Office_Printer-17",
+              "state": "done",
+              "confirmed": true,
+              "message": "fake job is done"
+            }
+          ],
+          "recorded_at": "2026-10-17T17:01:13.032433+00:00"
+        }
+      ],
+      "retries": {
+        "rescans": 0,
+        "reprints": 0,
+        "trial_regenerations": 0
+      },
+      "reprint_requested": false
+    }
+  },
+  "decisions": [
+    {
+      "stage": "propose_gamma",
+      "trial_id": null,
+      "evaluation_record_id": null,
+      "response": {
+        "stage": "propose_gamma",
+        "experiments": [
+          {
+            "experiment_id": "experiment_18848d544a654115a84d698c48e80b3a",
+            "tests": [
+              {
+                "candidate_id": "test_1",
+                "gamma": 0.2,
+                "reason": "Explore strong brightening of the predominantly dark Initial and Final previews to reveal low-intensity structure."
+              },
+              {
+                "candidate_id": "test_2",
+                "gamma": 0.35,
+                "reason": "Test substantial brightening while retaining more separation from the isolated bright focus spot."
+              },
+              {
+                "candidate_id": "test_3",
+                "gamma": 0.6,
+                "reason": "Probe moderate brightening for a balance between faint texture visibility and focus-spot detail."
+              },
+              {
+                "candidate_id": "test_4",
+                "gamma": 1.4,
+                "reason": "Check whether modest darkening improves separation without losing the already dim background detail."
+              },
+              {
+                "candidate_id": "test_5",
+                "gamma": 2.8,
+                "reason": "Include a stronger darkening comparison to assess whether background texture is currently too prominent."
+              }
+            ]
+          },
+          {
+            "experiment_id": "experiment_0a53b0d22dca48bbb95c5cd1eea54236",
+            "tests": [
+              {
+                "candidate_id": "test_1",
+                "gamma": 0.2,
+                "reason": "Explore strong brightening of the dark Initial and Final previews to make low-intensity detail more legible."
+              },
+              {
+                "candidate_id": "test_2",
+                "gamma": 0.35,
+                "reason": "Test substantial brightening while checking whether the sparse bright feature remains distinct."
+              },
+              {
+                "candidate_id": "test_3",
+                "gamma": 0.6,
+                "reason": "Probe moderate brightening as a compromise between revealing faint structure and preserving level separation."
+              },
+              {
+                "candidate_id": "test_4",
+                "gamma": 1.4,
+                "reason": "Check modest darkening against the current appearance to see whether it clarifies the noisy texture."
+              },
+              {
+                "candidate_id": "test_5",
+                "gamma": 2.8,
+                "reason": "Include stronger darkening to test whether reduced prominence of the texture improves readability."
+              }
+            ]
+          },
+          {
+            "experiment_id": "experiment_92f251efb4d4474ebbfd2e37a03be6fc",
+            "tests": [
+              {
+                "candidate_id": "test_1",
+                "gamma": 0.2,
+                "reason": "Test strong brightening for low-intensity detail, while checking the already prominent light pixels for washout."
+              },
+              {
+                "candidate_id": "test_2",
+                "gamma": 0.35,
+                "reason": "Explore substantial brightening to assess faint structure without assuming the bright Initial texture is faithful detail."
+              },
+              {
+                "candidate_id": "test_3",
+                "gamma": 0.6,
+                "reason": "Probe moderate brightening as an initial balance between low-level visibility and bright-region separation."
+              },
+              {
+                "candidate_id": "test_4",
+                "gamma": 1.4,
+                "reason": "Test modest darkening to evaluate whether the bright Initial levels become better separated."
+              },
+              {
+                "candidate_id": "test_5",
+                "gamma": 2.8,
+                "reason": "Include stronger darkening to compare bright-region detail and overall readability in both panels."
+              }
+            ]
+          },
+          {
+            "experiment_id": "experiment_2f5f3e6a9c104597979ec1175375ede4",
+            "tests": [
+              {
+                "candidate_id": "test_1",
+                "gamma": 0.2,
+                "reason": "Test strong brightening for faint detail, while checking whether the comparatively bright texture becomes washed out."
+              },
+              {
+                "candidate_id": "test_2",
+                "gamma": 0.35,
+                "reason": "Explore substantial brightening to assess low-intensity visibility and preservation of bright-level distinctions."
+              },
+              {
+                "candidate_id": "test_3",
+                "gamma": 0.6,
+                "reason": "Probe moderate brightening as a balance between revealing dark detail and retaining texture separation."
+              },
+              {
+                "candidate_id": "test_4",
+                "gamma": 1.4,
+                "reason": "Test modest darkening to evaluate whether the brighter appearance gains useful level separation."
+              },
+              {
+                "candidate_id": "test_5",
+                "gamma": 2.8,
+                "reason": "Include stronger darkening as a comparison for bright-region detail and the readability of both panels."
+              }
+            ]
+          }
+        ]
+      },
+      "accepted_at": "2026-10-17T16:53:54.596422+00:00"
+    },
+    {
+      "stage": "review_gamma",
+      "trial_id": "1b859712-cec2-4e99-86a6-d58d6ad596f0",
+      "evaluation_record_id": "/Users/razmik/Documents/Agentic_system_with_hardware_integration/runs/20261017_205142_877726/print_tuning/scan_r1_1b859712_818fd2e8.json",
+      "response": {
+        "stage": "review_gamma",
+        "assessment": "usable",
+        "issues": [],
+        "gamma_winners": [
+          {
+            "experiment_id": "experiment_18848d544a654115a84d698c48e80b3a",
+            "candidate_id": "test_2",
+            "reason": "Gamma 0.35 is a better balance across Initial and Final than the very bright gamma 0.2: both panels retain distinct intensity levels and useful detail, while avoiding the severe dark crush seen at higher gamma. It is the best tested balance, although gamma 0.2 offers strong contrast as well.",
+            "confidence": "medium",
+            "tie_explanation": null
+          },
+          {
+            "experiment_id": "experiment_0a53b0d22dca48bbb95c5cd1eea54236",
+            "candidate_id": "test_2",
+            "reason": "Gamma 0.35 gives the strongest aggregate contrast among the tested candidates and keeps detail visible in both Initial and Final. The brighter gamma 0.2 remains a plausible alternative, but looks more prone to flattening intensity distinctions; the darkened candidates lose useful detail.",
+            "confidence": "medium",
+            "tie_explanation": null
+          },
+          {
+            "experiment_id": "experiment_92f251efb4d4474ebbfd2e37a03be6fc",
+            "candidate_id": "test_2",
+            "reason": "Gamma 0.35 is a balanced choice for the unlike panels: it improves Final detail over the reference while retaining separation in the already bright Initial panel. Gamma 0.6 gives slightly more aggregate contrast, but does so less evenly across the two panels.",
+            "confidence": "medium",
+            "tie_explanation": null
+          },
+          {
+            "experiment_id": "experiment_2f5f3e6a9c104597979ec1175375ede4",
+            "candidate_id": "test_3",
+            "reason": "Gamma 0.6 has the highest measured aggregate contrast among the tested options and preserves readable intensity variation in both Initial and Final. Gamma 0.35 is close, but gamma 0.6 appears to provide a slightly clearer balance without the detail loss of stronger darkening.",
+            "confidence": "medium",
+            "tie_explanation": null
+          }
+        ],
+        "gamma_tests": [
+          {
+            "experiment_id": "experiment_18848d544a654115a84d698c48e80b3a",
+            "tests": [
+              {
+                "candidate_id": "test_1",
+                "gamma": 0.224,
+                "reason": "Refine below the gamma 0.35 winner to check whether slightly stronger brightening reveals useful low-level detail in both panels without flattening their level distinctions."
+              },
+              {
+                "candidate_id": "test_2",
+                "gamma": 0.28,
+                "reason": "Probe a nearby brighter setting between the current winner and the more strongly brightened candidate."
+              },
+              {
+                "candidate_id": "test_3",
+                "gamma": 0.4375,
+                "reason": "Probe a modestly darker setting to see whether Initial and Final retain detail with improved separation."
+              },
+              {
+                "candidate_id": "test_4",
+                "gamma": 0.546875,
+                "reason": "Test a further step toward darker rendering while checking both panels for lost faint structure."
+              },
+              {
+                "candidate_id": "test_5",
+                "gamma": 0.683594,
+                "reason": "Extend the local refinement toward darker tones to assess whether either panel benefits without losing readable low-intensity detail."
+              }
+            ]
+          },
+          {
+            "experiment_id": "experiment_0a53b0d22dca48bbb95c5cd1eea54236",
+            "tests": [
+              {
+                "candidate_id": "test_1",
+                "gamma": 0.224,
+                "reason": "Refine below the gamma 0.35 winner to check whether slightly stronger brightening reveals useful low-level detail in both panels without flattening their level distinctions."
+              },
+              {
+                "candidate_id": "test_2",
+                "gamma": 0.28,
+                "reason": "Probe a nearby brighter setting between the current winner and the more strongly brightened candidate."
+              },
+              {
+                "candidate_id": "test_3",
+                "gamma": 0.4375,
+                "reason": "Probe a modestly darker setting to see whether Initial and Final retain detail with improved separation."
+              },
+              {
+                "candidate_id": "test_4",
+                "gamma": 0.546875,
+                "reason": "Test a further step toward darker rendering while checking both panels for lost faint structure."
+              },
+              {
+                "candidate_id": "test_5",
+                "gamma": 0.683594,
+                "reason": "Extend the local refinement toward darker tones to assess whether either panel benefits without losing readable low-intensity detail."
+              }
+            ]
+          },
+          {
+            "experiment_id": "experiment_92f251efb4d4474ebbfd2e37a03be6fc",
+            "tests": [
+              {
+                "candidate_id": "test_1",
+                "gamma": 0.224,
+                "reason": "Refine below the gamma 0.35 winner to check whether slightly stronger brightening improves Final while retaining useful separation in Initial."
+              },
+              {
+                "candidate_id": "test_2",
+                "gamma": 0.28,
+                "reason": "Probe a nearby brighter setting between the current winner and the more strongly brightened candidate."
+              },
+              {
+                "candidate_id": "test_3",
+                "gamma": 0.4375,
+                "reason": "Probe a modestly darker setting to check whether bright-region distinctions improve without compromising Final detail."
+              },
+              {
+                "candidate_id": "test_4",
+                "gamma": 0.546875,
+                "reason": "Test a further step toward darker rendering, considering the different readability needs of Initial and Final."
+              },
+              {
+                "candidate_id": "test_5",
+                "gamma": 0.683594,
+                "reason": "Extend local refinement toward darker tones while checking that the Final panel retains useful low-intensity structure."
+              }
+            ]
+          },
+          {
+            "experiment_id": "experiment_2f5f3e6a9c104597979ec1175375ede4",
+            "tests": [
+              {
+                "candidate_id": "test_1",
+                "gamma": 0.384,
+                "reason": "Refine below the gamma 0.6 winner to test whether a little more brightening improves low-intensity visibility in both panels."
+              },
+              {
+                "candidate_id": "test_2",
+                "gamma": 0.48,
+                "reason": "Probe a nearby brighter setting while checking for retained separation across the bright intensity levels."
+              },
+              {
+                "candidate_id": "test_3",
+                "gamma": 0.75,
+                "reason": "Probe a modestly darker setting to see whether bright-region detail improves without obscuring faint structure."
+              },
+              {
+                "candidate_id": "test_4",
+                "gamma": 0.9375,
+                "reason": "Test a further darker setting near the linear mapping, checking both panels for excessive darkening."
+              },
+              {
+                "candidate_id": "test_5",
+                "gamma": 1.171875,
+                "reason": "Extend local refinement toward darker rendering while monitoring whether useful detail remains legible in Initial and Final."
+              }
+            ]
+          }
+        ]
+      },
+      "accepted_at": "2026-10-17T16:58:19.328857+00:00"
+    },
+    {
+      "stage": "review_gamma",
+      "trial_id": "e8f2a6f9-1685-472c-9e19-1dce3e625a8d",
+      "evaluation_record_id": "/Users/razmik/Documents/Agentic_system_with_hardware_integration/runs/20261017_205142_877726/print_tuning/scan_r2_e8f2a6f9_bc034cd1.json",
+      "response": {
+        "stage": "review_gamma",
+        "assessment": "usable",
+        "issues": [],
+        "gamma_winners": [
+          {
+            "experiment_id": "experiment_18848d544a654115a84d698c48e80b3a",
+            "candidate_id": "test_2",
+            "reason": "Gamma 0.28 gives the strongest aggregate contrast among the tested candidates and improves the measured contrast in both Initial and Final over the reference. Printed levels remain separated, without the increased darkening and black share of the higher-gamma tests.",
+            "confidence": "medium",
+            "tie_explanation": null
+          },
+          {
+            "experiment_id": "experiment_0a53b0d22dca48bbb95c5cd1eea54236",
+            "candidate_id": "reference",
+            "reason": "The reference at gamma 0.35 has the slightly higher aggregate contrast. Gamma 0.28 improves Final modestly but reduces Initial contrast; the difference is small and both renderings retain separated levels and readable detail in both panels.",
+            "confidence": "low",
+            "tie_explanation": "The reference and test_2 (gamma 0.28) are effectively tied: test_2 favors Final slightly while the reference favors Initial and has marginally higher aggregate contrast. Retain the reference for this refinement round."
+          },
+          {
+            "experiment_id": "experiment_92f251efb4d4474ebbfd2e37a03be6fc",
+            "candidate_id": "test_3",
+            "reason": "Gamma 0.4375 has the highest aggregate contrast among tested candidates and notably improves Initial separation. Final contrast is slightly below the reference, but remains close, with distinct printed levels and readable detail in both panels.",
+            "confidence": "medium",
+            "tie_explanation": null
+          },
+          {
+            "experiment_id": "experiment_2f5f3e6a9c104597979ec1175375ede4",
+            "candidate_id": "test_2",
+            "reason": "Gamma 0.48 improves measured contrast in both Initial and Final over the reference and has the highest aggregate contrast tested. The darker tests lose useful distinction, with test_5 also showing a substantial full-black share.",
+            "confidence": "medium",
+            "tie_explanation": null
+          }
+        ],
+        "gamma_tests": [
+          {
+            "experiment_id": "experiment_18848d544a654115a84d698c48e80b3a",
+            "tests": [
+              {
+                "candidate_id": "test_1",
+                "gamma": 0.16,
+                "reason": "Probe stronger brightening to check whether faint detail improves without flattening distinctions in either panel."
+              },
+              {
+                "candidate_id": "test_2",
+                "gamma": 0.205,
+                "reason": "Test a nearby brighter setting below the current winner."
+              },
+              {
+                "candidate_id": "test_3",
+                "gamma": 0.263,
+                "reason": "Refine just below the winner to assess low-intensity detail and level separation across both panels."
+              },
+              {
+                "candidate_id": "test_4",
+                "gamma": 0.337,
+                "reason": "Probe just above the winner for a possible improvement in balance between Initial and Final."
+              },
+              {
+                "candidate_id": "test_5",
+                "gamma": 0.432,
+                "reason": "Test a darker local setting while checking that useful faint detail is retained."
+              }
+            ]
+          },
+          {
+            "experiment_id": "experiment_0a53b0d22dca48bbb95c5cd1eea54236",
+            "tests": [
+              {
+                "candidate_id": "test_1",
+                "gamma": 0.21,
+                "reason": "Explore stronger brightening for low-intensity detail in both panels while monitoring separation."
+              },
+              {
+                "candidate_id": "test_2",
+                "gamma": 0.26,
+                "reason": "Refine below the reference setting, balancing the modest Final improvement against Initial separation."
+              },
+              {
+                "candidate_id": "test_3",
+                "gamma": 0.32,
+                "reason": "Test a setting just below the reference to check for a more even Initial and Final balance."
+              },
+              {
+                "candidate_id": "test_4",
+                "gamma": 0.39,
+                "reason": "Probe slightly above the reference for improved separation without losing detail."
+              },
+              {
+                "candidate_id": "test_5",
+                "gamma": 0.48,
+                "reason": "Extend the local refinement toward darker tones while checking both panels for loss of faint structure."
+              }
+            ]
+          },
+          {
+            "experiment_id": "experiment_92f251efb4d4474ebbfd2e37a03be6fc",
+            "tests": [
+              {
+                "candidate_id": "test_1",
+                "gamma": 0.3,
+                "reason": "Check whether somewhat stronger brightening reveals useful detail in Final while retaining Initial separation."
+              },
+              {
+                "candidate_id": "test_2",
+                "gamma": 0.37,
+                "reason": "Probe below the winner for a possible improvement to Final readability."
+              },
+              {
+                "candidate_id": "test_3",
+                "gamma": 0.46,
+                "reason": "Test just above the winner to refine the balance between Initial contrast and Final detail."
+              },
+              {
+                "candidate_id": "test_4",
+                "gamma": 0.57,
+                "reason": "Assess a moderately darker setting for greater Initial separation without obscuring Final."
+              },
+              {
+                "candidate_id": "test_5",
+                "gamma": 0.7,
+                "reason": "Extend the local search toward darker tones while monitoring Final detail and black coverage."
+              }
+            ]
+          },
+          {
+            "experiment_id": "experiment_2f5f3e6a9c104597979ec1175375ede4",
+            "tests": [
+              {
+                "candidate_id": "test_1",
+                "gamma": 0.25,
+                "reason": "Test stronger brightening to see whether low-intensity detail improves without reducing useful level separation."
+              },
+              {
+                "candidate_id": "test_2",
+                "gamma": 0.315,
+                "reason": "Probe below the winner for a potential improvement in faint detail across both panels."
+              },
+              {
+                "candidate_id": "test_3",
+                "gamma": 0.397,
+                "reason": "Refine below the winner while checking whether both panels retain their observed intensity distinctions."
+              },
+              {
+                "candidate_id": "test_4",
+                "gamma": 0.5,
+                "reason": "Test just above the winner to see if slightly darker rendering provides a better balance."
+              },
+              {
+                "candidate_id": "test_5",
+                "gamma": 0.63,
+                "reason": "Probe a darker local setting while watching for loss of detail and increasing black coverage."
+              }
+            ]
+          }
+        ]
+      },
+      "accepted_at": "2026-10-17T17:00:54.428742+00:00"
+    },
+    {
+      "stage": "review_gamma_final",
+      "trial_id": "38b04f0a-aa9a-4606-a7d3-e3aa68bacdcb",
+      "evaluation_record_id": "/Users/razmik/Documents/Agentic_system_with_hardware_integration/runs/20261017_205142_877726/print_tuning/scan_r3_38b04f0a_c30d6aec.json",
+      "response": {
+        "stage": "review_gamma_final",
+        "assessment": "usable",
+        "issues": [],
+        "gamma_winners": [
+          {
+            "experiment_id": "experiment_18848d544a654115a84d698c48e80b3a",
+            "candidate_id": "reference",
+            "reason": "Retain gamma 0.28: it has the highest measured aggregate contrast in this set, with all intended levels separated in both panels and little full-black coverage. Tests 3 and 4 are close, but do not provide a meaningful readability improvement across Initial and Final.",
+            "confidence": "low",
+            "tie_explanation": "The reference and tests 3 and 4 are effectively tied in contrast and visual readability; the reference has a small aggregate advantage and no level-collapse warning."
+          },
+          {
+            "experiment_id": "experiment_0a53b0d22dca48bbb95c5cd1eea54236",
+            "candidate_id": "reference",
+            "reason": "Retain gamma 0.35. It has the highest measured aggregate contrast, while preserving separated levels and readable detail in both Initial and Final. Test 3 is nearly equivalent, with only a slight shift in favor of Final over Initial.",
+            "confidence": "low",
+            "tie_explanation": "The reference and test 3 are effectively tied: their aggregate contrast is nearly the same, with small opposing panel-level differences. Retain the reference."
+          },
+          {
+            "experiment_id": "experiment_92f251efb4d4474ebbfd2e37a03be6fc",
+            "candidate_id": "reference",
+            "reason": "Retain gamma 0.4375 for the best overall balance across the bright, varied Initial and darker Final panels. Test 3 has marginally higher Initial contrast, but slightly lower Final contrast; the reference also has less full-black coverage than the darker settings. All intended levels remain separated.",
+            "confidence": "low",
+            "tie_explanation": "The reference and test 3 are effectively tied in aggregate contrast and both retain readable levels in both panels. The reference has a slight aggregate advantage and favors Final modestly."
+          },
+          {
+            "experiment_id": "experiment_2f5f3e6a9c104597979ec1175375ede4",
+            "candidate_id": "test_4",
+            "reason": "Choose test 4, gamma 0.5. It has the highest measured aggregate contrast and slightly improves contrast in both Initial and Final over the reference. The increase in full-black coverage is modest, and all intended levels remain separated.",
+            "confidence": "medium",
+            "tie_explanation": null
+          }
+        ]
+      },
+      "accepted_at": "2026-10-17T17:03:00.686436+00:00"
+    }
+  ],
+  "outcomes": [],
+  "revision": 26,
+  "created_at": "2026-10-17T16:53:37.755816+00:00",
+  "updated_at": "2026-10-17T17:03:00.688482+00:00"
+}

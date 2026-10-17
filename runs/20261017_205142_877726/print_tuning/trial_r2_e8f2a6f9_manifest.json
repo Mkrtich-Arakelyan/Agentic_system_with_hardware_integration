@@ -1,0 +1,4545 @@
+{
+  "schema_version": "trial/1",
+  "trial_id": "e8f2a6f9-1685-472c-9e19-1dce3e625a8d",
+  "run_id": "20261017_205142_877726",
+  "selection_id": "468be234-bf13-5523-a254-4a8f72b159a1",
+  "selection_version": 1,
+  "calibration_session_id": "467c6601-c33e-4889-9fc6-20ed5d948b90",
+  "round_id": 2,
+  "tested_parameter": "gamma",
+  "created_at": "2026-10-17T16:58:23.351527+00:00",
+  "config": {
+    "schema_version": "tuning_config/1",
+    "name": "photonic_focus_heatmaps",
+    "description": "Grayscale print tuning for the focusing experiments: each item is one experiment with its Initial and Final camera heatmaps, printed in several grayscale variations per round, scanned by the user and judged by the agents to pick a better gamma. Only gamma is tuned, in all three rounds.",
+    "page": {
+      "size": "A4",
+      "orientation": "portrait",
+      "items_per_page": 2,
+      "variations_per_item": 6,
+      "margin_mm": 10,
+      "description": "Each page shows items_per_page items, each printed in variations_per_item variations, so one page has items_per_page x variations_per_item tiles."
+    },
+    "panels": {
+      "allowed_kinds": [
+        "heatmap"
+      ],
+      "min_per_item": 1,
+      "max_per_item": 3,
+      "description": "The figures inside one item. For this project an item has 2 heatmap panels: the Initial and the Final camera image."
+    },
+    "limits": {
+      "method": "percentile",
+      "low_percentile": 0.5,
+      "high_percentile": 99.5,
+      "scope": "per_item",
+      "description": "The value limits that map data to gray are computed once from all panels of an item together and stay fixed for the whole calibration session, so the panels of an item stay comparable and only gamma changes between rounds."
+    },
+    "parameters": {
+      "gamma": {
+        "type": "float",
+        "min": 0.1,
+        "max": 5.0,
+        "default": 1.0,
+        "spacing": "log",
+        "scope": "per_item",
+        "tuned": true,
+        "description": "Tone curve applied to the normalized data; values below 1 brighten the low values, above 1 darken them. Test values are spaced on a log scale."
+      },
+      "gray_levels": {
+        "type": "range",
+        "dark": {
+          "min": 0.0,
+          "max": 0.4,
+          "default": 0.0
+        },
+        "light": {
+          "min": 0.6,
+          "max": 1.0,
+          "default": 1.0
+        },
+        "min_gap": 0.3,
+        "scope": "shared",
+        "tuned": false,
+        "description": "The printed gray for the lowest (dark) and highest (light) data values, where 0 means black and 1 means white. Not tuned: always printed with the defaults, dark 0.0 and light 1.0."
+      },
+      "steps": {
+        "type": "int",
+        "min": 2,
+        "max": 32,
+        "default": 0,
+        "special_values": {
+          "0": "smooth"
+        },
+        "scope": "per_item",
+        "tuned": false,
+        "description": "Number of discrete gray bands. 0 means smooth (no banding). Not tuned: always printed with the default 0 (smooth)."
+      },
+      "invert": {
+        "type": "bool",
+        "default": false,
+        "scope": "per_item",
+        "tuned": false,
+        "description": "If true, high data values print dark instead of light. Not tuned; set by hand if needed."
+      }
+    },
+    "rounds": [
+      {
+        "round_id": 1,
+        "parameter": "gamma"
+      },
+      {
+        "round_id": 2,
+        "parameter": "gamma"
+      },
+      {
+        "round_id": 3,
+        "parameter": "gamma"
+      }
+    ],
+    "variation_rules": {
+      "reference_count": 1,
+      "tests_change_only_round_parameter": true,
+      "shared_parameters_same_tests_for_all_items": true,
+      "description": "Each item's variations include reference_count copies of the best settings so far; the other variations change only the parameter of the current round. A shared parameter gets the same test values in every item."
+    },
+    "references": {
+      "gray_patches": 11,
+      "paper_refs": 2,
+      "black_patch": true,
+      "markers": 4,
+      "page_code": true,
+      "description": "Printed on every page for reading the scan: gray_patches patches evenly spaced from 0 to 1, paper_refs blank paper areas, one full black patch, and markers corner markers for aligning the scan, with a page code that identifies the page and round."
+    },
+    "scan": {
+      "min_dpi": 150,
+      "recommended_dpi": 300,
+      "accepted_formats": [
+        "pdf",
+        "png",
+        "jpg",
+        "jpeg"
+      ],
+      "description": "Requirements for the scanned page the user returns."
+    }
+  },
+  "items": [
+    {
+      "item_id": "experiment_18848d544a654115a84d698c48e80b3a",
+      "label": "enhancement 0.8 → 28.3",
+      "limits": {
+        "lo": 0.003164737911684864,
+        "hi": 6.939199564121912,
+        "method": "percentile",
+        "hi_raised_to_focus_peak": true
+      },
+      "panels": [
+        {
+          "name": "Initial",
+          "kind": "heatmap",
+          "data_path": "/Users/razmik/Documents/Agentic_system_with_hardware_integration/runs/20261017_205142_877726/experiment_18848d544a654115a84d698c48e80b3a/initial_intensity.npy",
+          "sha256": "a36d6a98936eec1c154285f03f479beddf0b0b97fa522554dc3cd29f7864c731",
+          "grid_shape": [
+            32,
+            32
+          ],
+          "marks": [
+            {
+              "type": "box",
+              "row": 16,
+              "col": 16,
+              "size": 3
+            }
+          ],
+          "clipped": {
+            "below_lo": 7,
+            "above_hi": 0
+          }
+        },
+        {
+          "name": "Final",
+          "kind": "heatmap",
+          "data_path": "/Users/razmik/Documents/Agentic_system_with_hardware_integration/runs/20261017_205142_877726/experiment_18848d544a654115a84d698c48e80b3a/final_intensity.npy",
+          "sha256": "d9c3452ef223481e9aa3db9d5a6514f421bd2388aa535a7dc971e3b23cbefacc",
+          "grid_shape": [
+            32,
+            32
+          ],
+          "marks": [
+            {
+              "type": "box",
+              "row": 16,
+              "col": 16,
+              "size": 3
+            }
+          ],
+          "clipped": {
+            "below_lo": 4,
+            "above_hi": 0
+          }
+        }
+      ]
+    },
+    {
+      "item_id": "experiment_0a53b0d22dca48bbb95c5cd1eea54236",
+      "label": "enhancement 0.9 → 6.7",
+      "limits": {
+        "lo": 0.003182859391852668,
+        "hi": 4.98944036997549,
+        "method": "percentile",
+        "hi_raised_to_focus_peak": true
+      },
+      "panels": [
+        {
+          "name": "Initial",
+          "kind": "heatmap",
+          "data_path": "/Users/razmik/Documents/Agentic_system_with_hardware_integration/runs/20261017_205142_877726/experiment_0a53b0d22dca48bbb95c5cd1eea54236/initial_intensity.npy",
+          "sha256": "7412ed6aa60bed3f6583ac520fd2ecfdd82a5f1e07d8fc74b7421adca79bcd6c",
+          "grid_shape": [
+            32,
+            32
+          ],
+          "marks": [
+            {
+              "type": "box",
+              "row": 16,
+              "col": 16,
+              "size": 3
+            }
+          ],
+          "clipped": {
+            "below_lo": 6,
+            "above_hi": 0
+          }
+        },
+        {
+          "name": "Final",
+          "kind": "heatmap",
+          "data_path": "/Users/razmik/Documents/Agentic_system_with_hardware_integration/runs/20261017_205142_877726/experiment_0a53b0d22dca48bbb95c5cd1eea54236/final_intensity.npy",
+          "sha256": "16a58f7d31c0d288ebce7048b588bf3c4d8539b6e6c54187df595b707280ddc2",
+          "grid_shape": [
+            32,
+            32
+          ],
+          "marks": [
+            {
+              "type": "box",
+              "row": 16,
+              "col": 16,
+              "size": 3
+            }
+          ],
+          "clipped": {
+            "below_lo": 5,
+            "above_hi": 0
+          }
+        }
+      ]
+    },
+    {
+      "item_id": "experiment_92f251efb4d4474ebbfd2e37a03be6fc",
+      "label": "enhancement 1.0 → 2.9",
+      "limits": {
+        "lo": 0.004423754692666885,
+        "hi": 2.703316697304627,
+        "method": "percentile"
+      },
+      "panels": [
+        {
+          "name": "Initial",
+          "kind": "heatmap",
+          "data_path": "/Users/razmik/Documents/Agentic_system_with_hardware_integration/runs/20261017_205142_877726/experiment_92f251efb4d4474ebbfd2e37a03be6fc/initial_intensity.npy",
+          "sha256": "ecdf1f6691c2f99c719243c80523d506405000843149cb503f6ff5f863972123",
+          "grid_shape": [
+            32,
+            32
+          ],
+          "marks": [
+            {
+              "type": "box",
+              "row": 16,
+              "col": 16,
+              "size": 3
+            }
+          ],
+          "clipped": {
+            "below_lo": 8,
+            "above_hi": 11
+          }
+        },
+        {
+          "name": "Final",
+          "kind": "heatmap",
+          "data_path": "/Users/razmik/Documents/Agentic_system_with_hardware_integration/runs/20261017_205142_877726/experiment_92f251efb4d4474ebbfd2e37a03be6fc/final_intensity.npy",
+          "sha256": "66e1f7e0fe8c680b54b4d00c1100e738fd82fa68afb8d94612a831a1e0098c58",
+          "grid_shape": [
+            32,
+            32
+          ],
+          "marks": [
+            {
+              "type": "box",
+              "row": 16,
+              "col": 16,
+              "size": 3
+            }
+          ],
+          "clipped": {
+            "below_lo": 3,
+            "above_hi": 0
+          }
+        }
+      ]
+    },
+    {
+      "item_id": "experiment_2f5f3e6a9c104597979ec1175375ede4",
+      "label": "enhancement 1.2 → 1.2",
+      "limits": {
+        "lo": 0.00557373023682031,
+        "hi": 2.8859443687023667,
+        "method": "percentile"
+      },
+      "panels": [
+        {
+          "name": "Initial",
+          "kind": "heatmap",
+          "data_path": "/Users/razmik/Documents/Agentic_system_with_hardware_integration/runs/20261017_205142_877726/experiment_2f5f3e6a9c104597979ec1175375ede4/initial_intensity.npy",
+          "sha256": "ab87c38aacd2297950b37319d0a842d52235118549baf42010a71fe26aab63a2",
+          "grid_shape": [
+            32,
+            32
+          ],
+          "marks": [
+            {
+              "type": "box",
+              "row": 16,
+              "col": 16,
+              "size": 3
+            }
+          ],
+          "clipped": {
+            "below_lo": 6,
+            "above_hi": 6
+          }
+        },
+        {
+          "name": "Final",
+          "kind": "heatmap",
+          "data_path": "/Users/razmik/Documents/Agentic_system_with_hardware_integration/runs/20261017_205142_877726/experiment_2f5f3e6a9c104597979ec1175375ede4/final_intensity.npy",
+          "sha256": "90288ffbf57662ced674aabe26922ea232c0cf48f5e182d3791571c8ac235fd1",
+          "grid_shape": [
+            32,
+            32
+          ],
+          "marks": [
+            {
+              "type": "box",
+              "row": 16,
+              "col": 16,
+              "size": 3
+            }
+          ],
+          "clipped": {
+            "below_lo": 5,
+            "above_hi": 5
+          }
+        }
+      ]
+    }
+  ],
+  "variations": {
+    "experiment_18848d544a654115a84d698c48e80b3a": [
+      {
+        "variation_id": "reference",
+        "role": "reference",
+        "mapping": {
+          "gamma": 0.35,
+          "dark_level": 0.0,
+          "light_level": 1.0,
+          "steps": 0,
+          "invert": false
+        },
+        "note": "accepted settings so far"
+      },
+      {
+        "variation_id": "test_1",
+        "role": "test",
+        "mapping": {
+          "gamma": 0.224,
+          "dark_level": 0.0,
+          "light_level": 1.0,
+          "steps": 0,
+          "invert": false
+        },
+        "note": "Refine below the gamma 0.35 winner to check whether slightly stronger brightening reveals useful low-level detail in both panels without flattening their level distinctions."
+      },
+      {
+        "variation_id": "test_2",
+        "role": "test",
+        "mapping": {
+          "gamma": 0.28,
+          "dark_level": 0.0,
+          "light_level": 1.0,
+          "steps": 0,
+          "invert": false
+        },
+        "note": "Probe a nearby brighter setting between the current winner and the more strongly brightened candidate."
+      },
+      {
+        "variation_id": "test_3",
+        "role": "test",
+        "mapping": {
+          "gamma": 0.4375,
+          "dark_level": 0.0,
+          "light_level": 1.0,
+          "steps": 0,
+          "invert": false
+        },
+        "note": "Probe a modestly darker setting to see whether Initial and Final retain detail with improved separation."
+      },
+      {
+        "variation_id": "test_4",
+        "role": "test",
+        "mapping": {
+          "gamma": 0.546875,
+          "dark_level": 0.0,
+          "light_level": 1.0,
+          "steps": 0,
+          "invert": false
+        },
+        "note": "Test a further step toward darker rendering while checking both panels for lost faint structure."
+      },
+      {
+        "variation_id": "test_5",
+        "role": "test",
+        "mapping": {
+          "gamma": 0.683594,
+          "dark_level": 0.0,
+          "light_level": 1.0,
+          "steps": 0,
+          "invert": false
+        },
+        "note": "Extend the local refinement toward darker tones to assess whether either panel benefits without losing readable low-intensity detail."
+      }
+    ],
+    "experiment_0a53b0d22dca48bbb95c5cd1eea54236": [
+      {
+        "variation_id": "reference",
+        "role": "reference",
+        "mapping": {
+          "gamma": 0.35,
+          "dark_level": 0.0,
+          "light_level": 1.0,
+          "steps": 0,
+          "invert": false
+        },
+        "note": "accepted settings so far"
+      },
+      {
+        "variation_id": "test_1",
+        "role": "test",
+        "mapping": {
+          "gamma": 0.224,
+          "dark_level": 0.0,
+          "light_level": 1.0,
+          "steps": 0,
+          "invert": false
+        },
+        "note": "Refine below the gamma 0.35 winner to check whether slightly stronger brightening reveals useful low-level detail in both panels without flattening their level distinctions."
+      },
+      {
+        "variation_id": "test_2",
+        "role": "test",
+        "mapping": {
+          "gamma": 0.28,
+          "dark_level": 0.0,
+          "light_level": 1.0,
+          "steps": 0,
+          "invert": false
+        },
+        "note": "Probe a nearby brighter setting between the current winner and the more strongly brightened candidate."
+      },
+      {
+        "variation_id": "test_3",
+        "role": "test",
+        "mapping": {
+          "gamma": 0.4375,
+          "dark_level": 0.0,
+          "light_level": 1.0,
+          "steps": 0,
+          "invert": false
+        },
+        "note": "Probe a modestly darker setting to see whether Initial and Final retain detail with improved separation."
+      },
+      {
+        "variation_id": "test_4",
+        "role": "test",
+        "mapping": {
+          "gamma": 0.546875,
+          "dark_level": 0.0,
+          "light_level": 1.0,
+          "steps": 0,
+          "invert": false
+        },
+        "note": "Test a further step toward darker rendering while checking both panels for lost faint structure."
+      },
+      {
+        "variation_id": "test_5",
+        "role": "test",
+        "mapping": {
+          "gamma": 0.683594,
+          "dark_level": 0.0,
+          "light_level": 1.0,
+          "steps": 0,
+          "invert": false
+        },
+        "note": "Extend the local refinement toward darker tones to assess whether either panel benefits without losing readable low-intensity detail."
+      }
+    ],
+    "experiment_92f251efb4d4474ebbfd2e37a03be6fc": [
+      {
+        "variation_id": "reference",
+        "role": "reference",
+        "mapping": {
+          "gamma": 0.35,
+          "dark_level": 0.0,
+          "light_level": 1.0,
+          "steps": 0,
+          "invert": false
+        },
+        "note": "accepted settings so far"
+      },
+      {
+        "variation_id": "test_1",
+        "role": "test",
+        "mapping": {
+          "gamma": 0.224,
+          "dark_level": 0.0,
+          "light_level": 1.0,
+          "steps": 0,
+          "invert": false
+        },
+        "note": "Refine below the gamma 0.35 winner to check whether slightly stronger brightening improves Final while retaining useful separation in Initial."
+      },
+      {
+        "variation_id": "test_2",
+        "role": "test",
+        "mapping": {
+          "gamma": 0.28,
+          "dark_level": 0.0,
+          "light_level": 1.0,
+          "steps": 0,
+          "invert": false
+        },
+        "note": "Probe a nearby brighter setting between the current winner and the more strongly brightened candidate."
+      },
+      {
+        "variation_id": "test_3",
+        "role": "test",
+        "mapping": {
+          "gamma": 0.4375,
+          "dark_level": 0.0,
+          "light_level": 1.0,
+          "steps": 0,
+          "invert": false
+        },
+        "note": "Probe a modestly darker setting to check whether bright-region distinctions improve without compromising Final detail."
+      },
+      {
+        "variation_id": "test_4",
+        "role": "test",
+        "mapping": {
+          "gamma": 0.546875,
+          "dark_level": 0.0,
+          "light_level": 1.0,
+          "steps": 0,
+          "invert": false
+        },
+        "note": "Test a further step toward darker rendering, considering the different readability needs of Initial and Final."
+      },
+      {
+        "variation_id": "test_5",
+        "role": "test",
+        "mapping": {
+          "gamma": 0.683594,
+          "dark_level": 0.0,
+          "light_level": 1.0,
+          "steps": 0,
+          "invert": false
+        },
+        "note": "Extend local refinement toward darker tones while checking that the Final panel retains useful low-intensity structure."
+      }
+    ],
+    "experiment_2f5f3e6a9c104597979ec1175375ede4": [
+      {
+        "variation_id": "reference",
+        "role": "reference",
+        "mapping": {
+          "gamma": 0.6,
+          "dark_level": 0.0,
+          "light_level": 1.0,
+          "steps": 0,
+          "invert": false
+        },
+        "note": "accepted settings so far"
+      },
+      {
+        "variation_id": "test_1",
+        "role": "test",
+        "mapping": {
+          "gamma": 0.384,
+          "dark_level": 0.0,
+          "light_level": 1.0,
+          "steps": 0,
+          "invert": false
+        },
+        "note": "Refine below the gamma 0.6 winner to test whether a little more brightening improves low-intensity visibility in both panels."
+      },
+      {
+        "variation_id": "test_2",
+        "role": "test",
+        "mapping": {
+          "gamma": 0.48,
+          "dark_level": 0.0,
+          "light_level": 1.0,
+          "steps": 0,
+          "invert": false
+        },
+        "note": "Probe a nearby brighter setting while checking for retained separation across the bright intensity levels."
+      },
+      {
+        "variation_id": "test_3",
+        "role": "test",
+        "mapping": {
+          "gamma": 0.75,
+          "dark_level": 0.0,
+          "light_level": 1.0,
+          "steps": 0,
+          "invert": false
+        },
+        "note": "Probe a modestly darker setting to see whether bright-region detail improves without obscuring faint structure."
+      },
+      {
+        "variation_id": "test_4",
+        "role": "test",
+        "mapping": {
+          "gamma": 0.9375,
+          "dark_level": 0.0,
+          "light_level": 1.0,
+          "steps": 0,
+          "invert": false
+        },
+        "note": "Test a further darker setting near the linear mapping, checking both panels for excessive darkening."
+      },
+      {
+        "variation_id": "test_5",
+        "role": "test",
+        "mapping": {
+          "gamma": 1.171875,
+          "dark_level": 0.0,
+          "light_level": 1.0,
+          "steps": 0,
+          "invert": false
+        },
+        "note": "Extend local refinement toward darker rendering while monitoring whether useful detail remains legible in Initial and Final."
+      }
+    ]
+  },
+  "pdf": {
+    "path": "/Users/razmik/Documents/Agentic_system_with_hardware_integration/runs/20261017_205142_877726/print_tuning/trial_r2_e8f2a6f9.pdf",
+    "sha256": "68bd47c13424dd82c2ebda7a3ba103f3e8710d6468151effd1dae29b3aa35e97",
+    "pages": 2,
+    "page_size_mm": [
+      210,
+      297
+    ]
+  },
+  "print_settings": {
+    "printer": null,
+    "monochrome": true,
+    "scaling": "none",
+    "paper": "A4",
+    "tray": null,
+    "copies": 1
+  },
+  "cells_path": "/Users/razmik/Documents/Agentic_system_with_hardware_integration/runs/20261017_205142_877726/print_tuning/trial_r2_e8f2a6f9_cells.npz",
+  "manifest_path": "/Users/razmik/Documents/Agentic_system_with_hardware_integration/runs/20261017_205142_877726/print_tuning/trial_r2_e8f2a6f9_manifest.json",
+  "pages": [
+    {
+      "page_number": 1,
+      "page_code": [
+        0,
+        0,
+        1,
+        0,
+        1,
+        0
+      ],
+      "regions": {
+        "markers": [
+          {
+            "corner": "top_left",
+            "box": [
+              10.0,
+              10.0,
+              8.0,
+              8.0
+            ]
+          },
+          {
+            "corner": "top_right",
+            "box": [
+              192.0,
+              10.0,
+              8.0,
+              8.0
+            ]
+          },
+          {
+            "corner": "bottom_left",
+            "box": [
+              10.0,
+              279.0,
+              8.0,
+              8.0
+            ]
+          },
+          {
+            "corner": "bottom_right",
+            "box": [
+              192.0,
+              279.0,
+              8.0,
+              8.0
+            ]
+          }
+        ],
+        "page_code": [
+          {
+            "bit": 0,
+            "box": [
+              20.0,
+              12.5,
+              3.0,
+              3.0
+            ]
+          },
+          {
+            "bit": 0,
+            "box": [
+              24.0,
+              12.5,
+              3.0,
+              3.0
+            ]
+          },
+          {
+            "bit": 1,
+            "box": [
+              28.0,
+              12.5,
+              3.0,
+              3.0
+            ]
+          },
+          {
+            "bit": 0,
+            "box": [
+              32.0,
+              12.5,
+              3.0,
+              3.0
+            ]
+          },
+          {
+            "bit": 1,
+            "box": [
+              36.0,
+              12.5,
+              3.0,
+              3.0
+            ]
+          },
+          {
+            "bit": 0,
+            "box": [
+              40.0,
+              12.5,
+              3.0,
+              3.0
+            ]
+          }
+        ],
+        "tiles": [
+          {
+            "item_id": "experiment_18848d544a654115a84d698c48e80b3a",
+            "variation_id": "reference",
+            "role": "reference",
+            "box": [
+              10.0,
+              25.5,
+              61.67,
+              55.15
+            ]
+          },
+          {
+            "item_id": "experiment_18848d544a654115a84d698c48e80b3a",
+            "variation_id": "test_1",
+            "role": "test",
+            "box": [
+              74.17,
+              25.5,
+              61.67,
+              55.15
+            ]
+          },
+          {
+            "item_id": "experiment_18848d544a654115a84d698c48e80b3a",
+            "variation_id": "test_2",
+            "role": "test",
+            "box": [
+              138.33,
+              25.5,
+              61.67,
+              55.15
+            ]
+          },
+          {
+            "item_id": "experiment_18848d544a654115a84d698c48e80b3a",
+            "variation_id": "test_3",
+            "role": "test",
+            "box": [
+              10.0,
+              83.15,
+              61.67,
+              55.15
+            ]
+          },
+          {
+            "item_id": "experiment_18848d544a654115a84d698c48e80b3a",
+            "variation_id": "test_4",
+            "role": "test",
+            "box": [
+              74.17,
+              83.15,
+              61.67,
+              55.15
+            ]
+          },
+          {
+            "item_id": "experiment_18848d544a654115a84d698c48e80b3a",
+            "variation_id": "test_5",
+            "role": "test",
+            "box": [
+              138.33,
+              83.15,
+              61.67,
+              55.15
+            ]
+          },
+          {
+            "item_id": "experiment_0a53b0d22dca48bbb95c5cd1eea54236",
+            "variation_id": "reference",
+            "role": "reference",
+            "box": [
+              10.0,
+              146.8,
+              61.67,
+              55.15
+            ]
+          },
+          {
+            "item_id": "experiment_0a53b0d22dca48bbb95c5cd1eea54236",
+            "variation_id": "test_1",
+            "role": "test",
+            "box": [
+              74.17,
+              146.8,
+              61.67,
+              55.15
+            ]
+          },
+          {
+            "item_id": "experiment_0a53b0d22dca48bbb95c5cd1eea54236",
+            "variation_id": "test_2",
+            "role": "test",
+            "box": [
+              138.33,
+              146.8,
+              61.67,
+              55.15
+            ]
+          },
+          {
+            "item_id": "experiment_0a53b0d22dca48bbb95c5cd1eea54236",
+            "variation_id": "test_3",
+            "role": "test",
+            "box": [
+              10.0,
+              204.45,
+              61.67,
+              55.15
+            ]
+          },
+          {
+            "item_id": "experiment_0a53b0d22dca48bbb95c5cd1eea54236",
+            "variation_id": "test_4",
+            "role": "test",
+            "box": [
+              74.17,
+              204.45,
+              61.67,
+              55.15
+            ]
+          },
+          {
+            "item_id": "experiment_0a53b0d22dca48bbb95c5cd1eea54236",
+            "variation_id": "test_5",
+            "role": "test",
+            "box": [
+              138.33,
+              204.45,
+              61.67,
+              55.15
+            ]
+          }
+        ],
+        "plots": [
+          {
+            "item_id": "experiment_18848d544a654115a84d698c48e80b3a",
+            "variation_id": "reference",
+            "panel": "Initial",
+            "box": [
+              11.2,
+              36.26,
+              28.63,
+              28.63
+            ],
+            "grid_shape": [
+              32,
+              32
+            ]
+          },
+          {
+            "item_id": "experiment_18848d544a654115a84d698c48e80b3a",
+            "variation_id": "reference",
+            "panel": "Final",
+            "box": [
+              41.83,
+              36.26,
+              28.63,
+              28.63
+            ],
+            "grid_shape": [
+              32,
+              32
+            ]
+          },
+          {
+            "item_id": "experiment_18848d544a654115a84d698c48e80b3a",
+            "variation_id": "test_1",
+            "panel": "Initial",
+            "box": [
+              75.37,
+              36.26,
+              28.63,
+              28.63
+            ],
+            "grid_shape": [
+              32,
+              32
+            ]
+          },
+          {
+            "item_id": "experiment_18848d544a654115a84d698c48e80b3a",
+            "variation_id": "test_1",
+            "panel": "Final",
+            "box": [
+              106.0,
+              36.26,
+              28.63,
+              28.63
+            ],
+            "grid_shape": [
+              32,
+              32
+            ]
+          },
+          {
+            "item_id": "experiment_18848d544a654115a84d698c48e80b3a",
+            "variation_id": "test_2",
+            "panel": "Initial",
+            "box": [
+              139.53,
+              36.26,
+              28.63,
+              28.63
+            ],
+            "grid_shape": [
+              32,
+              32
+            ]
+          },
+          {
+            "item_id": "experiment_18848d544a654115a84d698c48e80b3a",
+            "variation_id": "test_2",
+            "panel": "Final",
+            "box": [
+              170.17,
+              36.26,
+              28.63,
+              28.63
+            ],
+            "grid_shape": [
+              32,
+              32
+            ]
+          },
+          {
+            "item_id": "experiment_18848d544a654115a84d698c48e80b3a",
+            "variation_id": "test_3",
+            "panel": "Initial",
+            "box": [
+              11.2,
+              93.91,
+              28.63,
+              28.63
+            ],
+            "grid_shape": [
+              32,
+              32
+            ]
+          },
+          {
+            "item_id": "experiment_18848d544a654115a84d698c48e80b3a",
+            "variation_id": "test_3",
+            "panel": "Final",
+            "box": [
+              41.83,
+              93.91,
+              28.63,
+              28.63
+            ],
+            "grid_shape": [
+              32,
+              32
+            ]
+          },
+          {
+            "item_id": "experiment_18848d544a654115a84d698c48e80b3a",
+            "variation_id": "test_4",
+            "panel": "Initial",
+            "box": [
+              75.37,
+              93.91,
+              28.63,
+              28.63
+            ],
+            "grid_shape": [
+              32,
+              32
+            ]
+          },
+          {
+            "item_id": "experiment_18848d544a654115a84d698c48e80b3a",
+            "variation_id": "test_4",
+            "panel": "Final",
+            "box": [
+              106.0,
+              93.91,
+              28.63,
+              28.63
+            ],
+            "grid_shape": [
+              32,
+              32
+            ]
+          },
+          {
+            "item_id": "experiment_18848d544a654115a84d698c48e80b3a",
+            "variation_id": "test_5",
+            "panel": "Initial",
+            "box": [
+              139.53,
+              93.91,
+              28.63,
+              28.63
+            ],
+            "grid_shape": [
+              32,
+              32
+            ]
+          },
+          {
+            "item_id": "experiment_18848d544a654115a84d698c48e80b3a",
+            "variation_id": "test_5",
+            "panel": "Final",
+            "box": [
+              170.17,
+              93.91,
+              28.63,
+              28.63
+            ],
+            "grid_shape": [
+              32,
+              32
+            ]
+          },
+          {
+            "item_id": "experiment_0a53b0d22dca48bbb95c5cd1eea54236",
+            "variation_id": "reference",
+            "panel": "Initial",
+            "box": [
+              11.2,
+              157.56,
+              28.63,
+              28.63
+            ],
+            "grid_shape": [
+              32,
+              32
+            ]
+          },
+          {
+            "item_id": "experiment_0a53b0d22dca48bbb95c5cd1eea54236",
+            "variation_id": "reference",
+            "panel": "Final",
+            "box": [
+              41.83,
+              157.56,
+              28.63,
+              28.63
+            ],
+            "grid_shape": [
+              32,
+              32
+            ]
+          },
+          {
+            "item_id": "experiment_0a53b0d22dca48bbb95c5cd1eea54236",
+            "variation_id": "test_1",
+            "panel": "Initial",
+            "box": [
+              75.37,
+              157.56,
+              28.63,
+              28.63
+            ],
+            "grid_shape": [
+              32,
+              32
+            ]
+          },
+          {
+            "item_id": "experiment_0a53b0d22dca48bbb95c5cd1eea54236",
+            "variation_id": "test_1",
+            "panel": "Final",
+            "box": [
+              106.0,
+              157.56,
+              28.63,
+              28.63
+            ],
+            "grid_shape": [
+              32,
+              32
+            ]
+          },
+          {
+            "item_id": "experiment_0a53b0d22dca48bbb95c5cd1eea54236",
+            "variation_id": "test_2",
+            "panel": "Initial",
+            "box": [
+              139.53,
+              157.56,
+              28.63,
+              28.63
+            ],
+            "grid_shape": [
+              32,
+              32
+            ]
+          },
+          {
+            "item_id": "experiment_0a53b0d22dca48bbb95c5cd1eea54236",
+            "variation_id": "test_2",
+            "panel": "Final",
+            "box": [
+              170.17,
+              157.56,
+              28.63,
+              28.63
+            ],
+            "grid_shape": [
+              32,
+              32
+            ]
+          },
+          {
+            "item_id": "experiment_0a53b0d22dca48bbb95c5cd1eea54236",
+            "variation_id": "test_3",
+            "panel": "Initial",
+            "box": [
+              11.2,
+              215.21,
+              28.63,
+              28.63
+            ],
+            "grid_shape": [
+              32,
+              32
+            ]
+          },
+          {
+            "item_id": "experiment_0a53b0d22dca48bbb95c5cd1eea54236",
+            "variation_id": "test_3",
+            "panel": "Final",
+            "box": [
+              41.83,
+              215.21,
+              28.63,
+              28.63
+            ],
+            "grid_shape": [
+              32,
+              32
+            ]
+          },
+          {
+            "item_id": "experiment_0a53b0d22dca48bbb95c5cd1eea54236",
+            "variation_id": "test_4",
+            "panel": "Initial",
+            "box": [
+              75.37,
+              215.21,
+              28.63,
+              28.63
+            ],
+            "grid_shape": [
+              32,
+              32
+            ]
+          },
+          {
+            "item_id": "experiment_0a53b0d22dca48bbb95c5cd1eea54236",
+            "variation_id": "test_4",
+            "panel": "Final",
+            "box": [
+              106.0,
+              215.21,
+              28.63,
+              28.63
+            ],
+            "grid_shape": [
+              32,
+              32
+            ]
+          },
+          {
+            "item_id": "experiment_0a53b0d22dca48bbb95c5cd1eea54236",
+            "variation_id": "test_5",
+            "panel": "Initial",
+            "box": [
+              139.53,
+              215.21,
+              28.63,
+              28.63
+            ],
+            "grid_shape": [
+              32,
+              32
+            ]
+          },
+          {
+            "item_id": "experiment_0a53b0d22dca48bbb95c5cd1eea54236",
+            "variation_id": "test_5",
+            "panel": "Final",
+            "box": [
+              170.17,
+              215.21,
+              28.63,
+              28.63
+            ],
+            "grid_shape": [
+              32,
+              32
+            ]
+          }
+        ],
+        "scale_bars": [
+          {
+            "item_id": "experiment_18848d544a654115a84d698c48e80b3a",
+            "variation_id": "reference",
+            "box": [
+              11.2,
+              65.89,
+              59.27,
+              1.6
+            ],
+            "lo": 0.003164737911684864,
+            "hi": 6.939199564121912
+          },
+          {
+            "item_id": "experiment_18848d544a654115a84d698c48e80b3a",
+            "variation_id": "test_1",
+            "box": [
+              75.37,
+              65.89,
+              59.27,
+              1.6
+            ],
+            "lo": 0.003164737911684864,
+            "hi": 6.939199564121912
+          },
+          {
+            "item_id": "experiment_18848d544a654115a84d698c48e80b3a",
+            "variation_id": "test_2",
+            "box": [
+              139.53,
+              65.89,
+              59.27,
+              1.6
+            ],
+            "lo": 0.003164737911684864,
+            "hi": 6.939199564121912
+          },
+          {
+            "item_id": "experiment_18848d544a654115a84d698c48e80b3a",
+            "variation_id": "test_3",
+            "box": [
+              11.2,
+              123.54,
+              59.27,
+              1.6
+            ],
+            "lo": 0.003164737911684864,
+            "hi": 6.939199564121912
+          },
+          {
+            "item_id": "experiment_18848d544a654115a84d698c48e80b3a",
+            "variation_id": "test_4",
+            "box": [
+              75.37,
+              123.54,
+              59.27,
+              1.6
+            ],
+            "lo": 0.003164737911684864,
+            "hi": 6.939199564121912
+          },
+          {
+            "item_id": "experiment_18848d544a654115a84d698c48e80b3a",
+            "variation_id": "test_5",
+            "box": [
+              139.53,
+              123.54,
+              59.27,
+              1.6
+            ],
+            "lo": 0.003164737911684864,
+            "hi": 6.939199564121912
+          },
+          {
+            "item_id": "experiment_0a53b0d22dca48bbb95c5cd1eea54236",
+            "variation_id": "reference",
+            "box": [
+              11.2,
+              187.19,
+              59.27,
+              1.6
+            ],
+            "lo": 0.003182859391852668,
+            "hi": 4.98944036997549
+          },
+          {
+            "item_id": "experiment_0a53b0d22dca48bbb95c5cd1eea54236",
+            "variation_id": "test_1",
+            "box": [
+              75.37,
+              187.19,
+              59.27,
+              1.6
+            ],
+            "lo": 0.003182859391852668,
+            "hi": 4.98944036997549
+          },
+          {
+            "item_id": "experiment_0a53b0d22dca48bbb95c5cd1eea54236",
+            "variation_id": "test_2",
+            "box": [
+              139.53,
+              187.19,
+              59.27,
+              1.6
+            ],
+            "lo": 0.003182859391852668,
+            "hi": 4.98944036997549
+          },
+          {
+            "item_id": "experiment_0a53b0d22dca48bbb95c5cd1eea54236",
+            "variation_id": "test_3",
+            "box": [
+              11.2,
+              244.84,
+              59.27,
+              1.6
+            ],
+            "lo": 0.003182859391852668,
+            "hi": 4.98944036997549
+          },
+          {
+            "item_id": "experiment_0a53b0d22dca48bbb95c5cd1eea54236",
+            "variation_id": "test_4",
+            "box": [
+              75.37,
+              244.84,
+              59.27,
+              1.6
+            ],
+            "lo": 0.003182859391852668,
+            "hi": 4.98944036997549
+          },
+          {
+            "item_id": "experiment_0a53b0d22dca48bbb95c5cd1eea54236",
+            "variation_id": "test_5",
+            "box": [
+              139.53,
+              244.84,
+              59.27,
+              1.6
+            ],
+            "lo": 0.003182859391852668,
+            "hi": 4.98944036997549
+          }
+        ],
+        "paper_refs": [
+          {
+            "box": [
+              10.0,
+              262.5,
+              15.0,
+              12.0
+            ]
+          },
+          {
+            "box": [
+              26.23,
+              262.5,
+              15.0,
+              12.0
+            ]
+          }
+        ],
+        "gray_patches": [
+          {
+            "level": 0.0,
+            "box": [
+              55.69,
+              262.5,
+              12.0,
+              12.0
+            ]
+          },
+          {
+            "level": 0.1,
+            "box": [
+              68.92,
+              262.5,
+              12.0,
+              12.0
+            ]
+          },
+          {
+            "level": 0.2,
+            "box": [
+              82.15,
+              262.5,
+              12.0,
+              12.0
+            ]
+          },
+          {
+            "level": 0.3,
+            "box": [
+              95.38,
+              262.5,
+              12.0,
+              12.0
+            ]
+          },
+          {
+            "level": 0.4,
+            "box": [
+              108.62,
+              262.5,
+              12.0,
+              12.0
+            ]
+          },
+          {
+            "level": 0.5,
+            "box": [
+              121.85,
+              262.5,
+              12.0,
+              12.0
+            ]
+          },
+          {
+            "level": 0.6,
+            "box": [
+              135.08,
+              262.5,
+              12.0,
+              12.0
+            ]
+          },
+          {
+            "level": 0.7,
+            "box": [
+              148.31,
+              262.5,
+              12.0,
+              12.0
+            ]
+          },
+          {
+            "level": 0.8,
+            "box": [
+              161.54,
+              262.5,
+              12.0,
+              12.0
+            ]
+          },
+          {
+            "level": 0.9,
+            "box": [
+              174.77,
+              262.5,
+              12.0,
+              12.0
+            ]
+          },
+          {
+            "level": 1.0,
+            "box": [
+              188.0,
+              262.5,
+              12.0,
+              12.0
+            ]
+          }
+        ],
+        "labels": [
+          {
+            "kind": "header",
+            "text": "Trial round 2 · testing gamma · page 1 of 2 · trial e8f2a6f9",
+            "box": [
+              46.0,
+              12.6,
+              82.37,
+              2.79
+            ]
+          },
+          {
+            "kind": "item_header",
+            "text": "enhancement 0.8 → 28.3 · experiment_18848d544a654115a84d698c48e80b3a · limits 0.003165 to 6.939",
+            "box": [
+              10.0,
+              21.0,
+              131.19,
+              2.46
+            ],
+            "item_id": "experiment_18848d544a654115a84d698c48e80b3a"
+          },
+          {
+            "kind": "panel_name",
+            "text": "Initial",
+            "box": [
+              22.58,
+              33.86,
+              5.87,
+              2.03
+            ],
+            "item_id": "experiment_18848d544a654115a84d698c48e80b3a",
+            "variation_id": "reference",
+            "panel": "Initial"
+          },
+          {
+            "kind": "panel_name",
+            "text": "Final",
+            "box": [
+              53.71,
+              33.86,
+              4.89,
+              2.03
+            ],
+            "item_id": "experiment_18848d544a654115a84d698c48e80b3a",
+            "variation_id": "reference",
+            "panel": "Final"
+          },
+          {
+            "kind": "scale_tick",
+            "text": "0.00316",
+            "box": [
+              11.2,
+              67.79,
+              8.75,
+              2.03
+            ],
+            "item_id": "experiment_18848d544a654115a84d698c48e80b3a",
+            "variation_id": "reference"
+          },
+          {
+            "kind": "scale_tick",
+            "text": "3.47",
+            "box": [
+              38.47,
+              67.79,
+              4.72,
+              2.03
+            ],
+            "item_id": "experiment_18848d544a654115a84d698c48e80b3a",
+            "variation_id": "reference"
+          },
+          {
+            "kind": "scale_tick",
+            "text": "6.94",
+            "box": [
+              65.74,
+              67.79,
+              4.73,
+              2.03
+            ],
+            "item_id": "experiment_18848d544a654115a84d698c48e80b3a",
+            "variation_id": "reference"
+          },
+          {
+            "kind": "tile",
+            "text": "best so far · γ 0.35 · 0.00–1.00 · smooth",
+            "box": [
+              11.2,
+              70.19,
+              49.31,
+              2.37
+            ],
+            "item_id": "experiment_18848d544a654115a84d698c48e80b3a",
+            "variation_id": "reference"
+          },
+          {
+            "kind": "panel_name",
+            "text": "Initial",
+            "box": [
+              86.75,
+              33.86,
+              5.87,
+              2.03
+            ],
+            "item_id": "experiment_18848d544a654115a84d698c48e80b3a",
+            "variation_id": "test_1",
+            "panel": "Initial"
+          },
+          {
+            "kind": "panel_name",
+            "text": "Final",
+            "box": [
+              117.87,
+              33.86,
+              4.89,
+              2.03
+            ],
+            "item_id": "experiment_18848d544a654115a84d698c48e80b3a",
+            "variation_id": "test_1",
+            "panel": "Final"
+          },
+          {
+            "kind": "scale_tick",
+            "text": "0.00316",
+            "box": [
+              75.37,
+              67.79,
+              8.75,
+              2.03
+            ],
+            "item_id": "experiment_18848d544a654115a84d698c48e80b3a",
+            "variation_id": "test_1"
+          },
+          {
+            "kind": "scale_tick",
+            "text": "3.47",
+            "box": [
+              102.64,
+              67.79,
+              4.72,
+              2.03
+            ],
+            "item_id": "experiment_18848d544a654115a84d698c48e80b3a",
+            "variation_id": "test_1"
+          },
+          {
+            "kind": "scale_tick",
+            "text": "6.94",
+            "box": [
+              129.9,
+              67.79,
+              4.73,
+              2.03
+            ],
+            "item_id": "experiment_18848d544a654115a84d698c48e80b3a",
+            "variation_id": "test_1"
+          },
+          {
+            "kind": "tile",
+            "text": "γ 0.22 · 0.00–1.00 · smooth",
+            "box": [
+              75.37,
+              70.19,
+              33.83,
+              2.37
+            ],
+            "item_id": "experiment_18848d544a654115a84d698c48e80b3a",
+            "variation_id": "test_1"
+          },
+          {
+            "kind": "panel_name",
+            "text": "Initial",
+            "box": [
+              150.91,
+              33.86,
+              5.87,
+              2.03
+            ],
+            "item_id": "experiment_18848d544a654115a84d698c48e80b3a",
+            "variation_id": "test_2",
+            "panel": "Initial"
+          },
+          {
+            "kind": "panel_name",
+            "text": "Final",
+            "box": [
+              182.04,
+              33.86,
+              4.89,
+              2.03
+            ],
+            "item_id": "experiment_18848d544a654115a84d698c48e80b3a",
+            "variation_id": "test_2",
+            "panel": "Final"
+          },
+          {
+            "kind": "scale_tick",
+            "text": "0.00316",
+            "box": [
+              139.53,
+              67.79,
+              8.75,
+              2.03
+            ],
+            "item_id": "experiment_18848d544a654115a84d698c48e80b3a",
+            "variation_id": "test_2"
+          },
+          {
+            "kind": "scale_tick",
+            "text": "3.47",
+            "box": [
+              166.81,
+              67.79,
+              4.72,
+              2.03
+            ],
+            "item_id": "experiment_18848d544a654115a84d698c48e80b3a",
+            "variation_id": "test_2"
+          },
+          {
+            "kind": "scale_tick",
+            "text": "6.94",
+            "box": [
+              194.07,
+              67.79,
+              4.73,
+              2.03
+            ],
+            "item_id": "experiment_18848d544a654115a84d698c48e80b3a",
+            "variation_id": "test_2"
+          },
+          {
+            "kind": "tile",
+            "text": "γ 0.28 · 0.00–1.00 · smooth",
+            "box": [
+              139.53,
+              70.19,
+              33.85,
+              2.37
+            ],
+            "item_id": "experiment_18848d544a654115a84d698c48e80b3a",
+            "variation_id": "test_2"
+          },
+          {
+            "kind": "panel_name",
+            "text": "Initial",
+            "box": [
+              22.58,
+              91.51,
+              5.87,
+              2.03
+            ],
+            "item_id": "experiment_18848d544a654115a84d698c48e80b3a",
+            "variation_id": "test_3",
+            "panel": "Initial"
+          },
+          {
+            "kind": "panel_name",
+            "text": "Final",
+            "box": [
+              53.71,
+              91.51,
+              4.89,
+              2.03
+            ],
+            "item_id": "experiment_18848d544a654115a84d698c48e80b3a",
+            "variation_id": "test_3",
+            "panel": "Final"
+          },
+          {
+            "kind": "scale_tick",
+            "text": "0.00316",
+            "box": [
+              11.2,
+              125.44,
+              8.75,
+              2.03
+            ],
+            "item_id": "experiment_18848d544a654115a84d698c48e80b3a",
+            "variation_id": "test_3"
+          },
+          {
+            "kind": "scale_tick",
+            "text": "3.47",
+            "box": [
+              38.47,
+              125.44,
+              4.72,
+              2.03
+            ],
+            "item_id": "experiment_18848d544a654115a84d698c48e80b3a",
+            "variation_id": "test_3"
+          },
+          {
+            "kind": "scale_tick",
+            "text": "6.94",
+            "box": [
+              65.74,
+              125.44,
+              4.73,
+              2.03
+            ],
+            "item_id": "experiment_18848d544a654115a84d698c48e80b3a",
+            "variation_id": "test_3"
+          },
+          {
+            "kind": "tile",
+            "text": "γ 0.44 · 0.00–1.00 · smooth",
+            "box": [
+              11.2,
+              127.84,
+              33.83,
+              2.37
+            ],
+            "item_id": "experiment_18848d544a654115a84d698c48e80b3a",
+            "variation_id": "test_3"
+          },
+          {
+            "kind": "panel_name",
+            "text": "Initial",
+            "box": [
+              86.75,
+              91.51,
+              5.87,
+              2.03
+            ],
+            "item_id": "experiment_18848d544a654115a84d698c48e80b3a",
+            "variation_id": "test_4",
+            "panel": "Initial"
+          },
+          {
+            "kind": "panel_name",
+            "text": "Final",
+            "box": [
+              117.87,
+              91.51,
+              4.89,
+              2.03
+            ],
+            "item_id": "experiment_18848d544a654115a84d698c48e80b3a",
+            "variation_id": "test_4",
+            "panel": "Final"
+          },
+          {
+            "kind": "scale_tick",
+            "text": "0.00316",
+            "box": [
+              75.37,
+              125.44,
+              8.75,
+              2.03
+            ],
+            "item_id": "experiment_18848d544a654115a84d698c48e80b3a",
+            "variation_id": "test_4"
+          },
+          {
+            "kind": "scale_tick",
+            "text": "3.47",
+            "box": [
+              102.64,
+              125.44,
+              4.72,
+              2.03
+            ],
+            "item_id": "experiment_18848d544a654115a84d698c48e80b3a",
+            "variation_id": "test_4"
+          },
+          {
+            "kind": "scale_tick",
+            "text": "6.94",
+            "box": [
+              129.9,
+              125.44,
+              4.73,
+              2.03
+            ],
+            "item_id": "experiment_18848d544a654115a84d698c48e80b3a",
+            "variation_id": "test_4"
+          },
+          {
+            "kind": "tile",
+            "text": "γ 0.55 · 0.00–1.00 · smooth",
+            "box": [
+              75.37,
+              127.84,
+              33.83,
+              2.37
+            ],
+            "item_id": "experiment_18848d544a654115a84d698c48e80b3a",
+            "variation_id": "test_4"
+          },
+          {
+            "kind": "panel_name",
+            "text": "Initial",
+            "box": [
+              150.91,
+              91.51,
+              5.87,
+              2.03
+            ],
+            "item_id": "experiment_18848d544a654115a84d698c48e80b3a",
+            "variation_id": "test_5",
+            "panel": "Initial"
+          },
+          {
+            "kind": "panel_name",
+            "text": "Final",
+            "box": [
+              182.04,
+              91.51,
+              4.89,
+              2.03
+            ],
+            "item_id": "experiment_18848d544a654115a84d698c48e80b3a",
+            "variation_id": "test_5",
+            "panel": "Final"
+          },
+          {
+            "kind": "scale_tick",
+            "text": "0.00316",
+            "box": [
+              139.53,
+              125.44,
+              8.75,
+              2.03
+            ],
+            "item_id": "experiment_18848d544a654115a84d698c48e80b3a",
+            "variation_id": "test_5"
+          },
+          {
+            "kind": "scale_tick",
+            "text": "3.47",
+            "box": [
+              166.81,
+              125.44,
+              4.72,
+              2.03
+            ],
+            "item_id": "experiment_18848d544a654115a84d698c48e80b3a",
+            "variation_id": "test_5"
+          },
+          {
+            "kind": "scale_tick",
+            "text": "6.94",
+            "box": [
+              194.07,
+              125.44,
+              4.73,
+              2.03
+            ],
+            "item_id": "experiment_18848d544a654115a84d698c48e80b3a",
+            "variation_id": "test_5"
+          },
+          {
+            "kind": "tile",
+            "text": "γ 0.68 · 0.00–1.00 · smooth",
+            "box": [
+              139.53,
+              127.84,
+              33.85,
+              2.37
+            ],
+            "item_id": "experiment_18848d544a654115a84d698c48e80b3a",
+            "variation_id": "test_5"
+          },
+          {
+            "kind": "item_header",
+            "text": "enhancement 0.9 → 6.7 · experiment_0a53b0d22dca48bbb95c5cd1eea54236 · limits 0.003183 to 4.989",
+            "box": [
+              10.0,
+              142.3,
+              129.05,
+              2.46
+            ],
+            "item_id": "experiment_0a53b0d22dca48bbb95c5cd1eea54236"
+          },
+          {
+            "kind": "panel_name",
+            "text": "Initial",
+            "box": [
+              22.58,
+              155.16,
+              5.87,
+              2.03
+            ],
+            "item_id": "experiment_0a53b0d22dca48bbb95c5cd1eea54236",
+            "variation_id": "reference",
+            "panel": "Initial"
+          },
+          {
+            "kind": "panel_name",
+            "text": "Final",
+            "box": [
+              53.71,
+              155.16,
+              4.89,
+              2.03
+            ],
+            "item_id": "experiment_0a53b0d22dca48bbb95c5cd1eea54236",
+            "variation_id": "reference",
+            "panel": "Final"
+          },
+          {
+            "kind": "scale_tick",
+            "text": "0.00318",
+            "box": [
+              11.2,
+              189.09,
+              8.75,
+              2.03
+            ],
+            "item_id": "experiment_0a53b0d22dca48bbb95c5cd1eea54236",
+            "variation_id": "reference"
+          },
+          {
+            "kind": "scale_tick",
+            "text": "2.5",
+            "box": [
+              39.15,
+              189.09,
+              3.37,
+              2.03
+            ],
+            "item_id": "experiment_0a53b0d22dca48bbb95c5cd1eea54236",
+            "variation_id": "reference"
+          },
+          {
+            "kind": "scale_tick",
+            "text": "4.99",
+            "box": [
+              65.75,
+              189.09,
+              4.72,
+              2.03
+            ],
+            "item_id": "experiment_0a53b0d22dca48bbb95c5cd1eea54236",
+            "variation_id": "reference"
+          },
+          {
+            "kind": "tile",
+            "text": "best so far · γ 0.35 · 0.00–1.00 · smooth",
+            "box": [
+              11.2,
+              191.49,
+              49.31,
+              2.37
+            ],
+            "item_id": "experiment_0a53b0d22dca48bbb95c5cd1eea54236",
+            "variation_id": "reference"
+          },
+          {
+            "kind": "panel_name",
+            "text": "Initial",
+            "box": [
+              86.75,
+              155.16,
+              5.87,
+              2.03
+            ],
+            "item_id": "experiment_0a53b0d22dca48bbb95c5cd1eea54236",
+            "variation_id": "test_1",
+            "panel": "Initial"
+          },
+          {
+            "kind": "panel_name",
+            "text": "Final",
+            "box": [
+              117.87,
+              155.16,
+              4.89,
+              2.03
+            ],
+            "item_id": "experiment_0a53b0d22dca48bbb95c5cd1eea54236",
+            "variation_id": "test_1",
+            "panel": "Final"
+          },
+          {
+            "kind": "scale_tick",
+            "text": "0.00318",
+            "box": [
+              75.37,
+              189.09,
+              8.75,
+              2.03
+            ],
+            "item_id": "experiment_0a53b0d22dca48bbb95c5cd1eea54236",
+            "variation_id": "test_1"
+          },
+          {
+            "kind": "scale_tick",
+            "text": "2.5",
+            "box": [
+              103.32,
+              189.09,
+              3.37,
+              2.03
+            ],
+            "item_id": "experiment_0a53b0d22dca48bbb95c5cd1eea54236",
+            "variation_id": "test_1"
+          },
+          {
+            "kind": "scale_tick",
+            "text": "4.99",
+            "box": [
+              129.91,
+              189.09,
+              4.72,
+              2.03
+            ],
+            "item_id": "experiment_0a53b0d22dca48bbb95c5cd1eea54236",
+            "variation_id": "test_1"
+          },
+          {
+            "kind": "tile",
+            "text": "γ 0.22 · 0.00–1.00 · smooth",
+            "box": [
+              75.37,
+              191.49,
+              33.83,
+              2.37
+            ],
+            "item_id": "experiment_0a53b0d22dca48bbb95c5cd1eea54236",
+            "variation_id": "test_1"
+          },
+          {
+            "kind": "panel_name",
+            "text": "Initial",
+            "box": [
+              150.91,
+              155.16,
+              5.87,
+              2.03
+            ],
+            "item_id": "experiment_0a53b0d22dca48bbb95c5cd1eea54236",
+            "variation_id": "test_2",
+            "panel": "Initial"
+          },
+          {
+            "kind": "panel_name",
+            "text": "Final",
+            "box": [
+              182.04,
+              155.16,
+              4.89,
+              2.03
+            ],
+            "item_id": "experiment_0a53b0d22dca48bbb95c5cd1eea54236",
+            "variation_id": "test_2",
+            "panel": "Final"
+          },
+          {
+            "kind": "scale_tick",
+            "text": "0.00318",
+            "box": [
+              139.53,
+              189.09,
+              8.75,
+              2.03
+            ],
+            "item_id": "experiment_0a53b0d22dca48bbb95c5cd1eea54236",
+            "variation_id": "test_2"
+          },
+          {
+            "kind": "scale_tick",
+            "text": "2.5",
+            "box": [
+              167.48,
+              189.09,
+              3.37,
+              2.03
+            ],
+            "item_id": "experiment_0a53b0d22dca48bbb95c5cd1eea54236",
+            "variation_id": "test_2"
+          },
+          {
+            "kind": "scale_tick",
+            "text": "4.99",
+            "box": [
+              194.08,
+              189.09,
+              4.72,
+              2.03
+            ],
+            "item_id": "experiment_0a53b0d22dca48bbb95c5cd1eea54236",
+            "variation_id": "test_2"
+          },
+          {
+            "kind": "tile",
+            "text": "γ 0.28 · 0.00–1.00 · smooth",
+            "box": [
+              139.53,
+              191.49,
+              33.85,
+              2.37
+            ],
+            "item_id": "experiment_0a53b0d22dca48bbb95c5cd1eea54236",
+            "variation_id": "test_2"
+          },
+          {
+            "kind": "panel_name",
+            "text": "Initial",
+            "box": [
+              22.58,
+              212.81,
+              5.87,
+              2.03
+            ],
+            "item_id": "experiment_0a53b0d22dca48bbb95c5cd1eea54236",
+            "variation_id": "test_3",
+            "panel": "Initial"
+          },
+          {
+            "kind": "panel_name",
+            "text": "Final",
+            "box": [
+              53.71,
+              212.81,
+              4.89,
+              2.03
+            ],
+            "item_id": "experiment_0a53b0d22dca48bbb95c5cd1eea54236",
+            "variation_id": "test_3",
+            "panel": "Final"
+          },
+          {
+            "kind": "scale_tick",
+            "text": "0.00318",
+            "box": [
+              11.2,
+              246.74,
+              8.75,
+              2.03
+            ],
+            "item_id": "experiment_0a53b0d22dca48bbb95c5cd1eea54236",
+            "variation_id": "test_3"
+          },
+          {
+            "kind": "scale_tick",
+            "text": "2.5",
+            "box": [
+              39.15,
+              246.74,
+              3.37,
+              2.03
+            ],
+            "item_id": "experiment_0a53b0d22dca48bbb95c5cd1eea54236",
+            "variation_id": "test_3"
+          },
+          {
+            "kind": "scale_tick",
+            "text": "4.99",
+            "box": [
+              65.75,
+              246.74,
+              4.72,
+              2.03
+            ],
+            "item_id": "experiment_0a53b0d22dca48bbb95c5cd1eea54236",
+            "variation_id": "test_3"
+          },
+          {
+            "kind": "tile",
+            "text": "γ 0.44 · 0.00–1.00 · smooth",
+            "box": [
+              11.2,
+              249.14,
+              33.83,
+              2.37
+            ],
+            "item_id": "experiment_0a53b0d22dca48bbb95c5cd1eea54236",
+            "variation_id": "test_3"
+          },
+          {
+            "kind": "panel_name",
+            "text": "Initial",
+            "box": [
+              86.75,
+              212.81,
+              5.87,
+              2.03
+            ],
+            "item_id": "experiment_0a53b0d22dca48bbb95c5cd1eea54236",
+            "variation_id": "test_4",
+            "panel": "Initial"
+          },
+          {
+            "kind": "panel_name",
+            "text": "Final",
+            "box": [
+              117.87,
+              212.81,
+              4.89,
+              2.03
+            ],
+            "item_id": "experiment_0a53b0d22dca48bbb95c5cd1eea54236",
+            "variation_id": "test_4",
+            "panel": "Final"
+          },
+          {
+            "kind": "scale_tick",
+            "text": "0.00318",
+            "box": [
+              75.37,
+              246.74,
+              8.75,
+              2.03
+            ],
+            "item_id": "experiment_0a53b0d22dca48bbb95c5cd1eea54236",
+            "variation_id": "test_4"
+          },
+          {
+            "kind": "scale_tick",
+            "text": "2.5",
+            "box": [
+              103.32,
+              246.74,
+              3.37,
+              2.03
+            ],
+            "item_id": "experiment_0a53b0d22dca48bbb95c5cd1eea54236",
+            "variation_id": "test_4"
+          },
+          {
+            "kind": "scale_tick",
+            "text": "4.99",
+            "box": [
+              129.91,
+              246.74,
+              4.72,
+              2.03
+            ],
+            "item_id": "experiment_0a53b0d22dca48bbb95c5cd1eea54236",
+            "variation_id": "test_4"
+          },
+          {
+            "kind": "tile",
+            "text": "γ 0.55 · 0.00–1.00 · smooth",
+            "box": [
+              75.37,
+              249.14,
+              33.83,
+              2.37
+            ],
+            "item_id": "experiment_0a53b0d22dca48bbb95c5cd1eea54236",
+            "variation_id": "test_4"
+          },
+          {
+            "kind": "panel_name",
+            "text": "Initial",
+            "box": [
+              150.91,
+              212.81,
+              5.87,
+              2.03
+            ],
+            "item_id": "experiment_0a53b0d22dca48bbb95c5cd1eea54236",
+            "variation_id": "test_5",
+            "panel": "Initial"
+          },
+          {
+            "kind": "panel_name",
+            "text": "Final",
+            "box": [
+              182.04,
+              212.81,
+              4.89,
+              2.03
+            ],
+            "item_id": "experiment_0a53b0d22dca48bbb95c5cd1eea54236",
+            "variation_id": "test_5",
+            "panel": "Final"
+          },
+          {
+            "kind": "scale_tick",
+            "text": "0.00318",
+            "box": [
+              139.53,
+              246.74,
+              8.75,
+              2.03
+            ],
+            "item_id": "experiment_0a53b0d22dca48bbb95c5cd1eea54236",
+            "variation_id": "test_5"
+          },
+          {
+            "kind": "scale_tick",
+            "text": "2.5",
+            "box": [
+              167.48,
+              246.74,
+              3.37,
+              2.03
+            ],
+            "item_id": "experiment_0a53b0d22dca48bbb95c5cd1eea54236",
+            "variation_id": "test_5"
+          },
+          {
+            "kind": "scale_tick",
+            "text": "4.99",
+            "box": [
+              194.08,
+              246.74,
+              4.72,
+              2.03
+            ],
+            "item_id": "experiment_0a53b0d22dca48bbb95c5cd1eea54236",
+            "variation_id": "test_5"
+          },
+          {
+            "kind": "tile",
+            "text": "γ 0.68 · 0.00–1.00 · smooth",
+            "box": [
+              139.53,
+              249.14,
+              33.85,
+              2.37
+            ],
+            "item_id": "experiment_0a53b0d22dca48bbb95c5cd1eea54236",
+            "variation_id": "test_5"
+          },
+          {
+            "kind": "paper_ref",
+            "text": "paper",
+            "box": [
+              14.42,
+              275.5,
+              6.16,
+              2.03
+            ]
+          },
+          {
+            "kind": "paper_ref",
+            "text": "paper",
+            "box": [
+              30.65,
+              275.5,
+              6.16,
+              2.03
+            ]
+          },
+          {
+            "kind": "black_patch",
+            "text": "black",
+            "box": [
+              45.65,
+              275.5,
+              5.62,
+              2.03
+            ]
+          },
+          {
+            "kind": "patch_level",
+            "text": "0.00",
+            "box": [
+              59.34,
+              275.5,
+              4.71,
+              2.03
+            ]
+          },
+          {
+            "kind": "patch_level",
+            "text": "0.10",
+            "box": [
+              72.57,
+              275.5,
+              4.71,
+              2.03
+            ]
+          },
+          {
+            "kind": "patch_level",
+            "text": "0.20",
+            "box": [
+              85.79,
+              275.5,
+              4.72,
+              2.03
+            ]
+          },
+          {
+            "kind": "patch_level",
+            "text": "0.30",
+            "box": [
+              99.03,
+              275.5,
+              4.71,
+              2.03
+            ]
+          },
+          {
+            "kind": "patch_level",
+            "text": "0.40",
+            "box": [
+              112.26,
+              275.5,
+              4.72,
+              2.03
+            ]
+          },
+          {
+            "kind": "patch_level",
+            "text": "0.50",
+            "box": [
+              125.5,
+              275.5,
+              4.7,
+              2.03
+            ]
+          },
+          {
+            "kind": "patch_level",
+            "text": "0.60",
+            "box": [
+              138.72,
+              275.5,
+              4.72,
+              2.03
+            ]
+          },
+          {
+            "kind": "patch_level",
+            "text": "0.70",
+            "box": [
+              151.95,
+              275.5,
+              4.71,
+              2.03
+            ]
+          },
+          {
+            "kind": "patch_level",
+            "text": "0.80",
+            "box": [
+              165.18,
+              275.5,
+              4.72,
+              2.03
+            ]
+          },
+          {
+            "kind": "patch_level",
+            "text": "0.90",
+            "box": [
+              178.41,
+              275.5,
+              4.71,
+              2.03
+            ]
+          },
+          {
+            "kind": "patch_level",
+            "text": "1.00",
+            "box": [
+              191.65,
+              275.5,
+              4.71,
+              2.03
+            ]
+          }
+        ],
+        "black_patch": {
+          "box": [
+            42.46,
+            262.5,
+            12.0,
+            12.0
+          ]
+        }
+      }
+    },
+    {
+      "page_number": 2,
+      "page_code": [
+        0,
+        1,
+        0,
+        0,
+        1,
+        0
+      ],
+      "regions": {
+        "markers": [
+          {
+            "corner": "top_left",
+            "box": [
+              10.0,
+              10.0,
+              8.0,
+              8.0
+            ]
+          },
+          {
+            "corner": "top_right",
+            "box": [
+              192.0,
+              10.0,
+              8.0,
+              8.0
+            ]
+          },
+          {
+            "corner": "bottom_left",
+            "box": [
+              10.0,
+              279.0,
+              8.0,
+              8.0
+            ]
+          },
+          {
+            "corner": "bottom_right",
+            "box": [
+              192.0,
+              279.0,
+              8.0,
+              8.0
+            ]
+          }
+        ],
+        "page_code": [
+          {
+            "bit": 0,
+            "box": [
+              20.0,
+              12.5,
+              3.0,
+              3.0
+            ]
+          },
+          {
+            "bit": 1,
+            "box": [
+              24.0,
+              12.5,
+              3.0,
+              3.0
+            ]
+          },
+          {
+            "bit": 0,
+            "box": [
+              28.0,
+              12.5,
+              3.0,
+              3.0
+            ]
+          },
+          {
+            "bit": 0,
+            "box": [
+              32.0,
+              12.5,
+              3.0,
+              3.0
+            ]
+          },
+          {
+            "bit": 1,
+            "box": [
+              36.0,
+              12.5,
+              3.0,
+              3.0
+            ]
+          },
+          {
+            "bit": 0,
+            "box": [
+              40.0,
+              12.5,
+              3.0,
+              3.0
+            ]
+          }
+        ],
+        "tiles": [
+          {
+            "item_id": "experiment_92f251efb4d4474ebbfd2e37a03be6fc",
+            "variation_id": "reference",
+            "role": "reference",
+            "box": [
+              10.0,
+              25.5,
+              61.67,
+              55.15
+            ]
+          },
+          {
+            "item_id": "experiment_92f251efb4d4474ebbfd2e37a03be6fc",
+            "variation_id": "test_1",
+            "role": "test",
+            "box": [
+              74.17,
+              25.5,
+              61.67,
+              55.15
+            ]
+          },
+          {
+            "item_id": "experiment_92f251efb4d4474ebbfd2e37a03be6fc",
+            "variation_id": "test_2",
+            "role": "test",
+            "box": [
+              138.33,
+              25.5,
+              61.67,
+              55.15
+            ]
+          },
+          {
+            "item_id": "experiment_92f251efb4d4474ebbfd2e37a03be6fc",
+            "variation_id": "test_3",
+            "role": "test",
+            "box": [
+              10.0,
+              83.15,
+              61.67,
+              55.15
+            ]
+          },
+          {
+            "item_id": "experiment_92f251efb4d4474ebbfd2e37a03be6fc",
+            "variation_id": "test_4",
+            "role": "test",
+            "box": [
+              74.17,
+              83.15,
+              61.67,
+              55.15
+            ]
+          },
+          {
+            "item_id": "experiment_92f251efb4d4474ebbfd2e37a03be6fc",
+            "variation_id": "test_5",
+            "role": "test",
+            "box": [
+              138.33,
+              83.15,
+              61.67,
+              55.15
+            ]
+          },
+          {
+            "item_id": "experiment_2f5f3e6a9c104597979ec1175375ede4",
+            "variation_id": "reference",
+            "role": "reference",
+            "box": [
+              10.0,
+              146.8,
+              61.67,
+              55.15
+            ]
+          },
+          {
+            "item_id": "experiment_2f5f3e6a9c104597979ec1175375ede4",
+            "variation_id": "test_1",
+            "role": "test",
+            "box": [
+              74.17,
+              146.8,
+              61.67,
+              55.15
+            ]
+          },
+          {
+            "item_id": "experiment_2f5f3e6a9c104597979ec1175375ede4",
+            "variation_id": "test_2",
+            "role": "test",
+            "box": [
+              138.33,
+              146.8,
+              61.67,
+              55.15
+            ]
+          },
+          {
+            "item_id": "experiment_2f5f3e6a9c104597979ec1175375ede4",
+            "variation_id": "test_3",
+            "role": "test",
+            "box": [
+              10.0,
+              204.45,
+              61.67,
+              55.15
+            ]
+          },
+          {
+            "item_id": "experiment_2f5f3e6a9c104597979ec1175375ede4",
+            "variation_id": "test_4",
+            "role": "test",
+            "box": [
+              74.17,
+              204.45,
+              61.67,
+              55.15
+            ]
+          },
+          {
+            "item_id": "experiment_2f5f3e6a9c104597979ec1175375ede4",
+            "variation_id": "test_5",
+            "role": "test",
+            "box": [
+              138.33,
+              204.45,
+              61.67,
+              55.15
+            ]
+          }
+        ],
+        "plots": [
+          {
+            "item_id": "experiment_92f251efb4d4474ebbfd2e37a03be6fc",
+            "variation_id": "reference",
+            "panel": "Initial",
+            "box": [
+              11.2,
+              36.26,
+              28.63,
+              28.63
+            ],
+            "grid_shape": [
+              32,
+              32
+            ]
+          },
+          {
+            "item_id": "experiment_92f251efb4d4474ebbfd2e37a03be6fc",
+            "variation_id": "reference",
+            "panel": "Final",
+            "box": [
+              41.83,
+              36.26,
+              28.63,
+              28.63
+            ],
+            "grid_shape": [
+              32,
+              32
+            ]
+          },
+          {
+            "item_id": "experiment_92f251efb4d4474ebbfd2e37a03be6fc",
+            "variation_id": "test_1",
+            "panel": "Initial",
+            "box": [
+              75.37,
+              36.26,
+              28.63,
+              28.63
+            ],
+            "grid_shape": [
+              32,
+              32
+            ]
+          },
+          {
+            "item_id": "experiment_92f251efb4d4474ebbfd2e37a03be6fc",
+            "variation_id": "test_1",
+            "panel": "Final",
+            "box": [
+              106.0,
+              36.26,
+              28.63,
+              28.63
+            ],
+            "grid_shape": [
+              32,
+              32
+            ]
+          },
+          {
+            "item_id": "experiment_92f251efb4d4474ebbfd2e37a03be6fc",
+            "variation_id": "test_2",
+            "panel": "Initial",
+            "box": [
+              139.53,
+              36.26,
+              28.63,
+              28.63
+            ],
+            "grid_shape": [
+              32,
+              32
+            ]
+          },
+          {
+            "item_id": "experiment_92f251efb4d4474ebbfd2e37a03be6fc",
+            "variation_id": "test_2",
+            "panel": "Final",
+            "box": [
+              170.17,
+              36.26,
+              28.63,
+              28.63
+            ],
+            "grid_shape": [
+              32,
+              32
+            ]
+          },
+          {
+            "item_id": "experiment_92f251efb4d4474ebbfd2e37a03be6fc",
+            "variation_id": "test_3",
+            "panel": "Initial",
+            "box": [
+              11.2,
+              93.91,
+              28.63,
+              28.63
+            ],
+            "grid_shape": [
+              32,
+              32
+            ]
+          },
+          {
+            "item_id": "experiment_92f251efb4d4474ebbfd2e37a03be6fc",
+            "variation_id": "test_3",
+            "panel": "Final",
+            "box": [
+              41.83,
+              93.91,
+              28.63,
+              28.63
+            ],
+            "grid_shape": [
+              32,
+              32
+            ]
+          },
+          {
+            "item_id": "experiment_92f251efb4d4474ebbfd2e37a03be6fc",
+            "variation_id": "test_4",
+            "panel": "Initial",
+            "box": [
+              75.37,
+              93.91,
+              28.63,
+              28.63
+            ],
+            "grid_shape": [
+              32,
+              32
+            ]
+          },
+          {
+            "item_id": "experiment_92f251efb4d4474ebbfd2e37a03be6fc",
+            "variation_id": "test_4",
+            "panel": "Final",
+            "box": [
+              106.0,
+              93.91,
+              28.63,
+              28.63
+            ],
+            "grid_shape": [
+              32,
+              32
+            ]
+          },
+          {
+            "item_id": "experiment_92f251efb4d4474ebbfd2e37a03be6fc",
+            "variation_id": "test_5",
+            "panel": "Initial",
+            "box": [
+              139.53,
+              93.91,
+              28.63,
+              28.63
+            ],
+            "grid_shape": [
+              32,
+              32
+            ]
+          },
+          {
+            "item_id": "experiment_92f251efb4d4474ebbfd2e37a03be6fc",
+            "variation_id": "test_5",
+            "panel": "Final",
+            "box": [
+              170.17,
+              93.91,
+              28.63,
+              28.63
+            ],
+            "grid_shape": [
+              32,
+              32
+            ]
+          },
+          {
+            "item_id": "experiment_2f5f3e6a9c104597979ec1175375ede4",
+            "variation_id": "reference",
+            "panel": "Initial",
+            "box": [
+              11.2,
+              157.56,
+              28.63,
+              28.63
+            ],
+            "grid_shape": [
+              32,
+              32
+            ]
+          },
+          {
+            "item_id": "experiment_2f5f3e6a9c104597979ec1175375ede4",
+            "variation_id": "reference",
+            "panel": "Final",
+            "box": [
+              41.83,
+              157.56,
+              28.63,
+              28.63
+            ],
+            "grid_shape": [
+              32,
+              32
+            ]
+          },
+          {
+            "item_id": "experiment_2f5f3e6a9c104597979ec1175375ede4",
+            "variation_id": "test_1",
+            "panel": "Initial",
+            "box": [
+              75.37,
+              157.56,
+              28.63,
+              28.63
+            ],
+            "grid_shape": [
+              32,
+              32
+            ]
+          },
+          {
+            "item_id": "experiment_2f5f3e6a9c104597979ec1175375ede4",
+            "variation_id": "test_1",
+            "panel": "Final",
+            "box": [
+              106.0,
+              157.56,
+              28.63,
+              28.63
+            ],
+            "grid_shape": [
+              32,
+              32
+            ]
+          },
+          {
+            "item_id": "experiment_2f5f3e6a9c104597979ec1175375ede4",
+            "variation_id": "test_2",
+            "panel": "Initial",
+            "box": [
+              139.53,
+              157.56,
+              28.63,
+              28.63
+            ],
+            "grid_shape": [
+              32,
+              32
+            ]
+          },
+          {
+            "item_id": "experiment_2f5f3e6a9c104597979ec1175375ede4",
+            "variation_id": "test_2",
+            "panel": "Final",
+            "box": [
+              170.17,
+              157.56,
+              28.63,
+              28.63
+            ],
+            "grid_shape": [
+              32,
+              32
+            ]
+          },
+          {
+            "item_id": "experiment_2f5f3e6a9c104597979ec1175375ede4",
+            "variation_id": "test_3",
+            "panel": "Initial",
+            "box": [
+              11.2,
+              215.21,
+              28.63,
+              28.63
+            ],
+            "grid_shape": [
+              32,
+              32
+            ]
+          },
+          {
+            "item_id": "experiment_2f5f3e6a9c104597979ec1175375ede4",
+            "variation_id": "test_3",
+            "panel": "Final",
+            "box": [
+              41.83,
+              215.21,
+              28.63,
+              28.63
+            ],
+            "grid_shape": [
+              32,
+              32
+            ]
+          },
+          {
+            "item_id": "experiment_2f5f3e6a9c104597979ec1175375ede4",
+            "variation_id": "test_4",
+            "panel": "Initial",
+            "box": [
+              75.37,
+              215.21,
+              28.63,
+              28.63
+            ],
+            "grid_shape": [
+              32,
+              32
+            ]
+          },
+          {
+            "item_id": "experiment_2f5f3e6a9c104597979ec1175375ede4",
+            "variation_id": "test_4",
+            "panel": "Final",
+            "box": [
+              106.0,
+              215.21,
+              28.63,
+              28.63
+            ],
+            "grid_shape": [
+              32,
+              32
+            ]
+          },
+          {
+            "item_id": "experiment_2f5f3e6a9c104597979ec1175375ede4",
+            "variation_id": "test_5",
+            "panel": "Initial",
+            "box": [
+              139.53,
+              215.21,
+              28.63,
+              28.63
+            ],
+            "grid_shape": [
+              32,
+              32
+            ]
+          },
+          {
+            "item_id": "experiment_2f5f3e6a9c104597979ec1175375ede4",
+            "variation_id": "test_5",
+            "panel": "Final",
+            "box": [
+              170.17,
+              215.21,
+              28.63,
+              28.63
+            ],
+            "grid_shape": [
+              32,
+              32
+            ]
+          }
+        ],
+        "scale_bars": [
+          {
+            "item_id": "experiment_92f251efb4d4474ebbfd2e37a03be6fc",
+            "variation_id": "reference",
+            "box": [
+              11.2,
+              65.89,
+              59.27,
+              1.6
+            ],
+            "lo": 0.004423754692666885,
+            "hi": 2.703316697304627
+          },
+          {
+            "item_id": "experiment_92f251efb4d4474ebbfd2e37a03be6fc",
+            "variation_id": "test_1",
+            "box": [
+              75.37,
+              65.89,
+              59.27,
+              1.6
+            ],
+            "lo": 0.004423754692666885,
+            "hi": 2.703316697304627
+          },
+          {
+            "item_id": "experiment_92f251efb4d4474ebbfd2e37a03be6fc",
+            "variation_id": "test_2",
+            "box": [
+              139.53,
+              65.89,
+              59.27,
+              1.6
+            ],
+            "lo": 0.004423754692666885,
+            "hi": 2.703316697304627
+          },
+          {
+            "item_id": "experiment_92f251efb4d4474ebbfd2e37a03be6fc",
+            "variation_id": "test_3",
+            "box": [
+              11.2,
+              123.54,
+              59.27,
+              1.6
+            ],
+            "lo": 0.004423754692666885,
+            "hi": 2.703316697304627
+          },
+          {
+            "item_id": "experiment_92f251efb4d4474ebbfd2e37a03be6fc",
+            "variation_id": "test_4",
+            "box": [
+              75.37,
+              123.54,
+              59.27,
+              1.6
+            ],
+            "lo": 0.004423754692666885,
+            "hi": 2.703316697304627
+          },
+          {
+            "item_id": "experiment_92f251efb4d4474ebbfd2e37a03be6fc",
+            "variation_id": "test_5",
+            "box": [
+              139.53,
+              123.54,
+              59.27,
+              1.6
+            ],
+            "lo": 0.004423754692666885,
+            "hi": 2.703316697304627
+          },
+          {
+            "item_id": "experiment_2f5f3e6a9c104597979ec1175375ede4",
+            "variation_id": "reference",
+            "box": [
+              11.2,
+              187.19,
+              59.27,
+              1.6
+            ],
+            "lo": 0.00557373023682031,
+            "hi": 2.8859443687023667
+          },
+          {
+            "item_id": "experiment_2f5f3e6a9c104597979ec1175375ede4",
+            "variation_id": "test_1",
+            "box": [
+              75.37,
+              187.19,
+              59.27,
+              1.6
+            ],
+            "lo": 0.00557373023682031,
+            "hi": 2.8859443687023667
+          },
+          {
+            "item_id": "experiment_2f5f3e6a9c104597979ec1175375ede4",
+            "variation_id": "test_2",
+            "box": [
+              139.53,
+              187.19,
+              59.27,
+              1.6
+            ],
+            "lo": 0.00557373023682031,
+            "hi": 2.8859443687023667
+          },
+          {
+            "item_id": "experiment_2f5f3e6a9c104597979ec1175375ede4",
+            "variation_id": "test_3",
+            "box": [
+              11.2,
+              244.84,
+              59.27,
+              1.6
+            ],
+            "lo": 0.00557373023682031,
+            "hi": 2.8859443687023667
+          },
+          {
+            "item_id": "experiment_2f5f3e6a9c104597979ec1175375ede4",
+            "variation_id": "test_4",
+            "box": [
+              75.37,
+              244.84,
+              59.27,
+              1.6
+            ],
+            "lo": 0.00557373023682031,
+            "hi": 2.8859443687023667
+          },
+          {
+            "item_id": "experiment_2f5f3e6a9c104597979ec1175375ede4",
+            "variation_id": "test_5",
+            "box": [
+              139.53,
+              244.84,
+              59.27,
+              1.6
+            ],
+            "lo": 0.00557373023682031,
+            "hi": 2.8859443687023667
+          }
+        ],
+        "paper_refs": [
+          {
+            "box": [
+              10.0,
+              262.5,
+              15.0,
+              12.0
+            ]
+          },
+          {
+            "box": [
+              26.23,
+              262.5,
+              15.0,
+              12.0
+            ]
+          }
+        ],
+        "gray_patches": [
+          {
+            "level": 0.0,
+            "box": [
+              55.69,
+              262.5,
+              12.0,
+              12.0
+            ]
+          },
+          {
+            "level": 0.1,
+            "box": [
+              68.92,
+              262.5,
+              12.0,
+              12.0
+            ]
+          },
+          {
+            "level": 0.2,
+            "box": [
+              82.15,
+              262.5,
+              12.0,
+              12.0
+            ]
+          },
+          {
+            "level": 0.3,
+            "box": [
+              95.38,
+              262.5,
+              12.0,
+              12.0
+            ]
+          },
+          {
+            "level": 0.4,
+            "box": [
+              108.62,
+              262.5,
+              12.0,
+              12.0
+            ]
+          },
+          {
+            "level": 0.5,
+            "box": [
+              121.85,
+              262.5,
+              12.0,
+              12.0
+            ]
+          },
+          {
+            "level": 0.6,
+            "box": [
+              135.08,
+              262.5,
+              12.0,
+              12.0
+            ]
+          },
+          {
+            "level": 0.7,
+            "box": [
+              148.31,
+              262.5,
+              12.0,
+              12.0
+            ]
+          },
+          {
+            "level": 0.8,
+            "box": [
+              161.54,
+              262.5,
+              12.0,
+              12.0
+            ]
+          },
+          {
+            "level": 0.9,
+            "box": [
+              174.77,
+              262.5,
+              12.0,
+              12.0
+            ]
+          },
+          {
+            "level": 1.0,
+            "box": [
+              188.0,
+              262.5,
+              12.0,
+              12.0
+            ]
+          }
+        ],
+        "labels": [
+          {
+            "kind": "header",
+            "text": "Trial round 2 · testing gamma · page 2 of 2 · trial e8f2a6f9",
+            "box": [
+              46.0,
+              12.6,
+              82.38,
+              2.79
+            ]
+          },
+          {
+            "kind": "item_header",
+            "text": "enhancement 1.0 → 2.9 · experiment_92f251efb4d4474ebbfd2e37a03be6fc · limits 0.004424 to 2.703 · 11 cells above hi are clipped",
+            "box": [
+              10.0,
+              21.0,
+              164.35,
+              2.46
+            ],
+            "item_id": "experiment_92f251efb4d4474ebbfd2e37a03be6fc"
+          },
+          {
+            "kind": "panel_name",
+            "text": "Initial",
+            "box": [
+              22.58,
+              33.86,
+              5.87,
+              2.03
+            ],
+            "item_id": "experiment_92f251efb4d4474ebbfd2e37a03be6fc",
+            "variation_id": "reference",
+            "panel": "Initial"
+          },
+          {
+            "kind": "panel_name",
+            "text": "Final",
+            "box": [
+              53.71,
+              33.86,
+              4.89,
+              2.03
+            ],
+            "item_id": "experiment_92f251efb4d4474ebbfd2e37a03be6fc",
+            "variation_id": "reference",
+            "panel": "Final"
+          },
+          {
+            "kind": "scale_tick",
+            "text": "0.00442",
+            "box": [
+              11.2,
+              67.79,
+              8.77,
+              2.03
+            ],
+            "item_id": "experiment_92f251efb4d4474ebbfd2e37a03be6fc",
+            "variation_id": "reference"
+          },
+          {
+            "kind": "scale_tick",
+            "text": "1.35",
+            "box": [
+              38.48,
+              67.79,
+              4.7,
+              2.03
+            ],
+            "item_id": "experiment_92f251efb4d4474ebbfd2e37a03be6fc",
+            "variation_id": "reference"
+          },
+          {
+            "kind": "scale_tick",
+            "text": "2.7",
+            "box": [
+              67.09,
+              67.79,
+              3.38,
+              2.03
+            ],
+            "item_id": "experiment_92f251efb4d4474ebbfd2e37a03be6fc",
+            "variation_id": "reference"
+          },
+          {
+            "kind": "tile",
+            "text": "best so far · γ 0.35 · 0.00–1.00 · smooth",
+            "box": [
+              11.2,
+              70.19,
+              49.31,
+              2.37
+            ],
+            "item_id": "experiment_92f251efb4d4474ebbfd2e37a03be6fc",
+            "variation_id": "reference"
+          },
+          {
+            "kind": "panel_name",
+            "text": "Initial",
+            "box": [
+              86.75,
+              33.86,
+              5.87,
+              2.03
+            ],
+            "item_id": "experiment_92f251efb4d4474ebbfd2e37a03be6fc",
+            "variation_id": "test_1",
+            "panel": "Initial"
+          },
+          {
+            "kind": "panel_name",
+            "text": "Final",
+            "box": [
+              117.87,
+              33.86,
+              4.89,
+              2.03
+            ],
+            "item_id": "experiment_92f251efb4d4474ebbfd2e37a03be6fc",
+            "variation_id": "test_1",
+            "panel": "Final"
+          },
+          {
+            "kind": "scale_tick",
+            "text": "0.00442",
+            "box": [
+              75.37,
+              67.79,
+              8.77,
+              2.03
+            ],
+            "item_id": "experiment_92f251efb4d4474ebbfd2e37a03be6fc",
+            "variation_id": "test_1"
+          },
+          {
+            "kind": "scale_tick",
+            "text": "1.35",
+            "box": [
+              102.65,
+              67.79,
+              4.7,
+              2.03
+            ],
+            "item_id": "experiment_92f251efb4d4474ebbfd2e37a03be6fc",
+            "variation_id": "test_1"
+          },
+          {
+            "kind": "scale_tick",
+            "text": "2.7",
+            "box": [
+              131.26,
+              67.79,
+              3.38,
+              2.03
+            ],
+            "item_id": "experiment_92f251efb4d4474ebbfd2e37a03be6fc",
+            "variation_id": "test_1"
+          },
+          {
+            "kind": "tile",
+            "text": "γ 0.22 · 0.00–1.00 · smooth",
+            "box": [
+              75.37,
+              70.19,
+              33.83,
+              2.37
+            ],
+            "item_id": "experiment_92f251efb4d4474ebbfd2e37a03be6fc",
+            "variation_id": "test_1"
+          },
+          {
+            "kind": "panel_name",
+            "text": "Initial",
+            "box": [
+              150.91,
+              33.86,
+              5.87,
+              2.03
+            ],
+            "item_id": "experiment_92f251efb4d4474ebbfd2e37a03be6fc",
+            "variation_id": "test_2",
+            "panel": "Initial"
+          },
+          {
+            "kind": "panel_name",
+            "text": "Final",
+            "box": [
+              182.04,
+              33.86,
+              4.89,
+              2.03
+            ],
+            "item_id": "experiment_92f251efb4d4474ebbfd2e37a03be6fc",
+            "variation_id": "test_2",
+            "panel": "Final"
+          },
+          {
+            "kind": "scale_tick",
+            "text": "0.00442",
+            "box": [
+              139.53,
+              67.79,
+              8.77,
+              2.03
+            ],
+            "item_id": "experiment_92f251efb4d4474ebbfd2e37a03be6fc",
+            "variation_id": "test_2"
+          },
+          {
+            "kind": "scale_tick",
+            "text": "1.35",
+            "box": [
+              166.82,
+              67.79,
+              4.7,
+              2.03
+            ],
+            "item_id": "experiment_92f251efb4d4474ebbfd2e37a03be6fc",
+            "variation_id": "test_2"
+          },
+          {
+            "kind": "scale_tick",
+            "text": "2.7",
+            "box": [
+              195.42,
+              67.79,
+              3.38,
+              2.03
+            ],
+            "item_id": "experiment_92f251efb4d4474ebbfd2e37a03be6fc",
+            "variation_id": "test_2"
+          },
+          {
+            "kind": "tile",
+            "text": "γ 0.28 · 0.00–1.00 · smooth",
+            "box": [
+              139.53,
+              70.19,
+              33.85,
+              2.37
+            ],
+            "item_id": "experiment_92f251efb4d4474ebbfd2e37a03be6fc",
+            "variation_id": "test_2"
+          },
+          {
+            "kind": "panel_name",
+            "text": "Initial",
+            "box": [
+              22.58,
+              91.51,
+              5.87,
+              2.03
+            ],
+            "item_id": "experiment_92f251efb4d4474ebbfd2e37a03be6fc",
+            "variation_id": "test_3",
+            "panel": "Initial"
+          },
+          {
+            "kind": "panel_name",
+            "text": "Final",
+            "box": [
+              53.71,
+              91.51,
+              4.89,
+              2.03
+            ],
+            "item_id": "experiment_92f251efb4d4474ebbfd2e37a03be6fc",
+            "variation_id": "test_3",
+            "panel": "Final"
+          },
+          {
+            "kind": "scale_tick",
+            "text": "0.00442",
+            "box": [
+              11.2,
+              125.44,
+              8.77,
+              2.03
+            ],
+            "item_id": "experiment_92f251efb4d4474ebbfd2e37a03be6fc",
+            "variation_id": "test_3"
+          },
+          {
+            "kind": "scale_tick",
+            "text": "1.35",
+            "box": [
+              38.48,
+              125.44,
+              4.7,
+              2.03
+            ],
+            "item_id": "experiment_92f251efb4d4474ebbfd2e37a03be6fc",
+            "variation_id": "test_3"
+          },
+          {
+            "kind": "scale_tick",
+            "text": "2.7",
+            "box": [
+              67.09,
+              125.44,
+              3.38,
+              2.03
+            ],
+            "item_id": "experiment_92f251efb4d4474ebbfd2e37a03be6fc",
+            "variation_id": "test_3"
+          },
+          {
+            "kind": "tile",
+            "text": "γ 0.44 · 0.00–1.00 · smooth",
+            "box": [
+              11.2,
+              127.84,
+              33.83,
+              2.37
+            ],
+            "item_id": "experiment_92f251efb4d4474ebbfd2e37a03be6fc",
+            "variation_id": "test_3"
+          },
+          {
+            "kind": "panel_name",
+            "text": "Initial",
+            "box": [
+              86.75,
+              91.51,
+              5.87,
+              2.03
+            ],
+            "item_id": "experiment_92f251efb4d4474ebbfd2e37a03be6fc",
+            "variation_id": "test_4",
+            "panel": "Initial"
+          },
+          {
+            "kind": "panel_name",
+            "text": "Final",
+            "box": [
+              117.87,
+              91.51,
+              4.89,
+              2.03
+            ],
+            "item_id": "experiment_92f251efb4d4474ebbfd2e37a03be6fc",
+            "variation_id": "test_4",
+            "panel": "Final"
+          },
+          {
+            "kind": "scale_tick",
+            "text": "0.00442",
+            "box": [
+              75.37,
+              125.44,
+              8.77,
+              2.03
+            ],
+            "item_id": "experiment_92f251efb4d4474ebbfd2e37a03be6fc",
+            "variation_id": "test_4"
+          },
+          {
+            "kind": "scale_tick",
+            "text": "1.35",
+            "box": [
+              102.65,
+              125.44,
+              4.7,
+              2.03
+            ],
+            "item_id": "experiment_92f251efb4d4474ebbfd2e37a03be6fc",
+            "variation_id": "test_4"
+          },
+          {
+            "kind": "scale_tick",
+            "text": "2.7",
+            "box": [
+              131.26,
+              125.44,
+              3.38,
+              2.03
+            ],
+            "item_id": "experiment_92f251efb4d4474ebbfd2e37a03be6fc",
+            "variation_id": "test_4"
+          },
+          {
+            "kind": "tile",
+            "text": "γ 0.55 · 0.00–1.00 · smooth",
+            "box": [
+              75.37,
+              127.84,
+              33.83,
+              2.37
+            ],
+            "item_id": "experiment_92f251efb4d4474ebbfd2e37a03be6fc",
+            "variation_id": "test_4"
+          },
+          {
+            "kind": "panel_name",
+            "text": "Initial",
+            "box": [
+              150.91,
+              91.51,
+              5.87,
+              2.03
+            ],
+            "item_id": "experiment_92f251efb4d4474ebbfd2e37a03be6fc",
+            "variation_id": "test_5",
+            "panel": "Initial"
+          },
+          {
+            "kind": "panel_name",
+            "text": "Final",
+            "box": [
+              182.04,
+              91.51,
+              4.89,
+              2.03
+            ],
+            "item_id": "experiment_92f251efb4d4474ebbfd2e37a03be6fc",
+            "variation_id": "test_5",
+            "panel": "Final"
+          },
+          {
+            "kind": "scale_tick",
+            "text": "0.00442",
+            "box": [
+              139.53,
+              125.44,
+              8.77,
+              2.03
+            ],
+            "item_id": "experiment_92f251efb4d4474ebbfd2e37a03be6fc",
+            "variation_id": "test_5"
+          },
+          {
+            "kind": "scale_tick",
+            "text": "1.35",
+            "box": [
+              166.82,
+              125.44,
+              4.7,
+              2.03
+            ],
+            "item_id": "experiment_92f251efb4d4474ebbfd2e37a03be6fc",
+            "variation_id": "test_5"
+          },
+          {
+            "kind": "scale_tick",
+            "text": "2.7",
+            "box": [
+              195.42,
+              125.44,
+              3.38,
+              2.03
+            ],
+            "item_id": "experiment_92f251efb4d4474ebbfd2e37a03be6fc",
+            "variation_id": "test_5"
+          },
+          {
+            "kind": "tile",
+            "text": "γ 0.68 · 0.00–1.00 · smooth",
+            "box": [
+              139.53,
+              127.84,
+              33.85,
+              2.37
+            ],
+            "item_id": "experiment_92f251efb4d4474ebbfd2e37a03be6fc",
+            "variation_id": "test_5"
+          },
+          {
+            "kind": "item_header",
+            "text": "enhancement 1.2 → 1.2 · experiment_2f5f3e6a9c104597979ec1175375ede4 · limits 0.005574 to 2.886 · 11 cells above hi are clipped",
+            "box": [
+              10.0,
+              142.3,
+              165.6,
+              2.46
+            ],
+            "item_id": "experiment_2f5f3e6a9c104597979ec1175375ede4"
+          },
+          {
+            "kind": "panel_name",
+            "text": "Initial",
+            "box": [
+              22.58,
+              155.16,
+              5.87,
+              2.03
+            ],
+            "item_id": "experiment_2f5f3e6a9c104597979ec1175375ede4",
+            "variation_id": "reference",
+            "panel": "Initial"
+          },
+          {
+            "kind": "panel_name",
+            "text": "Final",
+            "box": [
+              53.71,
+              155.16,
+              4.89,
+              2.03
+            ],
+            "item_id": "experiment_2f5f3e6a9c104597979ec1175375ede4",
+            "variation_id": "reference",
+            "panel": "Final"
+          },
+          {
+            "kind": "scale_tick",
+            "text": "0.00557",
+            "box": [
+              11.2,
+              189.09,
+              8.72,
+              2.03
+            ],
+            "item_id": "experiment_2f5f3e6a9c104597979ec1175375ede4",
+            "variation_id": "reference"
+          },
+          {
+            "kind": "scale_tick",
+            "text": "1.45",
+            "box": [
+              38.48,
+              189.09,
+              4.71,
+              2.03
+            ],
+            "item_id": "experiment_2f5f3e6a9c104597979ec1175375ede4",
+            "variation_id": "reference"
+          },
+          {
+            "kind": "scale_tick",
+            "text": "2.89",
+            "box": [
+              65.74,
+              189.09,
+              4.73,
+              2.03
+            ],
+            "item_id": "experiment_2f5f3e6a9c104597979ec1175375ede4",
+            "variation_id": "reference"
+          },
+          {
+            "kind": "tile",
+            "text": "best so far · γ 0.60 · 0.00–1.00 · smooth",
+            "box": [
+              11.2,
+              191.49,
+              49.29,
+              2.37
+            ],
+            "item_id": "experiment_2f5f3e6a9c104597979ec1175375ede4",
+            "variation_id": "reference"
+          },
+          {
+            "kind": "panel_name",
+            "text": "Initial",
+            "box": [
+              86.75,
+              155.16,
+              5.87,
+              2.03
+            ],
+            "item_id": "experiment_2f5f3e6a9c104597979ec1175375ede4",
+            "variation_id": "test_1",
+            "panel": "Initial"
+          },
+          {
+            "kind": "panel_name",
+            "text": "Final",
+            "box": [
+              117.87,
+              155.16,
+              4.89,
+              2.03
+            ],
+            "item_id": "experiment_2f5f3e6a9c104597979ec1175375ede4",
+            "variation_id": "test_1",
+            "panel": "Final"
+          },
+          {
+            "kind": "scale_tick",
+            "text": "0.00557",
+            "box": [
+              75.37,
+              189.09,
+              8.72,
+              2.03
+            ],
+            "item_id": "experiment_2f5f3e6a9c104597979ec1175375ede4",
+            "variation_id": "test_1"
+          },
+          {
+            "kind": "scale_tick",
+            "text": "1.45",
+            "box": [
+              102.65,
+              189.09,
+              4.71,
+              2.03
+            ],
+            "item_id": "experiment_2f5f3e6a9c104597979ec1175375ede4",
+            "variation_id": "test_1"
+          },
+          {
+            "kind": "scale_tick",
+            "text": "2.89",
+            "box": [
+              129.9,
+              189.09,
+              4.73,
+              2.03
+            ],
+            "item_id": "experiment_2f5f3e6a9c104597979ec1175375ede4",
+            "variation_id": "test_1"
+          },
+          {
+            "kind": "tile",
+            "text": "γ 0.38 · 0.00–1.00 · smooth",
+            "box": [
+              75.37,
+              191.49,
+              33.86,
+              2.37
+            ],
+            "item_id": "experiment_2f5f3e6a9c104597979ec1175375ede4",
+            "variation_id": "test_1"
+          },
+          {
+            "kind": "panel_name",
+            "text": "Initial",
+            "box": [
+              150.91,
+              155.16,
+              5.87,
+              2.03
+            ],
+            "item_id": "experiment_2f5f3e6a9c104597979ec1175375ede4",
+            "variation_id": "test_2",
+            "panel": "Initial"
+          },
+          {
+            "kind": "panel_name",
+            "text": "Final",
+            "box": [
+              182.04,
+              155.16,
+              4.89,
+              2.03
+            ],
+            "item_id": "experiment_2f5f3e6a9c104597979ec1175375ede4",
+            "variation_id": "test_2",
+            "panel": "Final"
+          },
+          {
+            "kind": "scale_tick",
+            "text": "0.00557",
+            "box": [
+              139.53,
+              189.09,
+              8.72,
+              2.03
+            ],
+            "item_id": "experiment_2f5f3e6a9c104597979ec1175375ede4",
+            "variation_id": "test_2"
+          },
+          {
+            "kind": "scale_tick",
+            "text": "1.45",
+            "box": [
+              166.81,
+              189.09,
+              4.71,
+              2.03
+            ],
+            "item_id": "experiment_2f5f3e6a9c104597979ec1175375ede4",
+            "variation_id": "test_2"
+          },
+          {
+            "kind": "scale_tick",
+            "text": "2.89",
+            "box": [
+              194.07,
+              189.09,
+              4.73,
+              2.03
+            ],
+            "item_id": "experiment_2f5f3e6a9c104597979ec1175375ede4",
+            "variation_id": "test_2"
+          },
+          {
+            "kind": "tile",
+            "text": "γ 0.48 · 0.00–1.00 · smooth",
+            "box": [
+              139.53,
+              191.49,
+              33.85,
+              2.37
+            ],
+            "item_id": "experiment_2f5f3e6a9c104597979ec1175375ede4",
+            "variation_id": "test_2"
+          },
+          {
+            "kind": "panel_name",
+            "text": "Initial",
+            "box": [
+              22.58,
+              212.81,
+              5.87,
+              2.03
+            ],
+            "item_id": "experiment_2f5f3e6a9c104597979ec1175375ede4",
+            "variation_id": "test_3",
+            "panel": "Initial"
+          },
+          {
+            "kind": "panel_name",
+            "text": "Final",
+            "box": [
+              53.71,
+              212.81,
+              4.89,
+              2.03
+            ],
+            "item_id": "experiment_2f5f3e6a9c104597979ec1175375ede4",
+            "variation_id": "test_3",
+            "panel": "Final"
+          },
+          {
+            "kind": "scale_tick",
+            "text": "0.00557",
+            "box": [
+              11.2,
+              246.74,
+              8.72,
+              2.03
+            ],
+            "item_id": "experiment_2f5f3e6a9c104597979ec1175375ede4",
+            "variation_id": "test_3"
+          },
+          {
+            "kind": "scale_tick",
+            "text": "1.45",
+            "box": [
+              38.48,
+              246.74,
+              4.71,
+              2.03
+            ],
+            "item_id": "experiment_2f5f3e6a9c104597979ec1175375ede4",
+            "variation_id": "test_3"
+          },
+          {
+            "kind": "scale_tick",
+            "text": "2.89",
+            "box": [
+              65.74,
+              246.74,
+              4.73,
+              2.03
+            ],
+            "item_id": "experiment_2f5f3e6a9c104597979ec1175375ede4",
+            "variation_id": "test_3"
+          },
+          {
+            "kind": "tile",
+            "text": "γ 0.75 · 0.00–1.00 · smooth",
+            "box": [
+              11.2,
+              249.14,
+              33.83,
+              2.37
+            ],
+            "item_id": "experiment_2f5f3e6a9c104597979ec1175375ede4",
+            "variation_id": "test_3"
+          },
+          {
+            "kind": "panel_name",
+            "text": "Initial",
+            "box": [
+              86.75,
+              212.81,
+              5.87,
+              2.03
+            ],
+            "item_id": "experiment_2f5f3e6a9c104597979ec1175375ede4",
+            "variation_id": "test_4",
+            "panel": "Initial"
+          },
+          {
+            "kind": "panel_name",
+            "text": "Final",
+            "box": [
+              117.87,
+              212.81,
+              4.89,
+              2.03
+            ],
+            "item_id": "experiment_2f5f3e6a9c104597979ec1175375ede4",
+            "variation_id": "test_4",
+            "panel": "Final"
+          },
+          {
+            "kind": "scale_tick",
+            "text": "0.00557",
+            "box": [
+              75.37,
+              246.74,
+              8.72,
+              2.03
+            ],
+            "item_id": "experiment_2f5f3e6a9c104597979ec1175375ede4",
+            "variation_id": "test_4"
+          },
+          {
+            "kind": "scale_tick",
+            "text": "1.45",
+            "box": [
+              102.65,
+              246.74,
+              4.71,
+              2.03
+            ],
+            "item_id": "experiment_2f5f3e6a9c104597979ec1175375ede4",
+            "variation_id": "test_4"
+          },
+          {
+            "kind": "scale_tick",
+            "text": "2.89",
+            "box": [
+              129.9,
+              246.74,
+              4.73,
+              2.03
+            ],
+            "item_id": "experiment_2f5f3e6a9c104597979ec1175375ede4",
+            "variation_id": "test_4"
+          },
+          {
+            "kind": "tile",
+            "text": "γ 0.94 · 0.00–1.00 · smooth",
+            "box": [
+              75.37,
+              249.14,
+              33.83,
+              2.37
+            ],
+            "item_id": "experiment_2f5f3e6a9c104597979ec1175375ede4",
+            "variation_id": "test_4"
+          },
+          {
+            "kind": "panel_name",
+            "text": "Initial",
+            "box": [
+              150.91,
+              212.81,
+              5.87,
+              2.03
+            ],
+            "item_id": "experiment_2f5f3e6a9c104597979ec1175375ede4",
+            "variation_id": "test_5",
+            "panel": "Initial"
+          },
+          {
+            "kind": "panel_name",
+            "text": "Final",
+            "box": [
+              182.04,
+              212.81,
+              4.89,
+              2.03
+            ],
+            "item_id": "experiment_2f5f3e6a9c104597979ec1175375ede4",
+            "variation_id": "test_5",
+            "panel": "Final"
+          },
+          {
+            "kind": "scale_tick",
+            "text": "0.00557",
+            "box": [
+              139.53,
+              246.74,
+              8.72,
+              2.03
+            ],
+            "item_id": "experiment_2f5f3e6a9c104597979ec1175375ede4",
+            "variation_id": "test_5"
+          },
+          {
+            "kind": "scale_tick",
+            "text": "1.45",
+            "box": [
+              166.81,
+              246.74,
+              4.71,
+              2.03
+            ],
+            "item_id": "experiment_2f5f3e6a9c104597979ec1175375ede4",
+            "variation_id": "test_5"
+          },
+          {
+            "kind": "scale_tick",
+            "text": "2.89",
+            "box": [
+              194.07,
+              246.74,
+              4.73,
+              2.03
+            ],
+            "item_id": "experiment_2f5f3e6a9c104597979ec1175375ede4",
+            "variation_id": "test_5"
+          },
+          {
+            "kind": "tile",
+            "text": "γ 1.17 · 0.00–1.00 · smooth",
+            "box": [
+              139.53,
+              249.14,
+              33.87,
+              2.37
+            ],
+            "item_id": "experiment_2f5f3e6a9c104597979ec1175375ede4",
+            "variation_id": "test_5"
+          },
+          {
+            "kind": "paper_ref",
+            "text": "paper",
+            "box": [
+              14.42,
+              275.5,
+              6.16,
+              2.03
+            ]
+          },
+          {
+            "kind": "paper_ref",
+            "text": "paper",
+            "box": [
+              30.65,
+              275.5,
+              6.16,
+              2.03
+            ]
+          },
+          {
+            "kind": "black_patch",
+            "text": "black",
+            "box": [
+              45.65,
+              275.5,
+              5.62,
+              2.03
+            ]
+          },
+          {
+            "kind": "patch_level",
+            "text": "0.00",
+            "box": [
+              59.34,
+              275.5,
+              4.71,
+              2.03
+            ]
+          },
+          {
+            "kind": "patch_level",
+            "text": "0.10",
+            "box": [
+              72.57,
+              275.5,
+              4.71,
+              2.03
+            ]
+          },
+          {
+            "kind": "patch_level",
+            "text": "0.20",
+            "box": [
+              85.79,
+              275.5,
+              4.72,
+              2.03
+            ]
+          },
+          {
+            "kind": "patch_level",
+            "text": "0.30",
+            "box": [
+              99.03,
+              275.5,
+              4.71,
+              2.03
+            ]
+          },
+          {
+            "kind": "patch_level",
+            "text": "0.40",
+            "box": [
+              112.26,
+              275.5,
+              4.72,
+              2.03
+            ]
+          },
+          {
+            "kind": "patch_level",
+            "text": "0.50",
+            "box": [
+              125.5,
+              275.5,
+              4.7,
+              2.03
+            ]
+          },
+          {
+            "kind": "patch_level",
+            "text": "0.60",
+            "box": [
+              138.72,
+              275.5,
+              4.72,
+              2.03
+            ]
+          },
+          {
+            "kind": "patch_level",
+            "text": "0.70",
+            "box": [
+              151.95,
+              275.5,
+              4.71,
+              2.03
+            ]
+          },
+          {
+            "kind": "patch_level",
+            "text": "0.80",
+            "box": [
+              165.18,
+              275.5,
+              4.72,
+              2.03
+            ]
+          },
+          {
+            "kind": "patch_level",
+            "text": "0.90",
+            "box": [
+              178.41,
+              275.5,
+              4.71,
+              2.03
+            ]
+          },
+          {
+            "kind": "patch_level",
+            "text": "1.00",
+            "box": [
+              191.65,
+              275.5,
+              4.71,
+              2.03
+            ]
+          }
+        ],
+        "black_patch": {
+          "box": [
+            42.46,
+            262.5,
+            12.0,
+            12.0
+          ]
+        }
+      }
+    }
+  ]
+}

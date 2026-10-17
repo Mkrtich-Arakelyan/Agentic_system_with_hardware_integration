@@ -1,0 +1,32 @@
+{
+  "provider": "openai",
+  "api": "responses",
+  "reasoning_effort": "medium",
+  "python": "3.10.10 (v3.10.10:aad5f6a891, Feb  7 2023, 08:47:40) [Clang 13.0.0 (clang-1300.0.29.30)]",
+  "bench": {
+    "dmd_shape": [
+      16,
+      16
+    ],
+    "camera_shape": [
+      32,
+      32
+    ],
+    "target_position": [
+      16,
+      16
+    ],
+    "transmission_seed": 42,
+    "noise_seed": 43,
+    "noise_std": 0.01
+  },
+  "request": "Compare four focusing experiments that change only the iteration budget (100, 300, 600, 1000) with macropixel size 2 fixed. Judge fairness, compare performance and cost, suggest the next experiment, then produce a one-page report with one graph, explanation and verdict, and print it after my approval.",
+  "script_timeout_seconds": 300,
+  "model": "gpt-6-luna",
+  "min_experiments": 4,
+  "initial_decisions": 10,
+  "extra_decisions": 5,
+  "fake_printer": true,
+  "printer_name": "Office_Printer",
+  "specialist_model": null
+}

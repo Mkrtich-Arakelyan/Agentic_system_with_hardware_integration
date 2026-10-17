@@ -1,0 +1,2236 @@
+{
+  "contract_version": 1,
+  "schema_version": "scan_eval/2",
+  "evaluation_id": "91c6396a",
+  "session_id": "df29ddee-a46b-47bd-82b6-f96a3ed43229",
+  "trial_id": "aeadf633-f46c-43f9-a026-fce5bab4a9d8",
+  "round_id": 2,
+  "tested_parameter": "gamma",
+  "created_at": "2026-10-17T18:16:44.300321+00:00",
+  "manifest_path": "/Users/razmik/Documents/Agentic_system_with_hardware_integration/runs/20261017_221127_850186/print_tuning/trial_r2_aeadf633_manifest.json",
+  "scan_files": [
+    {
+      "path": "/Users/razmik/Documents/Agentic_system_with_hardware_integration/runs/20261017_221127_850186/scans/round_2/fake_221614/scan_page_1.png",
+      "sha256": "a1b83c6cbcc28e5f5b0ae5eae47290bca7a664901fc32a7556095e75b5bfa956"
+    },
+    {
+      "path": "/Users/razmik/Documents/Agentic_system_with_hardware_integration/runs/20261017_221127_850186/scans/round_2/fake_221614/scan_page_2.png",
+      "sha256": "078c4781f9f94b6cf8ee48bc51bc0725c039c85b18fb576df048d71fc2e64fb1"
+    }
+  ],
+  "scan_quality": {
+    "usable": true,
+    "issues": []
+  },
+  "pages": [
+    {
+      "page_number": 1,
+      "scan_index": 0,
+      "page_code_read": [
+        0,
+        0,
+        1,
+        0,
+        1,
+        0
+      ],
+      "page_code_expected": [
+        0,
+        0,
+        1,
+        0,
+        1,
+        0
+      ],
+      "code_matches": true,
+      "aligned": true,
+      "fit_error_mm": 0.0,
+      "dpi": 300.0,
+      "orientation": 0,
+      "paper": {
+        "gray": 0.996,
+        "rgb": [
+          0.996,
+          0.996,
+          0.996
+        ]
+      },
+      "black": {
+        "gray": 0.0039,
+        "rgb": [
+          0.0039,
+          0.0039,
+          0.0039
+        ]
+      },
+      "paper_to_black_contrast": 0.9921,
+      "gray_patches": [
+        {
+          "level": 0.0,
+          "measured": 0.004,
+          "std": 0.0039
+        },
+        {
+          "level": 0.1,
+          "measured": 0.0979,
+          "std": 0.0065
+        },
+        {
+          "level": 0.2,
+          "measured": 0.2002,
+          "std": 0.0067
+        },
+        {
+          "level": 0.3,
+          "measured": 0.2981,
+          "std": 0.0067
+        },
+        {
+          "level": 0.4,
+          "measured": 0.3998,
+          "std": 0.0068
+        },
+        {
+          "level": 0.5,
+          "measured": 0.498,
+          "std": 0.0067
+        },
+        {
+          "level": 0.6,
+          "measured": 0.5999,
+          "std": 0.0067
+        },
+        {
+          "level": 0.7,
+          "measured": 0.6979,
+          "std": 0.0067
+        },
+        {
+          "level": 0.8,
+          "measured": 0.7999,
+          "std": 0.0067
+        },
+        {
+          "level": 0.9,
+          "measured": 0.898,
+          "std": 0.0067
+        },
+        {
+          "level": 1.0,
+          "measured": 0.9961,
+          "std": 0.0039
+        }
+      ],
+      "issues": [],
+      "notes": {}
+    },
+    {
+      "page_number": 2,
+      "scan_index": 1,
+      "page_code_read": [
+        0,
+        1,
+        0,
+        0,
+        1,
+        0
+      ],
+      "page_code_expected": [
+        0,
+        1,
+        0,
+        0,
+        1,
+        0
+      ],
+      "code_matches": true,
+      "aligned": true,
+      "fit_error_mm": 0.001,
+      "dpi": 300.0,
+      "orientation": 0,
+      "paper": {
+        "gray": 0.996,
+        "rgb": [
+          0.996,
+          0.996,
+          0.996
+        ]
+      },
+      "black": {
+        "gray": 0.004,
+        "rgb": [
+          0.004,
+          0.004,
+          0.004
+        ]
+      },
+      "paper_to_black_contrast": 0.992,
+      "gray_patches": [
+        {
+          "level": 0.0,
+          "measured": 0.004,
+          "std": 0.004
+        },
+        {
+          "level": 0.1,
+          "measured": 0.098,
+          "std": 0.0067
+        },
+        {
+          "level": 0.2,
+          "measured": 0.2,
+          "std": 0.0066
+        },
+        {
+          "level": 0.3,
+          "measured": 0.2981,
+          "std": 0.0067
+        },
+        {
+          "level": 0.4,
+          "measured": 0.4001,
+          "std": 0.0067
+        },
+        {
+          "level": 0.5,
+          "measured": 0.4981,
+          "std": 0.0067
+        },
+        {
+          "level": 0.6,
+          "measured": 0.6001,
+          "std": 0.0068
+        },
+        {
+          "level": 0.7,
+          "measured": 0.698,
+          "std": 0.0067
+        },
+        {
+          "level": 0.8,
+          "measured": 0.8001,
+          "std": 0.0067
+        },
+        {
+          "level": 0.9,
+          "measured": 0.898,
+          "std": 0.0066
+        },
+        {
+          "level": 1.0,
+          "measured": 0.9959,
+          "std": 0.004
+        }
+      ],
+      "issues": [],
+      "notes": {}
+    }
+  ],
+  "printer_response": {
+    "paper": {
+      "gray": 0.996,
+      "rgb": [
+        0.996,
+        0.996,
+        0.996
+      ]
+    },
+    "black": {
+      "gray": 0.004,
+      "rgb": [
+        0.004,
+        0.004,
+        0.004
+      ]
+    },
+    "gray_patches": [
+      {
+        "level": 0.0,
+        "measured": 0.004
+      },
+      {
+        "level": 0.1,
+        "measured": 0.098
+      },
+      {
+        "level": 0.2,
+        "measured": 0.2001
+      },
+      {
+        "level": 0.3,
+        "measured": 0.2981
+      },
+      {
+        "level": 0.4,
+        "measured": 0.4
+      },
+      {
+        "level": 0.5,
+        "measured": 0.498
+      },
+      {
+        "level": 0.6,
+        "measured": 0.6
+      },
+      {
+        "level": 0.7,
+        "measured": 0.6979
+      },
+      {
+        "level": 0.8,
+        "measured": 0.8
+      },
+      {
+        "level": 0.9,
+        "measured": 0.898
+      },
+      {
+        "level": 1.0,
+        "measured": 0.996
+      }
+    ],
+    "notes": {}
+  },
+  "candidates": [
+    {
+      "experiment_id": "experiment_1f77972a2eca40c2b75fc9d9fb143331",
+      "candidate_id": "reference",
+      "role": "reference",
+      "mapping": {
+        "gamma": 0.28284,
+        "dark_level": 0.0,
+        "light_level": 1.0,
+        "steps": 0,
+        "invert": false
+      },
+      "page_number": 1,
+      "tile_path": "/Users/razmik/Documents/Agentic_system_with_hardware_integration/runs/20261017_221127_850186/print_tuning/scan_r2_aeadf633_91c6396a_tiles/p1__experiment_1f77972a2eca40c2b75fc9d9fb143331__reference__tile.png",
+      "panels": [
+        {
+          "panel": "Initial",
+          "png": "/Users/razmik/Documents/Agentic_system_with_hardware_integration/runs/20261017_221127_850186/print_tuning/scan_r2_aeadf633_91c6396a_tiles/p1_experiment_1f77972a2eca40c2b75fc9d9fb143331__reference__Initial.png",
+          "measurements": {
+            "cells_used": 1004,
+            "paper_white_share": 0.0,
+            "full_black_share": 0.006,
+            "intended_levels": 14,
+            "printed_levels": 14,
+            "collapsed_levels": 0,
+            "correlation": 0.9999,
+            "mean_abs_difference": 0.0021,
+            "contrast": 0.5108,
+            "intended_contrast": 0.509,
+            "focus": {
+              "inside_mean": 0.332,
+              "rest_mean": 0.4755,
+              "difference": -0.1436,
+              "intended_difference": -0.1421
+            }
+          },
+          "notes": {}
+        },
+        {
+          "panel": "Final",
+          "png": "/Users/razmik/Documents/Agentic_system_with_hardware_integration/runs/20261017_221127_850186/print_tuning/scan_r2_aeadf633_91c6396a_tiles/p1_experiment_1f77972a2eca40c2b75fc9d9fb143331__reference__Final.png",
+          "measurements": {
+            "cells_used": 1004,
+            "paper_white_share": 0.0,
+            "full_black_share": 0.005,
+            "intended_levels": 14,
+            "printed_levels": 14,
+            "collapsed_levels": 0,
+            "correlation": 0.9999,
+            "mean_abs_difference": 0.002,
+            "contrast": 0.4611,
+            "intended_contrast": 0.4595,
+            "focus": {
+              "inside_mean": 0.5356,
+              "rest_mean": 0.4305,
+              "difference": 0.1051,
+              "intended_difference": 0.1055
+            }
+          },
+          "notes": {}
+        }
+      ],
+      "measurements": {
+        "paper_white_share": 0.0,
+        "full_black_share": 0.0055,
+        "collapsed_levels": 0,
+        "correlation": 0.9999,
+        "contrast": 0.4859,
+        "focus_difference": {
+          "Initial": -0.1436,
+          "Final": 0.1051
+        }
+      },
+      "warnings": [],
+      "notes": {}
+    },
+    {
+      "experiment_id": "experiment_1f77972a2eca40c2b75fc9d9fb143331",
+      "candidate_id": "test_1",
+      "role": "test",
+      "mapping": {
+        "gamma": 0.14142,
+        "dark_level": 0.0,
+        "light_level": 1.0,
+        "steps": 0,
+        "invert": false
+      },
+      "page_number": 1,
+      "tile_path": "/Users/razmik/Documents/Agentic_system_with_hardware_integration/runs/20261017_221127_850186/print_tuning/scan_r2_aeadf633_91c6396a_tiles/p1__experiment_1f77972a2eca40c2b75fc9d9fb143331__test_1__tile.png",
+      "panels": [
+        {
+          "panel": "Initial",
+          "png": "/Users/razmik/Documents/Agentic_system_with_hardware_integration/runs/20261017_221127_850186/print_tuning/scan_r2_aeadf633_91c6396a_tiles/p1_experiment_1f77972a2eca40c2b75fc9d9fb143331__test_1__Initial.png",
+          "measurements": {
+            "cells_used": 1004,
+            "paper_white_share": 0.001,
+            "full_black_share": 0.006,
+            "intended_levels": 12,
+            "printed_levels": 12,
+            "collapsed_levels": 0,
+            "correlation": 0.9998,
+            "mean_abs_difference": 0.002,
+            "contrast": 0.3852,
+            "intended_contrast": 0.3813,
+            "focus": {
+              "inside_mean": 0.5774,
+              "rest_mean": 0.6795,
+              "difference": -0.1021,
+              "intended_difference": -0.1012
+            }
+          },
+          "notes": {}
+        },
+        {
+          "panel": "Final",
+          "png": "/Users/razmik/Documents/Agentic_system_with_hardware_integration/runs/20261017_221127_850186/print_tuning/scan_r2_aeadf633_91c6396a_tiles/p1_experiment_1f77972a2eca40c2b75fc9d9fb143331__test_1__Final.png",
+          "measurements": {
+            "cells_used": 1004,
+            "paper_white_share": 0.0,
+            "full_black_share": 0.005,
+            "intended_levels": 12,
+            "printed_levels": 12,
+            "collapsed_levels": 0,
+            "correlation": 0.9998,
+            "mean_abs_difference": 0.0019,
+            "contrast": 0.3636,
+            "intended_contrast": 0.3628,
+            "focus": {
+              "inside_mean": 0.7332,
+              "rest_mean": 0.6464,
+              "difference": 0.0868,
+              "intended_difference": 0.0866
+            }
+          },
+          "notes": {}
+        }
+      ],
+      "measurements": {
+        "paper_white_share": 0.0005,
+        "full_black_share": 0.0055,
+        "collapsed_levels": 0,
+        "correlation": 0.9998,
+        "contrast": 0.3744,
+        "focus_difference": {
+          "Initial": -0.1021,
+          "Final": 0.0868
+        }
+      },
+      "warnings": [],
+      "notes": {}
+    },
+    {
+      "experiment_id": "experiment_1f77972a2eca40c2b75fc9d9fb143331",
+      "candidate_id": "test_2",
+      "role": "test",
+      "mapping": {
+        "gamma": 0.1922,
+        "dark_level": 0.0,
+        "light_level": 1.0,
+        "steps": 0,
+        "invert": false
+      },
+      "page_number": 1,
+      "tile_path": "/Users/razmik/Documents/Agentic_system_with_hardware_integration/runs/20261017_221127_850186/print_tuning/scan_r2_aeadf633_91c6396a_tiles/p1__experiment_1f77972a2eca40c2b75fc9d9fb143331__test_2__tile.png",
+      "panels": [
+        {
+          "panel": "Initial",
+          "png": "/Users/razmik/Documents/Agentic_system_with_hardware_integration/runs/20261017_221127_850186/print_tuning/scan_r2_aeadf633_91c6396a_tiles/p1_experiment_1f77972a2eca40c2b75fc9d9fb143331__test_2__Initial.png",
+          "measurements": {
+            "cells_used": 1004,
+            "paper_white_share": 0.0,
+            "full_black_share": 0.006,
+            "intended_levels": 13,
+            "printed_levels": 13,
+            "collapsed_levels": 0,
+            "correlation": 0.9998,
+            "mean_abs_difference": 0.0019,
+            "contrast": 0.4494,
+            "intended_contrast": 0.4467,
+            "focus": {
+              "inside_mean": 0.477,
+              "rest_mean": 0.5962,
+              "difference": -0.1192,
+              "intended_difference": -0.1215
+            }
+          },
+          "notes": {}
+        },
+        {
+          "panel": "Final",
+          "png": "/Users/razmik/Documents/Agentic_system_with_hardware_integration/runs/20261017_221127_850186/print_tuning/scan_r2_aeadf633_91c6396a_tiles/p1_experiment_1f77972a2eca40c2b75fc9d9fb143331__test_2__Final.png",
+          "measurements": {
+            "cells_used": 1004,
+            "paper_white_share": 0.0,
+            "full_black_share": 0.005,
+            "intended_levels": 14,
+            "printed_levels": 14,
+            "collapsed_levels": 0,
+            "correlation": 0.9998,
+            "mean_abs_difference": 0.002,
+            "contrast": 0.4186,
+            "intended_contrast": 0.4171,
+            "focus": {
+              "inside_mean": 0.652,
+              "rest_mean": 0.5569,
+              "difference": 0.095,
+              "intended_difference": 0.098
+            }
+          },
+          "notes": {}
+        }
+      ],
+      "measurements": {
+        "paper_white_share": 0.0,
+        "full_black_share": 0.0055,
+        "collapsed_levels": 0,
+        "correlation": 0.9998,
+        "contrast": 0.434,
+        "focus_difference": {
+          "Initial": -0.1192,
+          "Final": 0.095
+        }
+      },
+      "warnings": [],
+      "notes": {}
+    },
+    {
+      "experiment_id": "experiment_1f77972a2eca40c2b75fc9d9fb143331",
+      "candidate_id": "test_3",
+      "role": "test",
+      "mapping": {
+        "gamma": 0.2611,
+        "dark_level": 0.0,
+        "light_level": 1.0,
+        "steps": 0,
+        "invert": false
+      },
+      "page_number": 1,
+      "tile_path": "/Users/razmik/Documents/Agentic_system_with_hardware_integration/runs/20261017_221127_850186/print_tuning/scan_r2_aeadf633_91c6396a_tiles/p1__experiment_1f77972a2eca40c2b75fc9d9fb143331__test_3__tile.png",
+      "panels": [
+        {
+          "panel": "Initial",
+          "png": "/Users/razmik/Documents/Agentic_system_with_hardware_integration/runs/20261017_221127_850186/print_tuning/scan_r2_aeadf633_91c6396a_tiles/p1_experiment_1f77972a2eca40c2b75fc9d9fb143331__test_3__Initial.png",
+          "measurements": {
+            "cells_used": 1004,
+            "paper_white_share": 0.0,
+            "full_black_share": 0.006,
+            "intended_levels": 14,
+            "printed_levels": 14,
+            "collapsed_levels": 0,
+            "correlation": 0.9999,
+            "mean_abs_difference": 0.0021,
+            "contrast": 0.5016,
+            "intended_contrast": 0.4991,
+            "focus": {
+              "inside_mean": 0.3619,
+              "rest_mean": 0.5016,
+              "difference": -0.1396,
+              "intended_difference": -0.1387
+            }
+          },
+          "notes": {}
+        },
+        {
+          "panel": "Final",
+          "png": "/Users/razmik/Documents/Agentic_system_with_hardware_integration/runs/20261017_221127_850186/print_tuning/scan_r2_aeadf633_91c6396a_tiles/p1_experiment_1f77972a2eca40c2b75fc9d9fb143331__test_3__Final.png",
+          "measurements": {
+            "cells_used": 1004,
+            "paper_white_share": 0.0,
+            "full_black_share": 0.005,
+            "intended_levels": 15,
+            "printed_levels": 15,
+            "collapsed_levels": 0,
+            "correlation": 0.9998,
+            "mean_abs_difference": 0.0021,
+            "contrast": 0.4553,
+            "intended_contrast": 0.4542,
+            "focus": {
+              "inside_mean": 0.5637,
+              "rest_mean": 0.4576,
+              "difference": 0.1061,
+              "intended_difference": 0.1049
+            }
+          },
+          "notes": {}
+        }
+      ],
+      "measurements": {
+        "paper_white_share": 0.0,
+        "full_black_share": 0.0055,
+        "collapsed_levels": 0,
+        "correlation": 0.9999,
+        "contrast": 0.4785,
+        "focus_difference": {
+          "Initial": -0.1396,
+          "Final": 0.1061
+        }
+      },
+      "warnings": [],
+      "notes": {}
+    },
+    {
+      "experiment_id": "experiment_1f77972a2eca40c2b75fc9d9fb143331",
+      "candidate_id": "test_4",
+      "role": "test",
+      "mapping": {
+        "gamma": 0.3544,
+        "dark_level": 0.0,
+        "light_level": 1.0,
+        "steps": 0,
+        "invert": false
+      },
+      "page_number": 1,
+      "tile_path": "/Users/razmik/Documents/Agentic_system_with_hardware_integration/runs/20261017_221127_850186/print_tuning/scan_r2_aeadf633_91c6396a_tiles/p1__experiment_1f77972a2eca40c2b75fc9d9fb143331__test_4__tile.png",
+      "panels": [
+        {
+          "panel": "Initial",
+          "png": "/Users/razmik/Documents/Agentic_system_with_hardware_integration/runs/20261017_221127_850186/print_tuning/scan_r2_aeadf633_91c6396a_tiles/p1_experiment_1f77972a2eca40c2b75fc9d9fb143331__test_4__Initial.png",
+          "measurements": {
+            "cells_used": 1004,
+            "paper_white_share": 0.0,
+            "full_black_share": 0.006,
+            "intended_levels": 15,
+            "printed_levels": 15,
+            "collapsed_levels": 0,
+            "correlation": 0.9999,
+            "mean_abs_difference": 0.0023,
+            "contrast": 0.5266,
+            "intended_contrast": 0.5252,
+            "focus": {
+              "inside_mean": 0.2507,
+              "rest_mean": 0.4,
+              "difference": -0.1493,
+              "intended_difference": -0.1482
+            }
+          },
+          "notes": {}
+        },
+        {
+          "panel": "Final",
+          "png": "/Users/razmik/Documents/Agentic_system_with_hardware_integration/runs/20261017_221127_850186/print_tuning/scan_r2_aeadf633_91c6396a_tiles/p1_experiment_1f77972a2eca40c2b75fc9d9fb143331__test_4__Final.png",
+          "measurements": {
+            "cells_used": 1004,
+            "paper_white_share": 0.0,
+            "full_black_share": 0.006,
+            "intended_levels": 14,
+            "printed_levels": 14,
+            "collapsed_levels": 0,
+            "correlation": 0.9998,
+            "mean_abs_difference": 0.0022,
+            "contrast": 0.4655,
+            "intended_contrast": 0.4617,
+            "focus": {
+              "inside_mean": 0.4576,
+              "rest_mean": 0.3537,
+              "difference": 0.1039,
+              "intended_difference": 0.1037
+            }
+          },
+          "notes": {}
+        }
+      ],
+      "measurements": {
+        "paper_white_share": 0.0,
+        "full_black_share": 0.006,
+        "collapsed_levels": 0,
+        "correlation": 0.9999,
+        "contrast": 0.496,
+        "focus_difference": {
+          "Initial": -0.1493,
+          "Final": 0.1039
+        }
+      },
+      "warnings": [],
+      "notes": {}
+    },
+    {
+      "experiment_id": "experiment_1f77972a2eca40c2b75fc9d9fb143331",
+      "candidate_id": "test_5",
+      "role": "test",
+      "mapping": {
+        "gamma": 0.4808,
+        "dark_level": 0.0,
+        "light_level": 1.0,
+        "steps": 0,
+        "invert": false
+      },
+      "page_number": 1,
+      "tile_path": "/Users/razmik/Documents/Agentic_system_with_hardware_integration/runs/20261017_221127_850186/print_tuning/scan_r2_aeadf633_91c6396a_tiles/p1__experiment_1f77972a2eca40c2b75fc9d9fb143331__test_5__tile.png",
+      "panels": [
+        {
+          "panel": "Initial",
+          "png": "/Users/razmik/Documents/Agentic_system_with_hardware_integration/runs/20261017_221127_850186/print_tuning/scan_r2_aeadf633_91c6396a_tiles/p1_experiment_1f77972a2eca40c2b75fc9d9fb143331__test_5__Initial.png",
+          "measurements": {
+            "cells_used": 1004,
+            "paper_white_share": 0.0,
+            "full_black_share": 0.0149,
+            "intended_levels": 14,
+            "printed_levels": 14,
+            "collapsed_levels": 0,
+            "correlation": 0.9999,
+            "mean_abs_difference": 0.0023,
+            "contrast": 0.5159,
+            "intended_contrast": 0.5137,
+            "focus": {
+              "inside_mean": 0.1524,
+              "rest_mean": 0.2992,
+              "difference": -0.1468,
+              "intended_difference": -0.1455
+            }
+          },
+          "notes": {}
+        },
+        {
+          "panel": "Final",
+          "png": "/Users/razmik/Documents/Agentic_system_with_hardware_integration/runs/20261017_221127_850186/print_tuning/scan_r2_aeadf633_91c6396a_tiles/p1_experiment_1f77972a2eca40c2b75fc9d9fb143331__test_5__Final.png",
+          "measurements": {
+            "cells_used": 1004,
+            "paper_white_share": 0.0,
+            "full_black_share": 0.0279,
+            "intended_levels": 13,
+            "printed_levels": 13,
+            "collapsed_levels": 0,
+            "correlation": 0.9998,
+            "mean_abs_difference": 0.0023,
+            "contrast": 0.431,
+            "intended_contrast": 0.431,
+            "focus": {
+              "inside_mean": 0.3445,
+              "rest_mean": 0.2533,
+              "difference": 0.0912,
+              "intended_difference": 0.0924
+            }
+          },
+          "notes": {}
+        }
+      ],
+      "measurements": {
+        "paper_white_share": 0.0,
+        "full_black_share": 0.0214,
+        "collapsed_levels": 0,
+        "correlation": 0.9999,
+        "contrast": 0.4735,
+        "focus_difference": {
+          "Initial": -0.1468,
+          "Final": 0.0912
+        }
+      },
+      "warnings": [],
+      "notes": {}
+    },
+    {
+      "experiment_id": "experiment_6f6aebea38fb4813873582cd5b237ce4",
+      "candidate_id": "reference",
+      "role": "reference",
+      "mapping": {
+        "gamma": 0.28284,
+        "dark_level": 0.0,
+        "light_level": 1.0,
+        "steps": 0,
+        "invert": false
+      },
+      "page_number": 1,
+      "tile_path": "/Users/razmik/Documents/Agentic_system_with_hardware_integration/runs/20261017_221127_850186/print_tuning/scan_r2_aeadf633_91c6396a_tiles/p1__experiment_6f6aebea38fb4813873582cd5b237ce4__reference__tile.png",
+      "panels": [
+        {
+          "panel": "Initial",
+          "png": "/Users/razmik/Documents/Agentic_system_with_hardware_integration/runs/20261017_221127_850186/print_tuning/scan_r2_aeadf633_91c6396a_tiles/p1_experiment_6f6aebea38fb4813873582cd5b237ce4__reference__Initial.png",
+          "measurements": {
+            "cells_used": 1004,
+            "paper_white_share": 0.0,
+            "full_black_share": 0.006,
+            "intended_levels": 16,
+            "printed_levels": 16,
+            "collapsed_levels": 0,
+            "correlation": 0.9999,
+            "mean_abs_difference": 0.0021,
+            "contrast": 0.5309,
+            "intended_contrast": 0.528,
+            "focus": {
+              "inside_mean": 0.3479,
+              "rest_mean": 0.4879,
+              "difference": -0.14,
+              "intended_difference": -0.1419
+            }
+          },
+          "notes": {}
+        },
+        {
+          "panel": "Final",
+          "png": "/Users/razmik/Documents/Agentic_system_with_hardware_integration/runs/20261017_221127_850186/print_tuning/scan_r2_aeadf633_91c6396a_tiles/p1_experiment_6f6aebea38fb4813873582cd5b237ce4__reference__Final.png",
+          "measurements": {
+            "cells_used": 1004,
+            "paper_white_share": 0.0,
+            "full_black_share": 0.006,
+            "intended_levels": 15,
+            "printed_levels": 15,
+            "collapsed_levels": 0,
+            "correlation": 0.9998,
+            "mean_abs_difference": 0.0021,
+            "contrast": 0.4566,
+            "intended_contrast": 0.4565,
+            "focus": {
+              "inside_mean": 0.6123,
+              "rest_mean": 0.415,
+              "difference": 0.1973,
+              "intended_difference": 0.1965
+            }
+          },
+          "notes": {}
+        }
+      ],
+      "measurements": {
+        "paper_white_share": 0.0,
+        "full_black_share": 0.006,
+        "collapsed_levels": 0,
+        "correlation": 0.9999,
+        "contrast": 0.4938,
+        "focus_difference": {
+          "Initial": -0.14,
+          "Final": 0.1973
+        }
+      },
+      "warnings": [],
+      "notes": {}
+    },
+    {
+      "experiment_id": "experiment_6f6aebea38fb4813873582cd5b237ce4",
+      "candidate_id": "test_1",
+      "role": "test",
+      "mapping": {
+        "gamma": 0.14142,
+        "dark_level": 0.0,
+        "light_level": 1.0,
+        "steps": 0,
+        "invert": false
+      },
+      "page_number": 1,
+      "tile_path": "/Users/razmik/Documents/Agentic_system_with_hardware_integration/runs/20261017_221127_850186/print_tuning/scan_r2_aeadf633_91c6396a_tiles/p1__experiment_6f6aebea38fb4813873582cd5b237ce4__test_1__tile.png",
+      "panels": [
+        {
+          "panel": "Initial",
+          "png": "/Users/razmik/Documents/Agentic_system_with_hardware_integration/runs/20261017_221127_850186/print_tuning/scan_r2_aeadf633_91c6396a_tiles/p1_experiment_6f6aebea38fb4813873582cd5b237ce4__test_1__Initial.png",
+          "measurements": {
+            "cells_used": 1004,
+            "paper_white_share": 0.001,
+            "full_black_share": 0.006,
+            "intended_levels": 13,
+            "printed_levels": 13,
+            "collapsed_levels": 0,
+            "correlation": 0.9998,
+            "mean_abs_difference": 0.0021,
+            "contrast": 0.3971,
+            "intended_contrast": 0.3916,
+            "focus": {
+              "inside_mean": 0.5884,
+              "rest_mean": 0.688,
+              "difference": -0.0996,
+              "intended_difference": -0.0988
+            }
+          },
+          "notes": {}
+        },
+        {
+          "panel": "Final",
+          "png": "/Users/razmik/Documents/Agentic_system_with_hardware_integration/runs/20261017_221127_850186/print_tuning/scan_r2_aeadf633_91c6396a_tiles/p1_experiment_6f6aebea38fb4813873582cd5b237ce4__test_1__Final.png",
+          "measurements": {
+            "cells_used": 1004,
+            "paper_white_share": 0.0,
+            "full_black_share": 0.005,
+            "intended_levels": 14,
+            "printed_levels": 14,
+            "collapsed_levels": 0,
+            "correlation": 0.9998,
+            "mean_abs_difference": 0.0019,
+            "contrast": 0.3689,
+            "intended_contrast": 0.368,
+            "focus": {
+              "inside_mean": 0.7869,
+              "rest_mean": 0.6346,
+              "difference": 0.1523,
+              "intended_difference": 0.1484
+            }
+          },
+          "notes": {}
+        }
+      ],
+      "measurements": {
+        "paper_white_share": 0.0005,
+        "full_black_share": 0.0055,
+        "collapsed_levels": 0,
+        "correlation": 0.9998,
+        "contrast": 0.383,
+        "focus_difference": {
+          "Initial": -0.0996,
+          "Final": 0.1523
+        }
+      },
+      "warnings": [],
+      "notes": {}
+    },
+    {
+      "experiment_id": "experiment_6f6aebea38fb4813873582cd5b237ce4",
+      "candidate_id": "test_2",
+      "role": "test",
+      "mapping": {
+        "gamma": 0.1922,
+        "dark_level": 0.0,
+        "light_level": 1.0,
+        "steps": 0,
+        "invert": false
+      },
+      "page_number": 1,
+      "tile_path": "/Users/razmik/Documents/Agentic_system_with_hardware_integration/runs/20261017_221127_850186/print_tuning/scan_r2_aeadf633_91c6396a_tiles/p1__experiment_6f6aebea38fb4813873582cd5b237ce4__test_2__tile.png",
+      "panels": [
+        {
+          "panel": "Initial",
+          "png": "/Users/razmik/Documents/Agentic_system_with_hardware_integration/runs/20261017_221127_850186/print_tuning/scan_r2_aeadf633_91c6396a_tiles/p1_experiment_6f6aebea38fb4813873582cd5b237ce4__test_2__Initial.png",
+          "measurements": {
+            "cells_used": 1004,
+            "paper_white_share": 0.001,
+            "full_black_share": 0.006,
+            "intended_levels": 15,
+            "printed_levels": 15,
+            "collapsed_levels": 0,
+            "correlation": 0.9999,
+            "mean_abs_difference": 0.002,
+            "contrast": 0.4583,
+            "intended_contrast": 0.4604,
+            "focus": {
+              "inside_mean": 0.4866,
+              "rest_mean": 0.6063,
+              "difference": -0.1198,
+              "intended_difference": -0.1196
+            }
+          },
+          "notes": {}
+        },
+        {
+          "panel": "Final",
+          "png": "/Users/razmik/Documents/Agentic_system_with_hardware_integration/runs/20261017_221127_850186/print_tuning/scan_r2_aeadf633_91c6396a_tiles/p1_experiment_6f6aebea38fb4813873582cd5b237ce4__test_2__Final.png",
+          "measurements": {
+            "cells_used": 1004,
+            "paper_white_share": 0.0,
+            "full_black_share": 0.005,
+            "intended_levels": 16,
+            "printed_levels": 16,
+            "collapsed_levels": 0,
+            "correlation": 0.9998,
+            "mean_abs_difference": 0.002,
+            "contrast": 0.4235,
+            "intended_contrast": 0.4198,
+            "focus": {
+              "inside_mean": 0.718,
+              "rest_mean": 0.5432,
+              "difference": 0.1748,
+              "intended_difference": 0.1733
+            }
+          },
+          "notes": {}
+        }
+      ],
+      "measurements": {
+        "paper_white_share": 0.0005,
+        "full_black_share": 0.0055,
+        "collapsed_levels": 0,
+        "correlation": 0.9999,
+        "contrast": 0.4409,
+        "focus_difference": {
+          "Initial": -0.1198,
+          "Final": 0.1748
+        }
+      },
+      "warnings": [],
+      "notes": {}
+    },
+    {
+      "experiment_id": "experiment_6f6aebea38fb4813873582cd5b237ce4",
+      "candidate_id": "test_3",
+      "role": "test",
+      "mapping": {
+        "gamma": 0.2611,
+        "dark_level": 0.0,
+        "light_level": 1.0,
+        "steps": 0,
+        "invert": false
+      },
+      "page_number": 1,
+      "tile_path": "/Users/razmik/Documents/Agentic_system_with_hardware_integration/runs/20261017_221127_850186/print_tuning/scan_r2_aeadf633_91c6396a_tiles/p1__experiment_6f6aebea38fb4813873582cd5b237ce4__test_3__tile.png",
+      "panels": [
+        {
+          "panel": "Initial",
+          "png": "/Users/razmik/Documents/Agentic_system_with_hardware_integration/runs/20261017_221127_850186/print_tuning/scan_r2_aeadf633_91c6396a_tiles/p1_experiment_6f6aebea38fb4813873582cd5b237ce4__test_3__Initial.png",
+          "measurements": {
+            "cells_used": 1004,
+            "paper_white_share": 0.0,
+            "full_black_share": 0.006,
+            "intended_levels": 16,
+            "printed_levels": 16,
+            "collapsed_levels": 0,
+            "correlation": 0.9999,
+            "mean_abs_difference": 0.0021,
+            "contrast": 0.5193,
+            "intended_contrast": 0.5169,
+            "focus": {
+              "inside_mean": 0.3748,
+              "rest_mean": 0.5136,
+              "difference": -0.1388,
+              "intended_difference": -0.138
+            }
+          },
+          "notes": {}
+        },
+        {
+          "panel": "Final",
+          "png": "/Users/razmik/Documents/Agentic_system_with_hardware_integration/runs/20261017_221127_850186/print_tuning/scan_r2_aeadf633_91c6396a_tiles/p1_experiment_6f6aebea38fb4813873582cd5b237ce4__test_3__Final.png",
+          "measurements": {
+            "cells_used": 1004,
+            "paper_white_share": 0.0,
+            "full_black_share": 0.005,
+            "intended_levels": 15,
+            "printed_levels": 15,
+            "collapsed_levels": 0,
+            "correlation": 0.9998,
+            "mean_abs_difference": 0.0021,
+            "contrast": 0.454,
+            "intended_contrast": 0.4526,
+            "focus": {
+              "inside_mean": 0.6358,
+              "rest_mean": 0.4422,
+              "difference": 0.1936,
+              "intended_difference": 0.1929
+            }
+          },
+          "notes": {}
+        }
+      ],
+      "measurements": {
+        "paper_white_share": 0.0,
+        "full_black_share": 0.0055,
+        "collapsed_levels": 0,
+        "correlation": 0.9999,
+        "contrast": 0.4867,
+        "focus_difference": {
+          "Initial": -0.1388,
+          "Final": 0.1936
+        }
+      },
+      "warnings": [],
+      "notes": {}
+    },
+    {
+      "experiment_id": "experiment_6f6aebea38fb4813873582cd5b237ce4",
+      "candidate_id": "test_4",
+      "role": "test",
+      "mapping": {
+        "gamma": 0.3544,
+        "dark_level": 0.0,
+        "light_level": 1.0,
+        "steps": 0,
+        "invert": false
+      },
+      "page_number": 1,
+      "tile_path": "/Users/razmik/Documents/Agentic_system_with_hardware_integration/runs/20261017_221127_850186/print_tuning/scan_r2_aeadf633_91c6396a_tiles/p1__experiment_6f6aebea38fb4813873582cd5b237ce4__test_4__tile.png",
+      "panels": [
+        {
+          "panel": "Initial",
+          "png": "/Users/razmik/Documents/Agentic_system_with_hardware_integration/runs/20261017_221127_850186/print_tuning/scan_r2_aeadf633_91c6396a_tiles/p1_experiment_6f6aebea38fb4813873582cd5b237ce4__test_4__Initial.png",
+          "measurements": {
+            "cells_used": 1004,
+            "paper_white_share": 0.0,
+            "full_black_share": 0.007,
+            "intended_levels": 15,
+            "printed_levels": 15,
+            "collapsed_levels": 0,
+            "correlation": 0.9999,
+            "mean_abs_difference": 0.0022,
+            "contrast": 0.547,
+            "intended_contrast": 0.5477,
+            "focus": {
+              "inside_mean": 0.2618,
+              "rest_mean": 0.4136,
+              "difference": -0.1518,
+              "intended_difference": -0.1495
+            }
+          },
+          "notes": {}
+        },
+        {
+          "panel": "Final",
+          "png": "/Users/razmik/Documents/Agentic_system_with_hardware_integration/runs/20261017_221127_850186/print_tuning/scan_r2_aeadf633_91c6396a_tiles/p1_experiment_6f6aebea38fb4813873582cd5b237ce4__test_4__Final.png",
+          "measurements": {
+            "cells_used": 1004,
+            "paper_white_share": 0.0,
+            "full_black_share": 0.007,
+            "intended_levels": 14,
+            "printed_levels": 14,
+            "collapsed_levels": 0,
+            "correlation": 0.9998,
+            "mean_abs_difference": 0.0023,
+            "contrast": 0.4519,
+            "intended_contrast": 0.4543,
+            "focus": {
+              "inside_mean": 0.5427,
+              "rest_mean": 0.3379,
+              "difference": 0.2048,
+              "intended_difference": 0.2019
+            }
+          },
+          "notes": {}
+        }
+      ],
+      "measurements": {
+        "paper_white_share": 0.0,
+        "full_black_share": 0.007,
+        "collapsed_levels": 0,
+        "correlation": 0.9999,
+        "contrast": 0.4995,
+        "focus_difference": {
+          "Initial": -0.1518,
+          "Final": 0.2048
+        }
+      },
+      "warnings": [],
+      "notes": {}
+    },
+    {
+      "experiment_id": "experiment_6f6aebea38fb4813873582cd5b237ce4",
+      "candidate_id": "test_5",
+      "role": "test",
+      "mapping": {
+        "gamma": 0.4808,
+        "dark_level": 0.0,
+        "light_level": 1.0,
+        "steps": 0,
+        "invert": false
+      },
+      "page_number": 1,
+      "tile_path": "/Users/razmik/Documents/Agentic_system_with_hardware_integration/runs/20261017_221127_850186/print_tuning/scan_r2_aeadf633_91c6396a_tiles/p1__experiment_6f6aebea38fb4813873582cd5b237ce4__test_5__tile.png",
+      "panels": [
+        {
+          "panel": "Initial",
+          "png": "/Users/razmik/Documents/Agentic_system_with_hardware_integration/runs/20261017_221127_850186/print_tuning/scan_r2_aeadf633_91c6396a_tiles/p1_experiment_6f6aebea38fb4813873582cd5b237ce4__test_5__Initial.png",
+          "measurements": {
+            "cells_used": 1004,
+            "paper_white_share": 0.0,
+            "full_black_share": 0.0179,
+            "intended_levels": 15,
+            "printed_levels": 15,
+            "collapsed_levels": 0,
+            "correlation": 0.9999,
+            "mean_abs_difference": 0.0022,
+            "contrast": 0.544,
+            "intended_contrast": 0.5411,
+            "focus": {
+              "inside_mean": 0.1626,
+              "rest_mean": 0.313,
+              "difference": -0.1504,
+              "intended_difference": -0.1493
+            }
+          },
+          "notes": {}
+        },
+        {
+          "panel": "Final",
+          "png": "/Users/razmik/Documents/Agentic_system_with_hardware_integration/runs/20261017_221127_850186/print_tuning/scan_r2_aeadf633_91c6396a_tiles/p1_experiment_6f6aebea38fb4813873582cd5b237ce4__test_5__Final.png",
+          "measurements": {
+            "cells_used": 1004,
+            "paper_white_share": 0.0,
+            "full_black_share": 0.0319,
+            "intended_levels": 13,
+            "printed_levels": 13,
+            "collapsed_levels": 0,
+            "correlation": 0.9998,
+            "mean_abs_difference": 0.0024,
+            "contrast": 0.4142,
+            "intended_contrast": 0.4173,
+            "focus": {
+              "inside_mean": 0.4359,
+              "rest_mean": 0.2381,
+              "difference": 0.1978,
+              "intended_difference": 0.1948
+            }
+          },
+          "notes": {}
+        }
+      ],
+      "measurements": {
+        "paper_white_share": 0.0,
+        "full_black_share": 0.0249,
+        "collapsed_levels": 0,
+        "correlation": 0.9999,
+        "contrast": 0.4791,
+        "focus_difference": {
+          "Initial": -0.1504,
+          "Final": 0.1978
+        }
+      },
+      "warnings": [],
+      "notes": {}
+    },
+    {
+      "experiment_id": "experiment_9bf696e7feb643cd8a555bcf80cc06e6",
+      "candidate_id": "reference",
+      "role": "reference",
+      "mapping": {
+        "gamma": 0.28284,
+        "dark_level": 0.0,
+        "light_level": 1.0,
+        "steps": 0,
+        "invert": false
+      },
+      "page_number": 2,
+      "tile_path": "/Users/razmik/Documents/Agentic_system_with_hardware_integration/runs/20261017_221127_850186/print_tuning/scan_r2_aeadf633_91c6396a_tiles/p2__experiment_9bf696e7feb643cd8a555bcf80cc06e6__reference__tile.png",
+      "panels": [
+        {
+          "panel": "Initial",
+          "png": "/Users/razmik/Documents/Agentic_system_with_hardware_integration/runs/20261017_221127_850186/print_tuning/scan_r2_aeadf633_91c6396a_tiles/p2_experiment_9bf696e7feb643cd8a555bcf80cc06e6__reference__Initial.png",
+          "measurements": {
+            "cells_used": 1004,
+            "paper_white_share": 0.002,
+            "full_black_share": 0.005,
+            "intended_levels": 16,
+            "printed_levels": 16,
+            "collapsed_levels": 0,
+            "correlation": 0.9999,
+            "mean_abs_difference": 0.0021,
+            "contrast": 0.5759,
+            "intended_contrast": 0.5731,
+            "focus": {
+              "inside_mean": 0.3744,
+              "rest_mean": 0.5244,
+              "difference": -0.15,
+              "intended_difference": -0.1527
+            }
+          },
+          "notes": {}
+        },
+        {
+          "panel": "Final",
+          "png": "/Users/razmik/Documents/Agentic_system_with_hardware_integration/runs/20261017_221127_850186/print_tuning/scan_r2_aeadf633_91c6396a_tiles/p2_experiment_9bf696e7feb643cd8a555bcf80cc06e6__reference__Final.png",
+          "measurements": {
+            "cells_used": 1004,
+            "paper_white_share": 0.0,
+            "full_black_share": 0.006,
+            "intended_levels": 16,
+            "printed_levels": 16,
+            "collapsed_levels": 0,
+            "correlation": 0.9999,
+            "mean_abs_difference": 0.002,
+            "contrast": 0.4711,
+            "intended_contrast": 0.4678,
+            "focus": {
+              "inside_mean": 0.6126,
+              "rest_mean": 0.4424,
+              "difference": 0.1702,
+              "intended_difference": 0.1731
+            }
+          },
+          "notes": {}
+        }
+      ],
+      "measurements": {
+        "paper_white_share": 0.001,
+        "full_black_share": 0.0055,
+        "collapsed_levels": 0,
+        "correlation": 0.9999,
+        "contrast": 0.5235,
+        "focus_difference": {
+          "Initial": -0.15,
+          "Final": 0.1702
+        }
+      },
+      "warnings": [],
+      "notes": {}
+    },
+    {
+      "experiment_id": "experiment_9bf696e7feb643cd8a555bcf80cc06e6",
+      "candidate_id": "test_1",
+      "role": "test",
+      "mapping": {
+        "gamma": 0.14142,
+        "dark_level": 0.0,
+        "light_level": 1.0,
+        "steps": 0,
+        "invert": false
+      },
+      "page_number": 2,
+      "tile_path": "/Users/razmik/Documents/Agentic_system_with_hardware_integration/runs/20261017_221127_850186/print_tuning/scan_r2_aeadf633_91c6396a_tiles/p2__experiment_9bf696e7feb643cd8a555bcf80cc06e6__test_1__tile.png",
+      "panels": [
+        {
+          "panel": "Initial",
+          "png": "/Users/razmik/Documents/Agentic_system_with_hardware_integration/runs/20261017_221127_850186/print_tuning/scan_r2_aeadf633_91c6396a_tiles/p2_experiment_9bf696e7feb643cd8a555bcf80cc06e6__test_1__Initial.png",
+          "measurements": {
+            "cells_used": 1004,
+            "paper_white_share": 0.006,
+            "full_black_share": 0.005,
+            "intended_levels": 12,
+            "printed_levels": 12,
+            "collapsed_levels": 0,
+            "correlation": 0.9998,
+            "mean_abs_difference": 0.002,
+            "contrast": 0.4109,
+            "intended_contrast": 0.4115,
+            "focus": {
+              "inside_mean": 0.6139,
+              "rest_mean": 0.7134,
+              "difference": -0.0996,
+              "intended_difference": -0.1029
+            }
+          },
+          "notes": {}
+        },
+        {
+          "panel": "Final",
+          "png": "/Users/razmik/Documents/Agentic_system_with_hardware_integration/runs/20261017_221127_850186/print_tuning/scan_r2_aeadf633_91c6396a_tiles/p2_experiment_9bf696e7feb643cd8a555bcf80cc06e6__test_1__Final.png",
+          "measurements": {
+            "cells_used": 1004,
+            "paper_white_share": 0.001,
+            "full_black_share": 0.006,
+            "intended_levels": 13,
+            "printed_levels": 13,
+            "collapsed_levels": 0,
+            "correlation": 0.9998,
+            "mean_abs_difference": 0.002,
+            "contrast": 0.369,
+            "intended_contrast": 0.3667,
+            "focus": {
+              "inside_mean": 0.7815,
+              "rest_mean": 0.6549,
+              "difference": 0.1266,
+              "intended_difference": 0.1303
+            }
+          },
+          "notes": {}
+        }
+      ],
+      "measurements": {
+        "paper_white_share": 0.0035,
+        "full_black_share": 0.0055,
+        "collapsed_levels": 0,
+        "correlation": 0.9998,
+        "contrast": 0.39,
+        "focus_difference": {
+          "Initial": -0.0996,
+          "Final": 0.1266
+        }
+      },
+      "warnings": [],
+      "notes": {}
+    },
+    {
+      "experiment_id": "experiment_9bf696e7feb643cd8a555bcf80cc06e6",
+      "candidate_id": "test_2",
+      "role": "test",
+      "mapping": {
+        "gamma": 0.1922,
+        "dark_level": 0.0,
+        "light_level": 1.0,
+        "steps": 0,
+        "invert": false
+      },
+      "page_number": 2,
+      "tile_path": "/Users/razmik/Documents/Agentic_system_with_hardware_integration/runs/20261017_221127_850186/print_tuning/scan_r2_aeadf633_91c6396a_tiles/p2__experiment_9bf696e7feb643cd8a555bcf80cc06e6__test_2__tile.png",
+      "panels": [
+        {
+          "panel": "Initial",
+          "png": "/Users/razmik/Documents/Agentic_system_with_hardware_integration/runs/20261017_221127_850186/print_tuning/scan_r2_aeadf633_91c6396a_tiles/p2_experiment_9bf696e7feb643cd8a555bcf80cc06e6__test_2__Initial.png",
+          "measurements": {
+            "cells_used": 1004,
+            "paper_white_share": 0.005,
+            "full_black_share": 0.005,
+            "intended_levels": 14,
+            "printed_levels": 14,
+            "collapsed_levels": 0,
+            "correlation": 0.9999,
+            "mean_abs_difference": 0.002,
+            "contrast": 0.4907,
+            "intended_contrast": 0.4895,
+            "focus": {
+              "inside_mean": 0.5124,
+              "rest_mean": 0.6368,
+              "difference": -0.1244,
+              "intended_difference": -0.126
+            }
+          },
+          "notes": {}
+        },
+        {
+          "panel": "Final",
+          "png": "/Users/razmik/Documents/Agentic_system_with_hardware_integration/runs/20261017_221127_850186/print_tuning/scan_r2_aeadf633_91c6396a_tiles/p2_experiment_9bf696e7feb643cd8a555bcf80cc06e6__test_2__Final.png",
+          "measurements": {
+            "cells_used": 1004,
+            "paper_white_share": 0.001,
+            "full_black_share": 0.006,
+            "intended_levels": 15,
+            "printed_levels": 15,
+            "collapsed_levels": 0,
+            "correlation": 0.9998,
+            "mean_abs_difference": 0.0019,
+            "contrast": 0.4219,
+            "intended_contrast": 0.4227,
+            "focus": {
+              "inside_mean": 0.7228,
+              "rest_mean": 0.5672,
+              "difference": 0.1555,
+              "intended_difference": 0.1522
+            }
+          },
+          "notes": {}
+        }
+      ],
+      "measurements": {
+        "paper_white_share": 0.003,
+        "full_black_share": 0.0055,
+        "collapsed_levels": 0,
+        "correlation": 0.9999,
+        "contrast": 0.4563,
+        "focus_difference": {
+          "Initial": -0.1244,
+          "Final": 0.1555
+        }
+      },
+      "warnings": [],
+      "notes": {}
+    },
+    {
+      "experiment_id": "experiment_9bf696e7feb643cd8a555bcf80cc06e6",
+      "candidate_id": "test_3",
+      "role": "test",
+      "mapping": {
+        "gamma": 0.2611,
+        "dark_level": 0.0,
+        "light_level": 1.0,
+        "steps": 0,
+        "invert": false
+      },
+      "page_number": 2,
+      "tile_path": "/Users/razmik/Documents/Agentic_system_with_hardware_integration/runs/20261017_221127_850186/print_tuning/scan_r2_aeadf633_91c6396a_tiles/p2__experiment_9bf696e7feb643cd8a555bcf80cc06e6__test_3__tile.png",
+      "panels": [
+        {
+          "panel": "Initial",
+          "png": "/Users/razmik/Documents/Agentic_system_with_hardware_integration/runs/20261017_221127_850186/print_tuning/scan_r2_aeadf633_91c6396a_tiles/p2_experiment_9bf696e7feb643cd8a555bcf80cc06e6__test_3__Initial.png",
+          "measurements": {
+            "cells_used": 1004,
+            "paper_white_share": 0.003,
+            "full_black_share": 0.005,
+            "intended_levels": 16,
+            "printed_levels": 16,
+            "collapsed_levels": 0,
+            "correlation": 0.9999,
+            "mean_abs_difference": 0.0019,
+            "contrast": 0.5582,
+            "intended_contrast": 0.5583,
+            "focus": {
+              "inside_mean": 0.4001,
+              "rest_mean": 0.5489,
+              "difference": -0.1488,
+              "intended_difference": -0.1477
+            }
+          },
+          "notes": {}
+        },
+        {
+          "panel": "Final",
+          "png": "/Users/razmik/Documents/Agentic_system_with_hardware_integration/runs/20261017_221127_850186/print_tuning/scan_r2_aeadf633_91c6396a_tiles/p2_experiment_9bf696e7feb643cd8a555bcf80cc06e6__test_3__Final.png",
+          "measurements": {
+            "cells_used": 1004,
+            "paper_white_share": 0.0,
+            "full_black_share": 0.006,
+            "intended_levels": 16,
+            "printed_levels": 16,
+            "collapsed_levels": 0,
+            "correlation": 0.9999,
+            "mean_abs_difference": 0.002,
+            "contrast": 0.4612,
+            "intended_contrast": 0.4619,
+            "focus": {
+              "inside_mean": 0.6393,
+              "rest_mean": 0.4692,
+              "difference": 0.1701,
+              "intended_difference": 0.1698
+            }
+          },
+          "notes": {}
+        }
+      ],
+      "measurements": {
+        "paper_white_share": 0.0015,
+        "full_black_share": 0.0055,
+        "collapsed_levels": 0,
+        "correlation": 0.9999,
+        "contrast": 0.5097,
+        "focus_difference": {
+          "Initial": -0.1488,
+          "Final": 0.1701
+        }
+      },
+      "warnings": [],
+      "notes": {}
+    },
+    {
+      "experiment_id": "experiment_9bf696e7feb643cd8a555bcf80cc06e6",
+      "candidate_id": "test_4",
+      "role": "test",
+      "mapping": {
+        "gamma": 0.3544,
+        "dark_level": 0.0,
+        "light_level": 1.0,
+        "steps": 0,
+        "invert": false
+      },
+      "page_number": 2,
+      "tile_path": "/Users/razmik/Documents/Agentic_system_with_hardware_integration/runs/20261017_221127_850186/print_tuning/scan_r2_aeadf633_91c6396a_tiles/p2__experiment_9bf696e7feb643cd8a555bcf80cc06e6__test_4__tile.png",
+      "panels": [
+        {
+          "panel": "Initial",
+          "png": "/Users/razmik/Documents/Agentic_system_with_hardware_integration/runs/20261017_221127_850186/print_tuning/scan_r2_aeadf633_91c6396a_tiles/p2_experiment_9bf696e7feb643cd8a555bcf80cc06e6__test_4__Initial.png",
+          "measurements": {
+            "cells_used": 1004,
+            "paper_white_share": 0.002,
+            "full_black_share": 0.005,
+            "intended_levels": 16,
+            "printed_levels": 16,
+            "collapsed_levels": 0,
+            "correlation": 0.9999,
+            "mean_abs_difference": 0.0022,
+            "contrast": 0.6056,
+            "intended_contrast": 0.6046,
+            "focus": {
+              "inside_mean": 0.2862,
+              "rest_mean": 0.4527,
+              "difference": -0.1666,
+              "intended_difference": -0.1637
+            }
+          },
+          "notes": {}
+        },
+        {
+          "panel": "Final",
+          "png": "/Users/razmik/Documents/Agentic_system_with_hardware_integration/runs/20261017_221127_850186/print_tuning/scan_r2_aeadf633_91c6396a_tiles/p2_experiment_9bf696e7feb643cd8a555bcf80cc06e6__test_4__Final.png",
+          "measurements": {
+            "cells_used": 1004,
+            "paper_white_share": 0.0,
+            "full_black_share": 0.007,
+            "intended_levels": 15,
+            "printed_levels": 15,
+            "collapsed_levels": 0,
+            "correlation": 0.9998,
+            "mean_abs_difference": 0.0023,
+            "contrast": 0.4759,
+            "intended_contrast": 0.4718,
+            "focus": {
+              "inside_mean": 0.542,
+              "rest_mean": 0.3659,
+              "difference": 0.176,
+              "intended_difference": 0.1782
+            }
+          },
+          "notes": {}
+        }
+      ],
+      "measurements": {
+        "paper_white_share": 0.001,
+        "full_black_share": 0.006,
+        "collapsed_levels": 0,
+        "correlation": 0.9999,
+        "contrast": 0.5408,
+        "focus_difference": {
+          "Initial": -0.1666,
+          "Final": 0.176
+        }
+      },
+      "warnings": [],
+      "notes": {}
+    },
+    {
+      "experiment_id": "experiment_9bf696e7feb643cd8a555bcf80cc06e6",
+      "candidate_id": "test_5",
+      "role": "test",
+      "mapping": {
+        "gamma": 0.4808,
+        "dark_level": 0.0,
+        "light_level": 1.0,
+        "steps": 0,
+        "invert": false
+      },
+      "page_number": 2,
+      "tile_path": "/Users/razmik/Documents/Agentic_system_with_hardware_integration/runs/20261017_221127_850186/print_tuning/scan_r2_aeadf633_91c6396a_tiles/p2__experiment_9bf696e7feb643cd8a555bcf80cc06e6__test_5__tile.png",
+      "panels": [
+        {
+          "panel": "Initial",
+          "png": "/Users/razmik/Documents/Agentic_system_with_hardware_integration/runs/20261017_221127_850186/print_tuning/scan_r2_aeadf633_91c6396a_tiles/p2_experiment_9bf696e7feb643cd8a555bcf80cc06e6__test_5__Initial.png",
+          "measurements": {
+            "cells_used": 1004,
+            "paper_white_share": 0.001,
+            "full_black_share": 0.011,
+            "intended_levels": 16,
+            "printed_levels": 16,
+            "collapsed_levels": 0,
+            "correlation": 0.9999,
+            "mean_abs_difference": 0.0022,
+            "contrast": 0.6125,
+            "intended_contrast": 0.6156,
+            "focus": {
+              "inside_mean": 0.1872,
+              "rest_mean": 0.3538,
+              "difference": -0.1666,
+              "intended_difference": -0.1688
+            }
+          },
+          "notes": {}
+        },
+        {
+          "panel": "Final",
+          "png": "/Users/razmik/Documents/Agentic_system_with_hardware_integration/runs/20261017_221127_850186/print_tuning/scan_r2_aeadf633_91c6396a_tiles/p2_experiment_9bf696e7feb643cd8a555bcf80cc06e6__test_5__Final.png",
+          "measurements": {
+            "cells_used": 1004,
+            "paper_white_share": 0.0,
+            "full_black_share": 0.0279,
+            "intended_levels": 14,
+            "printed_levels": 14,
+            "collapsed_levels": 0,
+            "correlation": 0.9998,
+            "mean_abs_difference": 0.0024,
+            "contrast": 0.4431,
+            "intended_contrast": 0.4434,
+            "focus": {
+              "inside_mean": 0.4393,
+              "rest_mean": 0.265,
+              "difference": 0.1744,
+              "intended_difference": 0.1725
+            }
+          },
+          "notes": {}
+        }
+      ],
+      "measurements": {
+        "paper_white_share": 0.0005,
+        "full_black_share": 0.0194,
+        "collapsed_levels": 0,
+        "correlation": 0.9999,
+        "contrast": 0.5278,
+        "focus_difference": {
+          "Initial": -0.1666,
+          "Final": 0.1744
+        }
+      },
+      "warnings": [],
+      "notes": {}
+    },
+    {
+      "experiment_id": "experiment_a47ef024e7d14b3a83d81bedda24255d",
+      "candidate_id": "reference",
+      "role": "reference",
+      "mapping": {
+        "gamma": 0.28284,
+        "dark_level": 0.0,
+        "light_level": 1.0,
+        "steps": 0,
+        "invert": false
+      },
+      "page_number": 2,
+      "tile_path": "/Users/razmik/Documents/Agentic_system_with_hardware_integration/runs/20261017_221127_850186/print_tuning/scan_r2_aeadf633_91c6396a_tiles/p2__experiment_a47ef024e7d14b3a83d81bedda24255d__reference__tile.png",
+      "panels": [
+        {
+          "panel": "Initial",
+          "png": "/Users/razmik/Documents/Agentic_system_with_hardware_integration/runs/20261017_221127_850186/print_tuning/scan_r2_aeadf633_91c6396a_tiles/p2_experiment_a47ef024e7d14b3a83d81bedda24255d__reference__Initial.png",
+          "measurements": {
+            "cells_used": 1004,
+            "paper_white_share": 0.0,
+            "full_black_share": 0.005,
+            "intended_levels": 15,
+            "printed_levels": 15,
+            "collapsed_levels": 0,
+            "correlation": 0.9999,
+            "mean_abs_difference": 0.0021,
+            "contrast": 0.5224,
+            "intended_contrast": 0.5203,
+            "focus": {
+              "inside_mean": 0.3449,
+              "rest_mean": 0.4811,
+              "difference": -0.1361,
+              "intended_difference": -0.1362
+            }
+          },
+          "notes": {}
+        },
+        {
+          "panel": "Final",
+          "png": "/Users/razmik/Documents/Agentic_system_with_hardware_integration/runs/20261017_221127_850186/print_tuning/scan_r2_aeadf633_91c6396a_tiles/p2_experiment_a47ef024e7d14b3a83d81bedda24255d__reference__Final.png",
+          "measurements": {
+            "cells_used": 1004,
+            "paper_white_share": 0.0,
+            "full_black_share": 0.006,
+            "intended_levels": 14,
+            "printed_levels": 14,
+            "collapsed_levels": 0,
+            "correlation": 0.9998,
+            "mean_abs_difference": 0.0021,
+            "contrast": 0.4563,
+            "intended_contrast": 0.4548,
+            "focus": {
+              "inside_mean": 0.5702,
+              "rest_mean": 0.4087,
+              "difference": 0.1615,
+              "intended_difference": 0.1625
+            }
+          },
+          "notes": {}
+        }
+      ],
+      "measurements": {
+        "paper_white_share": 0.0,
+        "full_black_share": 0.0055,
+        "collapsed_levels": 0,
+        "correlation": 0.9999,
+        "contrast": 0.4893,
+        "focus_difference": {
+          "Initial": -0.1361,
+          "Final": 0.1615
+        }
+      },
+      "warnings": [],
+      "notes": {}
+    },
+    {
+      "experiment_id": "experiment_a47ef024e7d14b3a83d81bedda24255d",
+      "candidate_id": "test_1",
+      "role": "test",
+      "mapping": {
+        "gamma": 0.14142,
+        "dark_level": 0.0,
+        "light_level": 1.0,
+        "steps": 0,
+        "invert": false
+      },
+      "page_number": 2,
+      "tile_path": "/Users/razmik/Documents/Agentic_system_with_hardware_integration/runs/20261017_221127_850186/print_tuning/scan_r2_aeadf633_91c6396a_tiles/p2__experiment_a47ef024e7d14b3a83d81bedda24255d__test_1__tile.png",
+      "panels": [
+        {
+          "panel": "Initial",
+          "png": "/Users/razmik/Documents/Agentic_system_with_hardware_integration/runs/20261017_221127_850186/print_tuning/scan_r2_aeadf633_91c6396a_tiles/p2_experiment_a47ef024e7d14b3a83d81bedda24255d__test_1__Initial.png",
+          "measurements": {
+            "cells_used": 1004,
+            "paper_white_share": 0.001,
+            "full_black_share": 0.005,
+            "intended_levels": 13,
+            "printed_levels": 13,
+            "collapsed_levels": 0,
+            "correlation": 0.9998,
+            "mean_abs_difference": 0.002,
+            "contrast": 0.3916,
+            "intended_contrast": 0.3889,
+            "focus": {
+              "inside_mean": 0.5882,
+              "rest_mean": 0.6833,
+              "difference": -0.0951,
+              "intended_difference": -0.0952
+            }
+          },
+          "notes": {}
+        },
+        {
+          "panel": "Final",
+          "png": "/Users/razmik/Documents/Agentic_system_with_hardware_integration/runs/20261017_221127_850186/print_tuning/scan_r2_aeadf633_91c6396a_tiles/p2_experiment_a47ef024e7d14b3a83d81bedda24255d__test_1__Final.png",
+          "measurements": {
+            "cells_used": 1004,
+            "paper_white_share": 0.0,
+            "full_black_share": 0.006,
+            "intended_levels": 13,
+            "printed_levels": 13,
+            "collapsed_levels": 0,
+            "correlation": 0.9998,
+            "mean_abs_difference": 0.002,
+            "contrast": 0.3823,
+            "intended_contrast": 0.3765,
+            "focus": {
+              "inside_mean": 0.7544,
+              "rest_mean": 0.6291,
+              "difference": 0.1253,
+              "intended_difference": 0.1276
+            }
+          },
+          "notes": {}
+        }
+      ],
+      "measurements": {
+        "paper_white_share": 0.0005,
+        "full_black_share": 0.0055,
+        "collapsed_levels": 0,
+        "correlation": 0.9998,
+        "contrast": 0.387,
+        "focus_difference": {
+          "Initial": -0.0951,
+          "Final": 0.1253
+        }
+      },
+      "warnings": [],
+      "notes": {}
+    },
+    {
+      "experiment_id": "experiment_a47ef024e7d14b3a83d81bedda24255d",
+      "candidate_id": "test_2",
+      "role": "test",
+      "mapping": {
+        "gamma": 0.1922,
+        "dark_level": 0.0,
+        "light_level": 1.0,
+        "steps": 0,
+        "invert": false
+      },
+      "page_number": 2,
+      "tile_path": "/Users/razmik/Documents/Agentic_system_with_hardware_integration/runs/20261017_221127_850186/print_tuning/scan_r2_aeadf633_91c6396a_tiles/p2__experiment_a47ef024e7d14b3a83d81bedda24255d__test_2__tile.png",
+      "panels": [
+        {
+          "panel": "Initial",
+          "png": "/Users/razmik/Documents/Agentic_system_with_hardware_integration/runs/20261017_221127_850186/print_tuning/scan_r2_aeadf633_91c6396a_tiles/p2_experiment_a47ef024e7d14b3a83d81bedda24255d__test_2__Initial.png",
+          "measurements": {
+            "cells_used": 1004,
+            "paper_white_share": 0.0,
+            "full_black_share": 0.005,
+            "intended_levels": 15,
+            "printed_levels": 15,
+            "collapsed_levels": 0,
+            "correlation": 0.9999,
+            "mean_abs_difference": 0.0019,
+            "contrast": 0.4568,
+            "intended_contrast": 0.456,
+            "focus": {
+              "inside_mean": 0.4851,
+              "rest_mean": 0.6008,
+              "difference": -0.1158,
+              "intended_difference": -0.1151
+            }
+          },
+          "notes": {}
+        },
+        {
+          "panel": "Final",
+          "png": "/Users/razmik/Documents/Agentic_system_with_hardware_integration/runs/20261017_221127_850186/print_tuning/scan_r2_aeadf633_91c6396a_tiles/p2_experiment_a47ef024e7d14b3a83d81bedda24255d__test_2__Final.png",
+          "measurements": {
+            "cells_used": 1004,
+            "paper_white_share": 0.0,
+            "full_black_share": 0.006,
+            "intended_levels": 14,
+            "printed_levels": 14,
+            "collapsed_levels": 0,
+            "correlation": 0.9998,
+            "mean_abs_difference": 0.002,
+            "contrast": 0.4238,
+            "intended_contrast": 0.4253,
+            "focus": {
+              "inside_mean": 0.6862,
+              "rest_mean": 0.5373,
+              "difference": 0.1489,
+              "intended_difference": 0.1468
+            }
+          },
+          "notes": {}
+        }
+      ],
+      "measurements": {
+        "paper_white_share": 0.0,
+        "full_black_share": 0.0055,
+        "collapsed_levels": 0,
+        "correlation": 0.9999,
+        "contrast": 0.4403,
+        "focus_difference": {
+          "Initial": -0.1158,
+          "Final": 0.1489
+        }
+      },
+      "warnings": [],
+      "notes": {}
+    },
+    {
+      "experiment_id": "experiment_a47ef024e7d14b3a83d81bedda24255d",
+      "candidate_id": "test_3",
+      "role": "test",
+      "mapping": {
+        "gamma": 0.2611,
+        "dark_level": 0.0,
+        "light_level": 1.0,
+        "steps": 0,
+        "invert": false
+      },
+      "page_number": 2,
+      "tile_path": "/Users/razmik/Documents/Agentic_system_with_hardware_integration/runs/20261017_221127_850186/print_tuning/scan_r2_aeadf633_91c6396a_tiles/p2__experiment_a47ef024e7d14b3a83d81bedda24255d__test_3__tile.png",
+      "panels": [
+        {
+          "panel": "Initial",
+          "png": "/Users/razmik/Documents/Agentic_system_with_hardware_integration/runs/20261017_221127_850186/print_tuning/scan_r2_aeadf633_91c6396a_tiles/p2_experiment_a47ef024e7d14b3a83d81bedda24255d__test_3__Initial.png",
+          "measurements": {
+            "cells_used": 1004,
+            "paper_white_share": 0.0,
+            "full_black_share": 0.005,
+            "intended_levels": 15,
+            "printed_levels": 15,
+            "collapsed_levels": 0,
+            "correlation": 0.9999,
+            "mean_abs_difference": 0.002,
+            "contrast": 0.5101,
+            "intended_contrast": 0.51,
+            "focus": {
+              "inside_mean": 0.3737,
+              "rest_mean": 0.507,
+              "difference": -0.1333,
+              "intended_difference": -0.1325
+            }
+          },
+          "notes": {}
+        },
+        {
+          "panel": "Final",
+          "png": "/Users/razmik/Documents/Agentic_system_with_hardware_integration/runs/20261017_221127_850186/print_tuning/scan_r2_aeadf633_91c6396a_tiles/p2_experiment_a47ef024e7d14b3a83d81bedda24255d__test_3__Final.png",
+          "measurements": {
+            "cells_used": 1004,
+            "paper_white_share": 0.0,
+            "full_black_share": 0.006,
+            "intended_levels": 14,
+            "printed_levels": 14,
+            "collapsed_levels": 0,
+            "correlation": 0.9998,
+            "mean_abs_difference": 0.0021,
+            "contrast": 0.4534,
+            "intended_contrast": 0.4527,
+            "focus": {
+              "inside_mean": 0.5991,
+              "rest_mean": 0.4363,
+              "difference": 0.1628,
+              "intended_difference": 0.1604
+            }
+          },
+          "notes": {}
+        }
+      ],
+      "measurements": {
+        "paper_white_share": 0.0,
+        "full_black_share": 0.0055,
+        "collapsed_levels": 0,
+        "correlation": 0.9999,
+        "contrast": 0.4818,
+        "focus_difference": {
+          "Initial": -0.1333,
+          "Final": 0.1628
+        }
+      },
+      "warnings": [],
+      "notes": {}
+    },
+    {
+      "experiment_id": "experiment_a47ef024e7d14b3a83d81bedda24255d",
+      "candidate_id": "test_4",
+      "role": "test",
+      "mapping": {
+        "gamma": 0.3544,
+        "dark_level": 0.0,
+        "light_level": 1.0,
+        "steps": 0,
+        "invert": false
+      },
+      "page_number": 2,
+      "tile_path": "/Users/razmik/Documents/Agentic_system_with_hardware_integration/runs/20261017_221127_850186/print_tuning/scan_r2_aeadf633_91c6396a_tiles/p2__experiment_a47ef024e7d14b3a83d81bedda24255d__test_4__tile.png",
+      "panels": [
+        {
+          "panel": "Initial",
+          "png": "/Users/razmik/Documents/Agentic_system_with_hardware_integration/runs/20261017_221127_850186/print_tuning/scan_r2_aeadf633_91c6396a_tiles/p2_experiment_a47ef024e7d14b3a83d81bedda24255d__test_4__Initial.png",
+          "measurements": {
+            "cells_used": 1004,
+            "paper_white_share": 0.0,
+            "full_black_share": 0.006,
+            "intended_levels": 15,
+            "printed_levels": 15,
+            "collapsed_levels": 0,
+            "correlation": 0.9999,
+            "mean_abs_difference": 0.0022,
+            "contrast": 0.5402,
+            "intended_contrast": 0.5377,
+            "focus": {
+              "inside_mean": 0.2626,
+              "rest_mean": 0.4062,
+              "difference": -0.1436,
+              "intended_difference": -0.1432
+            }
+          },
+          "notes": {}
+        },
+        {
+          "panel": "Final",
+          "png": "/Users/razmik/Documents/Agentic_system_with_hardware_integration/runs/20261017_221127_850186/print_tuning/scan_r2_aeadf633_91c6396a_tiles/p2_experiment_a47ef024e7d14b3a83d81bedda24255d__test_4__Final.png",
+          "measurements": {
+            "cells_used": 1004,
+            "paper_white_share": 0.0,
+            "full_black_share": 0.008,
+            "intended_levels": 13,
+            "printed_levels": 13,
+            "collapsed_levels": 0,
+            "correlation": 0.9998,
+            "mean_abs_difference": 0.0022,
+            "contrast": 0.4465,
+            "intended_contrast": 0.447,
+            "focus": {
+              "inside_mean": 0.499,
+              "rest_mean": 0.3318,
+              "difference": 0.1672,
+              "intended_difference": 0.1638
+            }
+          },
+          "notes": {}
+        }
+      ],
+      "measurements": {
+        "paper_white_share": 0.0,
+        "full_black_share": 0.007,
+        "collapsed_levels": 0,
+        "correlation": 0.9999,
+        "contrast": 0.4934,
+        "focus_difference": {
+          "Initial": -0.1436,
+          "Final": 0.1672
+        }
+      },
+      "warnings": [],
+      "notes": {}
+    },
+    {
+      "experiment_id": "experiment_a47ef024e7d14b3a83d81bedda24255d",
+      "candidate_id": "test_5",
+      "role": "test",
+      "mapping": {
+        "gamma": 0.4808,
+        "dark_level": 0.0,
+        "light_level": 1.0,
+        "steps": 0,
+        "invert": false
+      },
+      "page_number": 2,
+      "tile_path": "/Users/razmik/Documents/Agentic_system_with_hardware_integration/runs/20261017_221127_850186/print_tuning/scan_r2_aeadf633_91c6396a_tiles/p2__experiment_a47ef024e7d14b3a83d81bedda24255d__test_5__tile.png",
+      "panels": [
+        {
+          "panel": "Initial",
+          "png": "/Users/razmik/Documents/Agentic_system_with_hardware_integration/runs/20261017_221127_850186/print_tuning/scan_r2_aeadf633_91c6396a_tiles/p2_experiment_a47ef024e7d14b3a83d81bedda24255d__test_5__Initial.png",
+          "measurements": {
+            "cells_used": 1004,
+            "paper_white_share": 0.0,
+            "full_black_share": 0.0199,
+            "intended_levels": 15,
+            "printed_levels": 15,
+            "collapsed_levels": 0,
+            "correlation": 0.9999,
+            "mean_abs_difference": 0.0023,
+            "contrast": 0.529,
+            "intended_contrast": 0.5276,
+            "focus": {
+              "inside_mean": 0.1644,
+              "rest_mean": 0.3054,
+              "difference": -0.1411,
+              "intended_difference": -0.1427
+            }
+          },
+          "notes": {}
+        },
+        {
+          "panel": "Final",
+          "png": "/Users/razmik/Documents/Agentic_system_with_hardware_integration/runs/20261017_221127_850186/print_tuning/scan_r2_aeadf633_91c6396a_tiles/p2_experiment_a47ef024e7d14b3a83d81bedda24255d__test_5__Final.png",
+          "measurements": {
+            "cells_used": 1004,
+            "paper_white_share": 0.0,
+            "full_black_share": 0.0428,
+            "intended_levels": 12,
+            "printed_levels": 12,
+            "collapsed_levels": 0,
+            "correlation": 0.9998,
+            "mean_abs_difference": 0.0024,
+            "contrast": 0.4021,
+            "intended_contrast": 0.4024,
+            "focus": {
+              "inside_mean": 0.3891,
+              "rest_mean": 0.2325,
+              "difference": 0.1566,
+              "intended_difference": 0.153
+            }
+          },
+          "notes": {}
+        }
+      ],
+      "measurements": {
+        "paper_white_share": 0.0,
+        "full_black_share": 0.0314,
+        "collapsed_levels": 0,
+        "correlation": 0.9999,
+        "contrast": 0.4656,
+        "focus_difference": {
+          "Initial": -0.1411,
+          "Final": 0.1566
+        }
+      },
+      "warnings": [],
+      "notes": {}
+    }
+  ],
+  "measurement_docs": {
+    "page_number": {
+      "units": "page number, from 1",
+      "meaning": "page of the trial sheet (as in the manifest)"
+    },
+    "scan_index": {
+      "units": "index, from 0",
+      "meaning": "position of the page in the given scan"
+    },
+    "page_code_read": {
+      "units": "6 bits (0 or 1)",
+      "meaning": "page code squares read from the scan (1 = filled)"
+    },
+    "page_code_expected": {
+      "units": "6 bits (0 or 1)",
+      "meaning": "page code the manifest gives this page"
+    },
+    "dpi": {
+      "units": "dots per inch",
+      "meaning": "resolution of the scanned page"
+    },
+    "orientation": {
+      "units": "degrees",
+      "meaning": "clockwise quarter-turn of the page in the scan (0, 90, 180, 270)"
+    },
+    "fit_error_mm": {
+      "units": "mm",
+      "meaning": "largest miss between a found corner marker and where the other three markers put it"
+    },
+    "paper.gray": {
+      "units": "gray (0 black to 1 white)",
+      "meaning": "mean gray of the blank paper areas"
+    },
+    "paper.rgb": {
+      "units": "[R, G, B], each 0 to 1",
+      "meaning": "mean colour of the blank paper areas, unstretched"
+    },
+    "black.gray": {
+      "units": "gray (0 black to 1 white)",
+      "meaning": "mean gray of the solid black patch"
+    },
+    "black.rgb": {
+      "units": "[R, G, B], each 0 to 1",
+      "meaning": "mean colour of the solid black patch, unstretched"
+    },
+    "paper_to_black_contrast": {
+      "units": "gray (0 black to 1 white)",
+      "meaning": "paper gray minus black gray: the full printable range"
+    },
+    "gray_patches.level": {
+      "units": "gray (0 black to 1 white)",
+      "meaning": "gray the patch was meant to print"
+    },
+    "gray_patches.measured": {
+      "units": "gray (0 black to 1 white)",
+      "meaning": "mean printed gray of the patch"
+    },
+    "gray_patches.std": {
+      "units": "gray (0 black to 1 white)",
+      "meaning": "standard deviation of the printed gray within the patch (noise, banding)"
+    },
+    "cells_used": {
+      "units": "cells",
+      "meaning": "data cells measured (cells under a box mark's outline are left out)"
+    },
+    "paper_white_share": {
+      "units": "fraction 0 to 1",
+      "meaning": "share of cells printed within 0.04 of the paper gray"
+    },
+    "full_black_share": {
+      "units": "fraction 0 to 1",
+      "meaning": "share of cells printed within 0.04 of the black patch gray"
+    },
+    "intended_levels": {
+      "units": "levels",
+      "meaning": "intended grays grouped into 16 levels: how many of those levels the panel uses"
+    },
+    "printed_levels": {
+      "units": "levels",
+      "meaning": "how many intended levels stay apart on paper (neighbours closer than 0.02 gray count as one)"
+    },
+    "collapsed_levels": {
+      "units": "levels",
+      "meaning": "intended levels minus printed levels: gray levels that merge on paper (summed over panels for a candidate)"
+    },
+    "correlation": {
+      "units": "Pearson r, -1 to 1",
+      "meaning": "correlation of printed with intended cell grays (mean over panels for a candidate)"
+    },
+    "mean_abs_difference": {
+      "units": "gray (0 black to 1 white)",
+      "meaning": "mean absolute difference between printed and intended cell grays"
+    },
+    "contrast": {
+      "units": "gray (0 black to 1 white)",
+      "meaning": "95th minus 5th percentile of the printed cell grays (mean over panels for a candidate)"
+    },
+    "intended_contrast": {
+      "units": "gray (0 black to 1 white)",
+      "meaning": "95th minus 5th percentile of the intended cell grays"
+    },
+    "focus.inside_mean": {
+      "units": "gray (0 black to 1 white)",
+      "meaning": "mean printed gray of the cells inside the focus box"
+    },
+    "focus.rest_mean": {
+      "units": "gray (0 black to 1 white)",
+      "meaning": "mean printed gray of the other cells"
+    },
+    "focus.difference": {
+      "units": "gray (0 black to 1 white)",
+      "meaning": "focus inside_mean minus rest_mean on paper"
+    },
+    "focus.intended_difference": {
+      "units": "gray (0 black to 1 white)",
+      "meaning": "the same difference in the intended grays"
+    },
+    "mapping.gamma": {
+      "units": "exponent",
+      "meaning": "gamma of the data-to-gray mapping (1 = linear)"
+    },
+    "mapping.dark_level": {
+      "units": "gray (0 black to 1 white)",
+      "meaning": "gray the mapping gives the lowest data (fixed, not tuned)"
+    },
+    "mapping.light_level": {
+      "units": "gray (0 black to 1 white)",
+      "meaning": "gray the mapping gives the highest data (fixed, not tuned)"
+    },
+    "mapping.steps": {
+      "units": "levels",
+      "meaning": "number of gray steps (below 2 = smooth; fixed, not tuned)"
+    },
+    "focus_difference": {
+      "units": "gray (0 black to 1 white)",
+      "meaning": "panel name -> focus.difference of that panel"
+    }
+  },
+  "result_path": "/Users/razmik/Documents/Agentic_system_with_hardware_integration/runs/20261017_221127_850186/print_tuning/scan_r2_aeadf633_91c6396a.json",
+  "evaluation_path": "/Users/razmik/Documents/Agentic_system_with_hardware_integration/runs/20261017_221127_850186/print_tuning/scan_r2_aeadf633_91c6396a.json"
+}

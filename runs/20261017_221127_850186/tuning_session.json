@@ -1,0 +1,2903 @@
+{
+  "contract_version": 1,
+  "session_id": "df29ddee-a46b-47bd-82b6-f96a3ed43229",
+  "run_id": "20261017_221127_850186",
+  "session_path": "/Users/razmik/Documents/Agentic_system_with_hardware_integration/runs/20261017_221127_850186/tuning_session.json",
+  "selection_path": "/Users/razmik/Documents/Agentic_system_with_hardware_integration/runs/20261017_221127_850186/print_tuning/selection_b3755a08.json",
+  "selection_sha256": "c449e2111f00e8c289dbdb4b35afeda5b78da9daccb1443e93c2acae67bb69c7",
+  "selection_id": "b3755a08-8a59-5ad4-be09-f4db4c72990a",
+  "selection_version": 1,
+  "accepted_selection": {
+    "selections": [
+      {
+        "experiment_id": "experiment_1f77972a2eca40c2b75fc9d9fb143331",
+        "validity": "Successful recorded run with 100 iterations and five-shot validation; final_enhancement is 4.735178142196899.",
+        "comparability": "Matches the other selected runs on macropixel size 2, focus size 3, background size 9, search seed 42, and bench; iteration budget is the only changed setting.",
+        "relevance": "Provides the requested 100-iteration baseline for the fixed-macropixel budget comparison.",
+        "information_gained": "Shows the validated result at the lowest requested budget, enabling comparison of gains from larger budgets.",
+        "paths": {
+          "initial_camera": "/Users/razmik/Documents/Agentic_system_with_hardware_integration/runs/20261017_221127_850186/experiment_1f77972a2eca40c2b75fc9d9fb143331/initial_camera.png",
+          "final_camera": "/Users/razmik/Documents/Agentic_system_with_hardware_integration/runs/20261017_221127_850186/experiment_1f77972a2eca40c2b75fc9d9fb143331/final_camera.png",
+          "initial_intensity": "/Users/razmik/Documents/Agentic_system_with_hardware_integration/runs/20261017_221127_850186/experiment_1f77972a2eca40c2b75fc9d9fb143331/initial_intensity.npy",
+          "final_intensity": "/Users/razmik/Documents/Agentic_system_with_hardware_integration/runs/20261017_221127_850186/experiment_1f77972a2eca40c2b75fc9d9fb143331/final_intensity.npy",
+          "final_pattern": "/Users/razmik/Documents/Agentic_system_with_hardware_integration/runs/20261017_221127_850186/experiment_1f77972a2eca40c2b75fc9d9fb143331/final_pattern.npy",
+          "results_json": "/Users/razmik/Documents/Agentic_system_with_hardware_integration/runs/20261017_221127_850186/experiment_1f77972a2eca40c2b75fc9d9fb143331/results.json",
+          "experiments_csv": "/Users/razmik/Documents/Agentic_system_with_hardware_integration/runs/20261017_221127_850186/experiments.csv",
+          "summary_figure": "/Users/razmik/Documents/Agentic_system_with_hardware_integration/runs/20261017_221127_850186/experiment_1f77972a2eca40c2b75fc9d9fb143331/summary.png"
+        }
+      },
+      {
+        "experiment_id": "experiment_6f6aebea38fb4813873582cd5b237ce4",
+        "validity": "Successful recorded run with 300 iterations and five-shot validation; final_enhancement is 6.48978856664429.",
+        "comparability": "Matches the other selected runs on all recorded settings except the iteration budget.",
+        "relevance": "Provides the requested 300-iteration comparison point.",
+        "information_gained": "Shows a substantial improvement over the 100-iteration result and provides the reference point for assessing diminishing returns at 600 and 1,000 iterations.",
+        "paths": {
+          "initial_camera": "/Users/razmik/Documents/Agentic_system_with_hardware_integration/runs/20261017_221127_850186/experiment_6f6aebea38fb4813873582cd5b237ce4/initial_camera.png",
+          "final_camera": "/Users/razmik/Documents/Agentic_system_with_hardware_integration/runs/20261017_221127_850186/experiment_6f6aebea38fb4813873582cd5b237ce4/final_camera.png",
+          "initial_intensity": "/Users/razmik/Documents/Agentic_system_with_hardware_integration/runs/20261017_221127_850186/experiment_6f6aebea38fb4813873582cd5b237ce4/initial_intensity.npy",
+          "final_intensity": "/Users/razmik/Documents/Agentic_system_with_hardware_integration/runs/20261017_221127_850186/experiment_6f6aebea38fb4813873582cd5b237ce4/final_intensity.npy",
+          "final_pattern": "/Users/razmik/Documents/Agentic_system_with_hardware_integration/runs/20261017_221127_850186/experiment_6f6aebea38fb4813873582cd5b237ce4/final_pattern.npy",
+          "results_json": "/Users/razmik/Documents/Agentic_system_with_hardware_integration/runs/20261017_221127_850186/experiment_6f6aebea38fb4813873582cd5b237ce4/results.json",
+          "experiments_csv": "/Users/razmik/Documents/Agentic_system_with_hardware_integration/runs/20261017_221127_850186/experiments.csv",
+          "summary_figure": "/Users/razmik/Documents/Agentic_system_with_hardware_integration/runs/20261017_221127_850186/experiment_6f6aebea38fb4813873582cd5b237ce4/summary.png"
+        }
+      },
+      {
+        "experiment_id": "experiment_9bf696e7feb643cd8a555bcf80cc06e6",
+        "validity": "Successful recorded run with 600 iterations and five-shot validation; final_enhancement is 6.532685709841096.",
+        "comparability": "Matches the other selected runs on all recorded settings except the iteration budget.",
+        "relevance": "Provides the requested 600-iteration comparison point.",
+        "information_gained": "Its modest increase over the 300-iteration result quantifies the return from doubling that budget in this run.",
+        "paths": {
+          "initial_camera": "/Users/razmik/Documents/Agentic_system_with_hardware_integration/runs/20261017_221127_850186/experiment_9bf696e7feb643cd8a555bcf80cc06e6/initial_camera.png",
+          "final_camera": "/Users/razmik/Documents/Agentic_system_with_hardware_integration/runs/20261017_221127_850186/experiment_9bf696e7feb643cd8a555bcf80cc06e6/final_camera.png",
+          "initial_intensity": "/Users/razmik/Documents/Agentic_system_with_hardware_integration/runs/20261017_221127_850186/experiment_9bf696e7feb643cd8a555bcf80cc06e6/initial_intensity.npy",
+          "final_intensity": "/Users/razmik/Documents/Agentic_system_with_hardware_integration/runs/20261017_221127_850186/experiment_9bf696e7feb643cd8a555bcf80cc06e6/final_intensity.npy",
+          "final_pattern": "/Users/razmik/Documents/Agentic_system_with_hardware_integration/runs/20261017_221127_850186/experiment_9bf696e7feb643cd8a555bcf80cc06e6/final_pattern.npy",
+          "results_json": "/Users/razmik/Documents/Agentic_system_with_hardware_integration/runs/20261017_221127_850186/experiment_9bf696e7feb643cd8a555bcf80cc06e6/results.json",
+          "experiments_csv": "/Users/razmik/Documents/Agentic_system_with_hardware_integration/runs/20261017_221127_850186/experiments.csv",
+          "summary_figure": "/Users/razmik/Documents/Agentic_system_with_hardware_integration/runs/20261017_221127_850186/experiment_9bf696e7feb643cd8a555bcf80cc06e6/summary.png"
+        }
+      },
+      {
+        "experiment_id": "experiment_a47ef024e7d14b3a83d81bedda24255d",
+        "validity": "Successful recorded run with 1,000 iterations and five fresh validation shots; final_enhancement is 6.703996556136898.",
+        "comparability": "Matches the other selected runs on all recorded settings except the iteration budget.",
+        "relevance": "Provides the requested maximum-budget comparison point.",
+        "information_gained": "Gives the highest recorded validated enhancement and shows the additional gain and cost at the maximum permitted budget.",
+        "paths": {
+          "initial_camera": "/Users/razmik/Documents/Agentic_system_with_hardware_integration/runs/20261017_221127_850186/experiment_a47ef024e7d14b3a83d81bedda24255d/initial_camera.png",
+          "final_camera": "/Users/razmik/Documents/Agentic_system_with_hardware_integration/runs/20261017_221127_850186/experiment_a47ef024e7d14b3a83d81bedda24255d/final_camera.png",
+          "initial_intensity": "/Users/razmik/Documents/Agentic_system_with_hardware_integration/runs/20261017_221127_850186/experiment_a47ef024e7d14b3a83d81bedda24255d/initial_intensity.npy",
+          "final_intensity": "/Users/razmik/Documents/Agentic_system_with_hardware_integration/runs/20261017_221127_850186/experiment_a47ef024e7d14b3a83d81bedda24255d/final_intensity.npy",
+          "final_pattern": "/Users/razmik/Documents/Agentic_system_with_hardware_integration/runs/20261017_221127_850186/experiment_a47ef024e7d14b3a83d81bedda24255d/final_pattern.npy",
+          "results_json": "/Users/razmik/Documents/Agentic_system_with_hardware_integration/runs/20261017_221127_850186/experiment_a47ef024e7d14b3a83d81bedda24255d/results.json",
+          "experiments_csv": "/Users/razmik/Documents/Agentic_system_with_hardware_integration/runs/20261017_221127_850186/experiments.csv",
+          "summary_figure": "/Users/razmik/Documents/Agentic_system_with_hardware_integration/runs/20261017_221127_850186/experiment_a47ef024e7d14b3a83d81bedda24255d/summary.png"
+        }
+      }
+    ],
+    "group_reason": "Together, these four valid, directly comparable runs answer the requested iteration-budget question: they hold the bench, search seed, macropixel size, and measurement regions fixed while spanning all four requested budgets, allowing validated enhancement to be judged against iteration cost and diminishing returns."
+  },
+  "config_snapshot": {
+    "schema_version": "tuning_config/1",
+    "name": "photonic_focus_heatmaps",
+    "description": "Grayscale print tuning for the focusing experiments: each item is one experiment with its Initial and Final camera heatmaps, printed in several grayscale variations per round, scanned by the user and judged by the agents to pick a better gamma. Only gamma is tuned, in all three rounds.",
+    "page": {
+      "size": "A4",
+      "orientation": "portrait",
+      "items_per_page": 2,
+      "variations_per_item": 6,
+      "margin_mm": 10,
+      "description": "Each page shows items_per_page items, each printed in variations_per_item variations, so one page has items_per_page x variations_per_item tiles."
+    },
+    "panels": {
+      "allowed_kinds": [
+        "heatmap"
+      ],
+      "min_per_item": 1,
+      "max_per_item": 3,
+      "description": "The figures inside one item. For this project an item has 2 heatmap panels: the Initial and the Final camera image."
+    },
+    "limits": {
+      "method": "percentile",
+      "low_percentile": 0.5,
+      "high_percentile": 99.5,
+      "scope": "per_item",
+      "description": "The value limits that map data to gray are computed once from all panels of an item together and stay fixed for the whole calibration session, so the panels of an item stay comparable and only gamma changes between rounds."
+    },
+    "parameters": {
+      "gamma": {
+        "type": "float",
+        "min": 0.1,
+        "max": 5.0,
+        "default": 1.0,
+        "spacing": "log",
+        "scope": "per_item",
+        "tuned": true,
+        "description": "Tone curve applied to the normalized data; values below 1 brighten the low values, above 1 darken them. Test values are spaced on a log scale."
+      },
+      "gray_levels": {
+        "type": "range",
+        "dark": {
+          "min": 0.0,
+          "max": 0.4,
+          "default": 0.0
+        },
+        "light": {
+          "min": 0.6,
+          "max": 1.0,
+          "default": 1.0
+        },
+        "min_gap": 0.3,
+        "scope": "shared",
+        "tuned": false,
+        "description": "The printed gray for the lowest (dark) and highest (light) data values, where 0 means black and 1 means white. Not tuned: always printed with the defaults, dark 0.0 and light 1.0."
+      },
+      "steps": {
+        "type": "int",
+        "min": 2,
+        "max": 32,
+        "default": 0,
+        "special_values": {
+          "0": "smooth"
+        },
+        "scope": "per_item",
+        "tuned": false,
+        "description": "Number of discrete gray bands. 0 means smooth (no banding). Not tuned: always printed with the default 0 (smooth)."
+      },
+      "invert": {
+        "type": "bool",
+        "default": false,
+        "scope": "per_item",
+        "tuned": false,
+        "description": "If true, high data values print dark instead of light. Not tuned; set by hand if needed."
+      }
+    },
+    "rounds": [
+      {
+        "round_id": 1,
+        "parameter": "gamma"
+      },
+      {
+        "round_id": 2,
+        "parameter": "gamma"
+      },
+      {
+        "round_id": 3,
+        "parameter": "gamma"
+      }
+    ],
+    "variation_rules": {
+      "reference_count": 1,
+      "tests_change_only_round_parameter": true,
+      "shared_parameters_same_tests_for_all_items": true,
+      "description": "Each item's variations include reference_count copies of the best settings so far; the other variations change only the parameter of the current round. A shared parameter gets the same test values in every item."
+    },
+    "references": {
+      "gray_patches": 11,
+      "paper_refs": 2,
+      "black_patch": true,
+      "markers": 4,
+      "page_code": true,
+      "description": "Printed on every page for reading the scan: gray_patches patches evenly spaced from 0 to 1, paper_refs blank paper areas, one full black patch, and markers corner markers for aligning the scan, with a page code that identifies the page and round."
+    },
+    "scan": {
+      "min_dpi": 150,
+      "recommended_dpi": 300,
+      "accepted_formats": [
+        "pdf",
+        "png",
+        "jpg",
+        "jpeg"
+      ],
+      "description": "Requirements for the scanned page the user returns."
+    }
+  },
+  "paper_session_id": "default",
+  "paper_session": {
+    "paper_session_id": "default",
+    "description": "Unspecified paper; no paper-color assumption"
+  },
+  "paper_color": null,
+  "selected_experiments": [
+    {
+      "experiment_id": "experiment_1f77972a2eca40c2b75fc9d9fb143331",
+      "item_id": "experiment_1f77972a2eca40c2b75fc9d9fb143331",
+      "limits": {
+        "lo": 0.0022630647033853265,
+        "hi": 5.219409982153995,
+        "method": "percentile",
+        "hi_raised_to_focus_peak": true
+      },
+      "source": {
+        "experiment_id": "experiment_1f77972a2eca40c2b75fc9d9fb143331",
+        "settings": {
+          "dmd_shape": [
+            16,
+            16
+          ],
+          "camera_shape": [
+            32,
+            32
+          ],
+          "target_position": [
+            16,
+            16
+          ],
+          "transmission_seed": 42,
+          "noise_seed": 43,
+          "noise_std": 0.01,
+          "macropixel_size": 2,
+          "focus_size": 3,
+          "background_size": 9,
+          "iterations": 100,
+          "search_seed": 42,
+          "shots_per_measurement": 3,
+          "validation_shots": 5
+        },
+        "initial_enhancement": 0.9999396821307399,
+        "final_enhancement": 4.735178142196899,
+        "results_json": "/Users/razmik/Documents/Agentic_system_with_hardware_integration/runs/20261017_221127_850186/experiment_1f77972a2eca40c2b75fc9d9fb143331/results.json",
+        "reasons": {
+          "validity": "Successful recorded run with 100 iterations and five-shot validation; final_enhancement is 4.735178142196899.",
+          "comparability": "Matches the other selected runs on macropixel size 2, focus size 3, background size 9, search seed 42, and bench; iteration budget is the only changed setting.",
+          "relevance": "Provides the requested 100-iteration baseline for the fixed-macropixel budget comparison.",
+          "information_gained": "Shows the validated result at the lowest requested budget, enabling comparison of gains from larger budgets."
+        }
+      },
+      "panels": [
+        {
+          "name": "Initial",
+          "kind": "heatmap",
+          "data_path": "/Users/razmik/Documents/Agentic_system_with_hardware_integration/runs/20261017_221127_850186/experiment_1f77972a2eca40c2b75fc9d9fb143331/initial_intensity.npy",
+          "sha256": "ca7951dc9e85337cb7b2861b1a4d971e0e2589ec14e401445ef7014a12921eae",
+          "marks": [
+            {
+              "type": "box",
+              "row": 16,
+              "col": 16,
+              "size": 3
+            }
+          ]
+        },
+        {
+          "name": "Final",
+          "kind": "heatmap",
+          "data_path": "/Users/razmik/Documents/Agentic_system_with_hardware_integration/runs/20261017_221127_850186/experiment_1f77972a2eca40c2b75fc9d9fb143331/final_intensity.npy",
+          "sha256": "bc76a1f78b908379f1602f956c8b42462e915a49256441c11fa81bf6570a46a7",
+          "marks": [
+            {
+              "type": "box",
+              "row": 16,
+              "col": 16,
+              "size": 3
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "experiment_id": "experiment_6f6aebea38fb4813873582cd5b237ce4",
+      "item_id": "experiment_6f6aebea38fb4813873582cd5b237ce4",
+      "limits": {
+        "lo": 0.00397762872197956,
+        "hi": 4.7233486384696235,
+        "method": "percentile",
+        "hi_raised_to_focus_peak": true
+      },
+      "source": {
+        "experiment_id": "experiment_6f6aebea38fb4813873582cd5b237ce4",
+        "settings": {
+          "dmd_shape": [
+            16,
+            16
+          ],
+          "camera_shape": [
+            32,
+            32
+          ],
+          "target_position": [
+            16,
+            16
+          ],
+          "transmission_seed": 42,
+          "noise_seed": 43,
+          "noise_std": 0.01,
+          "macropixel_size": 2,
+          "focus_size": 3,
+          "background_size": 9,
+          "iterations": 300,
+          "search_seed": 42,
+          "shots_per_measurement": 3,
+          "validation_shots": 5
+        },
+        "initial_enhancement": 1.0013053240927148,
+        "final_enhancement": 6.48978856664429,
+        "results_json": "/Users/razmik/Documents/Agentic_system_with_hardware_integration/runs/20261017_221127_850186/experiment_6f6aebea38fb4813873582cd5b237ce4/results.json",
+        "reasons": {
+          "validity": "Successful recorded run with 300 iterations and five-shot validation; final_enhancement is 6.48978856664429.",
+          "comparability": "Matches the other selected runs on all recorded settings except the iteration budget.",
+          "relevance": "Provides the requested 300-iteration comparison point.",
+          "information_gained": "Shows a substantial improvement over the 100-iteration result and provides the reference point for assessing diminishing returns at 600 and 1,000 iterations."
+        }
+      },
+      "panels": [
+        {
+          "name": "Initial",
+          "kind": "heatmap",
+          "data_path": "/Users/razmik/Documents/Agentic_system_with_hardware_integration/runs/20261017_221127_850186/experiment_6f6aebea38fb4813873582cd5b237ce4/initial_intensity.npy",
+          "sha256": "8ed402490e3d3ab4159b42df4371b41b1a148eb6a627f4a754f09c0b56b113d4",
+          "marks": [
+            {
+              "type": "box",
+              "row": 16,
+              "col": 16,
+              "size": 3
+            }
+          ]
+        },
+        {
+          "name": "Final",
+          "kind": "heatmap",
+          "data_path": "/Users/razmik/Documents/Agentic_system_with_hardware_integration/runs/20261017_221127_850186/experiment_6f6aebea38fb4813873582cd5b237ce4/final_intensity.npy",
+          "sha256": "2e889dc3e25eca5c6df477a47aff49d247913f1cacefcd0d1ab49234986cd621",
+          "marks": [
+            {
+              "type": "box",
+              "row": 16,
+              "col": 16,
+              "size": 3
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "experiment_id": "experiment_9bf696e7feb643cd8a555bcf80cc06e6",
+      "item_id": "experiment_9bf696e7feb643cd8a555bcf80cc06e6",
+      "limits": {
+        "lo": 0.004187099957244465,
+        "hi": 3.6665663022994694,
+        "method": "percentile",
+        "hi_raised_to_focus_peak": true
+      },
+      "source": {
+        "experiment_id": "experiment_9bf696e7feb643cd8a555bcf80cc06e6",
+        "settings": {
+          "dmd_shape": [
+            16,
+            16
+          ],
+          "camera_shape": [
+            32,
+            32
+          ],
+          "target_position": [
+            16,
+            16
+          ],
+          "transmission_seed": 42,
+          "noise_seed": 43,
+          "noise_std": 0.01,
+          "macropixel_size": 2,
+          "focus_size": 3,
+          "background_size": 9,
+          "iterations": 600,
+          "search_seed": 42,
+          "shots_per_measurement": 3,
+          "validation_shots": 5
+        },
+        "initial_enhancement": 1.0036640929185807,
+        "final_enhancement": 6.532685709841096,
+        "results_json": "/Users/razmik/Documents/Agentic_system_with_hardware_integration/runs/20261017_221127_850186/experiment_9bf696e7feb643cd8a555bcf80cc06e6/results.json",
+        "reasons": {
+          "validity": "Successful recorded run with 600 iterations and five-shot validation; final_enhancement is 6.532685709841096.",
+          "comparability": "Matches the other selected runs on all recorded settings except the iteration budget.",
+          "relevance": "Provides the requested 600-iteration comparison point.",
+          "information_gained": "Its modest increase over the 300-iteration result quantifies the return from doubling that budget in this run."
+        }
+      },
+      "panels": [
+        {
+          "name": "Initial",
+          "kind": "heatmap",
+          "data_path": "/Users/razmik/Documents/Agentic_system_with_hardware_integration/runs/20261017_221127_850186/experiment_9bf696e7feb643cd8a555bcf80cc06e6/initial_intensity.npy",
+          "sha256": "668ecd30d58621f93f780d477731b60fd16c07fa1d8f749148653ac160993cbf",
+          "marks": [
+            {
+              "type": "box",
+              "row": 16,
+              "col": 16,
+              "size": 3
+            }
+          ]
+        },
+        {
+          "name": "Final",
+          "kind": "heatmap",
+          "data_path": "/Users/razmik/Documents/Agentic_system_with_hardware_integration/runs/20261017_221127_850186/experiment_9bf696e7feb643cd8a555bcf80cc06e6/final_intensity.npy",
+          "sha256": "0a64567032bd3ff5a09faf5b2940cef891cff0e35c11ccd43d403ce0a3c66ef9",
+          "marks": [
+            {
+              "type": "box",
+              "row": 16,
+              "col": 16,
+              "size": 3
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "experiment_id": "experiment_a47ef024e7d14b3a83d81bedda24255d",
+      "item_id": "experiment_a47ef024e7d14b3a83d81bedda24255d",
+      "limits": {
+        "lo": 0.002573253835417678,
+        "hi": 4.986342543287121,
+        "method": "percentile",
+        "hi_raised_to_focus_peak": true
+      },
+      "source": {
+        "experiment_id": "experiment_a47ef024e7d14b3a83d81bedda24255d",
+        "settings": {
+          "dmd_shape": [
+            16,
+            16
+          ],
+          "camera_shape": [
+            32,
+            32
+          ],
+          "target_position": [
+            16,
+            16
+          ],
+          "transmission_seed": 42,
+          "noise_seed": 43,
+          "noise_std": 0.01,
+          "macropixel_size": 2,
+          "focus_size": 3,
+          "background_size": 9,
+          "iterations": 1000,
+          "search_seed": 42,
+          "shots_per_measurement": 3,
+          "validation_shots": 5
+        },
+        "initial_enhancement": 1.0072026078741516,
+        "final_enhancement": 6.703996556136898,
+        "results_json": "/Users/razmik/Documents/Agentic_system_with_hardware_integration/runs/20261017_221127_850186/experiment_a47ef024e7d14b3a83d81bedda24255d/results.json",
+        "reasons": {
+          "validity": "Successful recorded run with 1,000 iterations and five fresh validation shots; final_enhancement is 6.703996556136898.",
+          "comparability": "Matches the other selected runs on all recorded settings except the iteration budget.",
+          "relevance": "Provides the requested maximum-budget comparison point.",
+          "information_gained": "Gives the highest recorded validated enhancement and shows the additional gain and cost at the maximum permitted budget."
+        }
+      },
+      "panels": [
+        {
+          "name": "Initial",
+          "kind": "heatmap",
+          "data_path": "/Users/razmik/Documents/Agentic_system_with_hardware_integration/runs/20261017_221127_850186/experiment_a47ef024e7d14b3a83d81bedda24255d/initial_intensity.npy",
+          "sha256": "ea896532473433cfc84a0e9c45058643ac2c0a2f4c76ed0c2cab1d07e6835a6e",
+          "marks": [
+            {
+              "type": "box",
+              "row": 16,
+              "col": 16,
+              "size": 3
+            }
+          ]
+        },
+        {
+          "name": "Final",
+          "kind": "heatmap",
+          "data_path": "/Users/razmik/Documents/Agentic_system_with_hardware_integration/runs/20261017_221127_850186/experiment_a47ef024e7d14b3a83d81bedda24255d/final_intensity.npy",
+          "sha256": "f459f214b5c5061acccf69586f4603c066c82616ca4af0ff02efcbdb68dfd98a",
+          "marks": [
+            {
+              "type": "box",
+              "row": 16,
+              "col": 16,
+              "size": 3
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "accepted_settings": {
+    "experiment_1f77972a2eca40c2b75fc9d9fb143331": {
+      "gamma": 0.3544,
+      "dark_level": 0.0,
+      "light_level": 1.0,
+      "steps": 0,
+      "invert": false
+    },
+    "experiment_6f6aebea38fb4813873582cd5b237ce4": {
+      "gamma": 0.33,
+      "dark_level": 0.0,
+      "light_level": 1.0,
+      "steps": 0,
+      "invert": false
+    },
+    "experiment_9bf696e7feb643cd8a555bcf80cc06e6": {
+      "gamma": 0.3544,
+      "dark_level": 0.0,
+      "light_level": 1.0,
+      "steps": 0,
+      "invert": false
+    },
+    "experiment_a47ef024e7d14b3a83d81bedda24255d": {
+      "gamma": 0.3544,
+      "dark_level": 0.0,
+      "light_level": 1.0,
+      "steps": 0,
+      "invert": false
+    }
+  },
+  "final_settings": {
+    "experiment_1f77972a2eca40c2b75fc9d9fb143331": {
+      "gamma": 0.3544,
+      "dark_level": 0.0,
+      "light_level": 1.0,
+      "steps": 0,
+      "invert": false
+    },
+    "experiment_6f6aebea38fb4813873582cd5b237ce4": {
+      "gamma": 0.33,
+      "dark_level": 0.0,
+      "light_level": 1.0,
+      "steps": 0,
+      "invert": false
+    },
+    "experiment_9bf696e7feb643cd8a555bcf80cc06e6": {
+      "gamma": 0.3544,
+      "dark_level": 0.0,
+      "light_level": 1.0,
+      "steps": 0,
+      "invert": false
+    },
+    "experiment_a47ef024e7d14b3a83d81bedda24255d": {
+      "gamma": 0.3544,
+      "dark_level": 0.0,
+      "light_level": 1.0,
+      "steps": 0,
+      "invert": false
+    }
+  },
+  "previews": {
+    "contract_version": 1,
+    "previews": [
+      {
+        "experiment_id": "experiment_1f77972a2eca40c2b75fc9d9fb143331",
+        "panel": "Initial",
+        "path": "/Users/razmik/Documents/Agentic_system_with_hardware_integration/runs/20261017_221127_850186/print_tuning/previews/df29ddee-a46b-47bd-82b6-f96a3ed43229/1/preview_experiment_1f77972a2eca40c2b75fc9d9fb143331_Initial.png",
+        "sha256": "1ff2d49e0ffce31c95c442ba528e7afc30209b13f95977b7f7c3ac1107059b46"
+      },
+      {
+        "experiment_id": "experiment_1f77972a2eca40c2b75fc9d9fb143331",
+        "panel": "Final",
+        "path": "/Users/razmik/Documents/Agentic_system_with_hardware_integration/runs/20261017_221127_850186/print_tuning/previews/df29ddee-a46b-47bd-82b6-f96a3ed43229/1/preview_experiment_1f77972a2eca40c2b75fc9d9fb143331_Final.png",
+        "sha256": "e408a7766da1f4e0566990609d4f057c02f8da05e4609340ba59534c8c69fe16"
+      },
+      {
+        "experiment_id": "experiment_6f6aebea38fb4813873582cd5b237ce4",
+        "panel": "Initial",
+        "path": "/Users/razmik/Documents/Agentic_system_with_hardware_integration/runs/20261017_221127_850186/print_tuning/previews/df29ddee-a46b-47bd-82b6-f96a3ed43229/1/preview_experiment_6f6aebea38fb4813873582cd5b237ce4_Initial.png",
+        "sha256": "0446cf73351f6dd0df515c254fa7cbca5e45856f4c4df9d98b96fa796a03d164"
+      },
+      {
+        "experiment_id": "experiment_6f6aebea38fb4813873582cd5b237ce4",
+        "panel": "Final",
+        "path": "/Users/razmik/Documents/Agentic_system_with_hardware_integration/runs/20261017_221127_850186/print_tuning/previews/df29ddee-a46b-47bd-82b6-f96a3ed43229/1/preview_experiment_6f6aebea38fb4813873582cd5b237ce4_Final.png",
+        "sha256": "3c79db7d03c93561d3daf9c242e43aba688cd7c5e56101378c3cea1359de2833"
+      },
+      {
+        "experiment_id": "experiment_9bf696e7feb643cd8a555bcf80cc06e6",
+        "panel": "Initial",
+        "path": "/Users/razmik/Documents/Agentic_system_with_hardware_integration/runs/20261017_221127_850186/print_tuning/previews/df29ddee-a46b-47bd-82b6-f96a3ed43229/1/preview_experiment_9bf696e7feb643cd8a555bcf80cc06e6_Initial.png",
+        "sha256": "2abf3d227c206e0647e2dbb4409ccd652c87ec582dcbe9f8f30ff08c57ec2464"
+      },
+      {
+        "experiment_id": "experiment_9bf696e7feb643cd8a555bcf80cc06e6",
+        "panel": "Final",
+        "path": "/Users/razmik/Documents/Agentic_system_with_hardware_integration/runs/20261017_221127_850186/print_tuning/previews/df29ddee-a46b-47bd-82b6-f96a3ed43229/1/preview_experiment_9bf696e7feb643cd8a555bcf80cc06e6_Final.png",
+        "sha256": "99cb846b1351928a90ecc98f853827008d62f28d0895b80de07247d5e604368b"
+      },
+      {
+        "experiment_id": "experiment_a47ef024e7d14b3a83d81bedda24255d",
+        "panel": "Initial",
+        "path": "/Users/razmik/Documents/Agentic_system_with_hardware_integration/runs/20261017_221127_850186/print_tuning/previews/df29ddee-a46b-47bd-82b6-f96a3ed43229/1/preview_experiment_a47ef024e7d14b3a83d81bedda24255d_Initial.png",
+        "sha256": "c0be2aa0556b35f6fd18e4e9b3b80af9d73f245b49434b6b48f4885425a9818e"
+      },
+      {
+        "experiment_id": "experiment_a47ef024e7d14b3a83d81bedda24255d",
+        "panel": "Final",
+        "path": "/Users/razmik/Documents/Agentic_system_with_hardware_integration/runs/20261017_221127_850186/print_tuning/previews/df29ddee-a46b-47bd-82b6-f96a3ed43229/1/preview_experiment_a47ef024e7d14b3a83d81bedda24255d_Final.png",
+        "sha256": "7b237801a3596a499e48577b3cc858f0fc090f50e1b8ce04391ab1cb0d3dc199"
+      }
+    ],
+    "normalization_limits": {
+      "experiment_1f77972a2eca40c2b75fc9d9fb143331": {
+        "lo": 0.0022630647033853265,
+        "hi": 5.219409982153995,
+        "method": "percentile",
+        "hi_raised_to_focus_peak": true
+      },
+      "experiment_6f6aebea38fb4813873582cd5b237ce4": {
+        "lo": 0.00397762872197956,
+        "hi": 4.7233486384696235,
+        "method": "percentile",
+        "hi_raised_to_focus_peak": true
+      },
+      "experiment_9bf696e7feb643cd8a555bcf80cc06e6": {
+        "lo": 0.004187099957244465,
+        "hi": 3.6665663022994694,
+        "method": "percentile",
+        "hi_raised_to_focus_peak": true
+      },
+      "experiment_a47ef024e7d14b3a83d81bedda24255d": {
+        "lo": 0.002573253835417678,
+        "hi": 4.986342543287121,
+        "method": "percentile",
+        "hi_raised_to_focus_peak": true
+      }
+    },
+    "reference_mappings": {
+      "experiment_1f77972a2eca40c2b75fc9d9fb143331": {
+        "gamma": 1.0,
+        "dark_level": 0.0,
+        "light_level": 1.0,
+        "steps": 0,
+        "invert": false
+      },
+      "experiment_6f6aebea38fb4813873582cd5b237ce4": {
+        "gamma": 1.0,
+        "dark_level": 0.0,
+        "light_level": 1.0,
+        "steps": 0,
+        "invert": false
+      },
+      "experiment_9bf696e7feb643cd8a555bcf80cc06e6": {
+        "gamma": 1.0,
+        "dark_level": 0.0,
+        "light_level": 1.0,
+        "steps": 0,
+        "invert": false
+      },
+      "experiment_a47ef024e7d14b3a83d81bedda24255d": {
+        "gamma": 1.0,
+        "dark_level": 0.0,
+        "light_level": 1.0,
+        "steps": 0,
+        "invert": false
+      }
+    },
+    "paper_color": null
+  },
+  "status": "completed",
+  "phase": "completed",
+  "active_round": 3,
+  "active_trial_id": "fd788bdd-2dcc-41df-948a-f1c7ce520fad",
+  "retry_limits": {
+    "rescans": 3,
+    "reprints": 1,
+    "trial_regenerations": 2
+  },
+  "initialization": {
+    "status": "complete",
+    "attempts": [
+      {
+        "started_at": "2026-10-17T18:12:59.134441+00:00",
+        "status": "complete",
+        "finished_at": "2026-10-17T18:12:59.211533+00:00"
+      }
+    ]
+  },
+  "rounds": {
+    "1": {
+      "proposal": {
+        "stage": "propose_gamma",
+        "experiments": [
+          {
+            "experiment_id": "experiment_1f77972a2eca40c2b75fc9d9fb143331",
+            "tests": [
+              {
+                "candidate_id": "test_1",
+                "gamma": 0.1,
+                "reason": "The Initial and Final previews appear very dark, with limited visible low-intensity detail. This low-end log-spaced test probes strong brightening."
+              },
+              {
+                "candidate_id": "test_2",
+                "gamma": 0.16818,
+                "reason": "Log-spaced between 0.1 and 0.8 to test a strong but less extreme brightening of the dark previews."
+              },
+              {
+                "candidate_id": "test_3",
+                "gamma": 0.28284,
+                "reason": "Log-spaced intermediate test to assess whether brightening reveals detail without washing out both panels."
+              },
+              {
+                "candidate_id": "test_4",
+                "gamma": 0.47568,
+                "reason": "Log-spaced intermediate test, allowing comparison of moderate brightening against more aggressive options."
+              },
+              {
+                "candidate_id": "test_5",
+                "gamma": 0.8,
+                "reason": "A mild brightening test near the reference gamma, useful for checking whether a smaller adjustment improves readability."
+              }
+            ]
+          },
+          {
+            "experiment_id": "experiment_6f6aebea38fb4813873582cd5b237ce4",
+            "tests": [
+              {
+                "candidate_id": "test_1",
+                "gamma": 0.1,
+                "reason": "The Initial and Final previews appear very dark, with limited visible low-intensity detail. This low-end log-spaced test probes strong brightening."
+              },
+              {
+                "candidate_id": "test_2",
+                "gamma": 0.16818,
+                "reason": "Log-spaced between 0.1 and 0.8 to test a strong but less extreme brightening of the dark previews."
+              },
+              {
+                "candidate_id": "test_3",
+                "gamma": 0.28284,
+                "reason": "Log-spaced intermediate test to assess whether brightening reveals detail without washing out both panels."
+              },
+              {
+                "candidate_id": "test_4",
+                "gamma": 0.47568,
+                "reason": "Log-spaced intermediate test, allowing comparison of moderate brightening against more aggressive options."
+              },
+              {
+                "candidate_id": "test_5",
+                "gamma": 0.8,
+                "reason": "A mild brightening test near the reference gamma, useful for checking whether a smaller adjustment improves readability."
+              }
+            ]
+          },
+          {
+            "experiment_id": "experiment_9bf696e7feb643cd8a555bcf80cc06e6",
+            "tests": [
+              {
+                "candidate_id": "test_1",
+                "gamma": 0.1,
+                "reason": "The Initial and Final previews appear very dark, with limited visible low-intensity detail. This low-end log-spaced test probes strong brightening."
+              },
+              {
+                "candidate_id": "test_2",
+                "gamma": 0.16818,
+                "reason": "Log-spaced between 0.1 and 0.8 to test a strong but less extreme brightening of the dark previews."
+              },
+              {
+                "candidate_id": "test_3",
+                "gamma": 0.28284,
+                "reason": "Log-spaced intermediate test to assess whether brightening reveals detail without washing out both panels."
+              },
+              {
+                "candidate_id": "test_4",
+                "gamma": 0.47568,
+                "reason": "Log-spaced intermediate test, allowing comparison of moderate brightening against more aggressive options."
+              },
+              {
+                "candidate_id": "test_5",
+                "gamma": 0.8,
+                "reason": "A mild brightening test near the reference gamma, useful for checking whether a smaller adjustment improves readability."
+              }
+            ]
+          },
+          {
+            "experiment_id": "experiment_a47ef024e7d14b3a83d81bedda24255d",
+            "tests": [
+              {
+                "candidate_id": "test_1",
+                "gamma": 0.1,
+                "reason": "The Initial and Final previews appear very dark, with limited visible low-intensity detail. This low-end log-spaced test probes strong brightening."
+              },
+              {
+                "candidate_id": "test_2",
+                "gamma": 0.16818,
+                "reason": "Log-spaced between 0.1 and 0.8 to test a strong but less extreme brightening of the dark previews."
+              },
+              {
+                "candidate_id": "test_3",
+                "gamma": 0.28284,
+                "reason": "Log-spaced intermediate test to assess whether brightening reveals detail without washing out both panels."
+              },
+              {
+                "candidate_id": "test_4",
+                "gamma": 0.47568,
+                "reason": "Log-spaced intermediate test, allowing comparison of moderate brightening against more aggressive options."
+              },
+              {
+                "candidate_id": "test_5",
+                "gamma": 0.8,
+                "reason": "A mild brightening test near the reference gamma, useful for checking whether a smaller adjustment improves readability."
+              }
+            ]
+          }
+        ]
+      },
+      "trial_result": {
+        "contract_version": 1,
+        "status": "ok",
+        "session_id": "df29ddee-a46b-47bd-82b6-f96a3ed43229",
+        "trial_id": "6be46dbd-fafe-4457-86d8-f8629bd4b8cd",
+        "round_id": 1,
+        "pdf_path": "/Users/razmik/Documents/Agentic_system_with_hardware_integration/runs/20261017_221127_850186/print_tuning/trial_r1_6be46dbd.pdf",
+        "pdf_sha256": "cfbdde1f99cb356c60dbda39738c0073a33893a7fccf643e92fc18cae0d0463d",
+        "manifest_path": "/Users/razmik/Documents/Agentic_system_with_hardware_integration/runs/20261017_221127_850186/print_tuning/trial_r1_6be46dbd_manifest.json",
+        "page_count": 2
+      },
+      "trials": [
+        {
+          "result": {
+            "contract_version": 1,
+            "status": "ok",
+            "session_id": "df29ddee-a46b-47bd-82b6-f96a3ed43229",
+            "trial_id": "6be46dbd-fafe-4457-86d8-f8629bd4b8cd",
+            "round_id": 1,
+            "pdf_path": "/Users/razmik/Documents/Agentic_system_with_hardware_integration/runs/20261017_221127_850186/print_tuning/trial_r1_6be46dbd.pdf",
+            "pdf_sha256": "cfbdde1f99cb356c60dbda39738c0073a33893a7fccf643e92fc18cae0d0463d",
+            "manifest_path": "/Users/razmik/Documents/Agentic_system_with_hardware_integration/runs/20261017_221127_850186/print_tuning/trial_r1_6be46dbd_manifest.json",
+            "page_count": 2
+          },
+          "manifest_sha256": "3c87d7bd9ad5237bcee642f03458c1ad3fba8fe202562e69a07901bd7bc783ee",
+          "recorded_at": "2026-10-17T18:13:15.524418+00:00"
+        }
+      ],
+      "evaluations": [
+        {
+          "record_id": "/Users/razmik/Documents/Agentic_system_with_hardware_integration/runs/20261017_221127_850186/print_tuning/scan_r1_6be46dbd_e4354d51.json",
+          "result": {
+            "contract_version": 1,
+            "status": "ok",
+            "session_id": "df29ddee-a46b-47bd-82b6-f96a3ed43229",
+            "trial_id": "6be46dbd-fafe-4457-86d8-f8629bd4b8cd",
+            "round_id": 1,
+            "evaluation_path": "/Users/razmik/Documents/Agentic_system_with_hardware_integration/runs/20261017_221127_850186/print_tuning/scan_r1_6be46dbd_e4354d51.json",
+            "scan_quality": {
+              "usable": true,
+              "issues": []
+            },
+            "scan_files": [
+              {
+                "path": "/Users/razmik/Documents/Agentic_system_with_hardware_integration/runs/20261017_221127_850186/scans/round_1/fake_221411/scan_page_1.png",
+                "sha256": "7982f99e003bd6036316bab85b1e1bbc7c522343b7b4a7b73f1ca719cda314b7"
+              },
+              {
+                "path": "/Users/razmik/Documents/Agentic_system_with_hardware_integration/runs/20261017_221127_850186/scans/round_1/fake_221411/scan_page_2.png",
+                "sha256": "67435d91cd3e19eb2ab86f76e718231b5834e4e3d1ca59146b113da95aec3aa8"
+              }
+            ]
+          },
+          "result_sha256": "1bb67435d15c89efbcc3726b82b4ee106cff4cb0be4c75d5b53794e05eef7c89",
+          "evaluation_sha256": "cbc9b70e4ecbddd44ba7d81a2ed50d010cf1592c389deec70ea456ea293d67c8",
+          "recorded_at": "2026-10-17T18:14:46.296740+00:00"
+        }
+      ],
+      "active_evaluation_id": "/Users/razmik/Documents/Agentic_system_with_hardware_integration/runs/20261017_221127_850186/print_tuning/scan_r1_6be46dbd_e4354d51.json",
+      "reviews": [
+        {
+          "response": {
+            "stage": "review_gamma",
+            "assessment": "usable",
+            "issues": [],
+            "gamma_winners": [
+              {
+                "experiment_id": "experiment_1f77972a2eca40c2b75fc9d9fb143331",
+                "candidate_id": "test_3",
+                "reason": "Gamma 0.28284 best balances improved readability of both Initial and Final against the too-dark reference and the washed-out lower-gamma tests. Both panels retain separated gray levels with no measured collapse, and this candidate has the strongest combined contrast among the printed options.",
+                "confidence": "medium",
+                "tie_explanation": null
+              },
+              {
+                "experiment_id": "experiment_6f6aebea38fb4813873582cd5b237ce4",
+                "candidate_id": "test_3",
+                "reason": "Gamma 0.28284 gives both panels substantially more usable tonal separation than the dark reference while avoiding the washed-out appearance of the lowest gammas. Initial and Final retain distinct levels without measured collapse, with strong contrast in both.",
+                "confidence": "medium",
+                "tie_explanation": null
+              },
+              {
+                "experiment_id": "experiment_9bf696e7feb643cd8a555bcf80cc06e6",
+                "candidate_id": "test_3",
+                "reason": "Gamma 0.28284 improves both panels over the dark reference and preserves useful detail without the pale, washed-out look of the lowest gammas. It gives a more balanced Initial/Final contrast than the darker test_4, and all intended levels remain separated.",
+                "confidence": "medium",
+                "tie_explanation": null
+              },
+              {
+                "experiment_id": "experiment_a47ef024e7d14b3a83d81bedda24255d",
+                "candidate_id": "test_3",
+                "reason": "Gamma 0.28284 provides a good balance of tonal separation and visibility in both Initial and Final, improving on the reference's dark appearance without the washed-out lower-gamma tests. No measured levels collapse, and the candidate has the strongest combined contrast among the printed options.",
+                "confidence": "medium",
+                "tie_explanation": null
+              }
+            ],
+            "gamma_tests": [
+              {
+                "experiment_id": "experiment_1f77972a2eca40c2b75fc9d9fb143331",
+                "tests": [
+                  {
+                    "candidate_id": "test_1",
+                    "gamma": 0.14142,
+                    "reason": "Log-spaced lower-side refinement around the selected gamma, testing a somewhat brighter mapping."
+                  },
+                  {
+                    "candidate_id": "test_2",
+                    "gamma": 0.1922,
+                    "reason": "Log-spaced lower-side refinement, closer to the selected gamma."
+                  },
+                  {
+                    "candidate_id": "test_3",
+                    "gamma": 0.2611,
+                    "reason": "Log-spaced test just below the selected gamma to refine the balance of low-intensity visibility and tonal separation."
+                  },
+                  {
+                    "candidate_id": "test_4",
+                    "gamma": 0.3544,
+                    "reason": "Log-spaced test just above the selected gamma to check whether slightly darker rendering improves separation without losing detail."
+                  },
+                  {
+                    "candidate_id": "test_5",
+                    "gamma": 0.4808,
+                    "reason": "Log-spaced upper-side refinement around the selected gamma, testing a darker mapping while remaining near the promising range."
+                  }
+                ]
+              },
+              {
+                "experiment_id": "experiment_6f6aebea38fb4813873582cd5b237ce4",
+                "tests": [
+                  {
+                    "candidate_id": "test_1",
+                    "gamma": 0.14142,
+                    "reason": "Log-spaced lower-side refinement around the selected gamma, testing a somewhat brighter mapping."
+                  },
+                  {
+                    "candidate_id": "test_2",
+                    "gamma": 0.1922,
+                    "reason": "Log-spaced lower-side refinement, closer to the selected gamma."
+                  },
+                  {
+                    "candidate_id": "test_3",
+                    "gamma": 0.2611,
+                    "reason": "Log-spaced test just below the selected gamma to refine the balance of low-intensity visibility and tonal separation."
+                  },
+                  {
+                    "candidate_id": "test_4",
+                    "gamma": 0.3544,
+                    "reason": "Log-spaced test just above the selected gamma to check whether slightly darker rendering improves separation without losing detail."
+                  },
+                  {
+                    "candidate_id": "test_5",
+                    "gamma": 0.4808,
+                    "reason": "Log-spaced upper-side refinement around the selected gamma, testing a darker mapping while remaining near the promising range."
+                  }
+                ]
+              },
+              {
+                "experiment_id": "experiment_9bf696e7feb643cd8a555bcf80cc06e6",
+                "tests": [
+                  {
+                    "candidate_id": "test_1",
+                    "gamma": 0.14142,
+                    "reason": "Log-spaced lower-side refinement around the selected gamma, testing a somewhat brighter mapping."
+                  },
+                  {
+                    "candidate_id": "test_2",
+                    "gamma": 0.1922,
+                    "reason": "Log-spaced lower-side refinement, closer to the selected gamma."
+                  },
+                  {
+                    "candidate_id": "test_3",
+                    "gamma": 0.2611,
+                    "reason": "Log-spaced test just below the selected gamma to refine the balance of low-intensity visibility and tonal separation."
+                  },
+                  {
+                    "candidate_id": "test_4",
+                    "gamma": 0.3544,
+                    "reason": "Log-spaced test just above the selected gamma to check whether slightly darker rendering improves separation without losing detail."
+                  },
+                  {
+                    "candidate_id": "test_5",
+                    "gamma": 0.4808,
+                    "reason": "Log-spaced upper-side refinement around the selected gamma, testing a darker mapping while remaining near the promising range."
+                  }
+                ]
+              },
+              {
+                "experiment_id": "experiment_a47ef024e7d14b3a83d81bedda24255d",
+                "tests": [
+                  {
+                    "candidate_id": "test_1",
+                    "gamma": 0.14142,
+                    "reason": "Log-spaced lower-side refinement around the selected gamma, testing a somewhat brighter mapping."
+                  },
+                  {
+                    "candidate_id": "test_2",
+                    "gamma": 0.1922,
+                    "reason": "Log-spaced lower-side refinement, closer to the selected gamma."
+                  },
+                  {
+                    "candidate_id": "test_3",
+                    "gamma": 0.2611,
+                    "reason": "Log-spaced test just below the selected gamma to refine the balance of low-intensity visibility and tonal separation."
+                  },
+                  {
+                    "candidate_id": "test_4",
+                    "gamma": 0.3544,
+                    "reason": "Log-spaced test just above the selected gamma to check whether slightly darker rendering improves separation without losing detail."
+                  },
+                  {
+                    "candidate_id": "test_5",
+                    "gamma": 0.4808,
+                    "reason": "Log-spaced upper-side refinement around the selected gamma, testing a darker mapping while remaining near the promising range."
+                  }
+                ]
+              }
+            ]
+          },
+          "trial_id": "6be46dbd-fafe-4457-86d8-f8629bd4b8cd",
+          "evaluation_record_id": "/Users/razmik/Documents/Agentic_system_with_hardware_integration/runs/20261017_221127_850186/print_tuning/scan_r1_6be46dbd_e4354d51.json"
+        }
+      ],
+      "review": {
+        "stage": "review_gamma",
+        "assessment": "usable",
+        "issues": [],
+        "gamma_winners": [
+          {
+            "experiment_id": "experiment_1f77972a2eca40c2b75fc9d9fb143331",
+            "candidate_id": "test_3",
+            "reason": "Gamma 0.28284 best balances improved readability of both Initial and Final against the too-dark reference and the washed-out lower-gamma tests. Both panels retain separated gray levels with no measured collapse, and this candidate has the strongest combined contrast among the printed options.",
+            "confidence": "medium",
+            "tie_explanation": null
+          },
+          {
+            "experiment_id": "experiment_6f6aebea38fb4813873582cd5b237ce4",
+            "candidate_id": "test_3",
+            "reason": "Gamma 0.28284 gives both panels substantially more usable tonal separation than the dark reference while avoiding the washed-out appearance of the lowest gammas. Initial and Final retain distinct levels without measured collapse, with strong contrast in both.",
+            "confidence": "medium",
+            "tie_explanation": null
+          },
+          {
+            "experiment_id": "experiment_9bf696e7feb643cd8a555bcf80cc06e6",
+            "candidate_id": "test_3",
+            "reason": "Gamma 0.28284 improves both panels over the dark reference and preserves useful detail without the pale, washed-out look of the lowest gammas. It gives a more balanced Initial/Final contrast than the darker test_4, and all intended levels remain separated.",
+            "confidence": "medium",
+            "tie_explanation": null
+          },
+          {
+            "experiment_id": "experiment_a47ef024e7d14b3a83d81bedda24255d",
+            "candidate_id": "test_3",
+            "reason": "Gamma 0.28284 provides a good balance of tonal separation and visibility in both Initial and Final, improving on the reference's dark appearance without the washed-out lower-gamma tests. No measured levels collapse, and the candidate has the strongest combined contrast among the printed options.",
+            "confidence": "medium",
+            "tie_explanation": null
+          }
+        ],
+        "gamma_tests": [
+          {
+            "experiment_id": "experiment_1f77972a2eca40c2b75fc9d9fb143331",
+            "tests": [
+              {
+                "candidate_id": "test_1",
+                "gamma": 0.14142,
+                "reason": "Log-spaced lower-side refinement around the selected gamma, testing a somewhat brighter mapping."
+              },
+              {
+                "candidate_id": "test_2",
+                "gamma": 0.1922,
+                "reason": "Log-spaced lower-side refinement, closer to the selected gamma."
+              },
+              {
+                "candidate_id": "test_3",
+                "gamma": 0.2611,
+                "reason": "Log-spaced test just below the selected gamma to refine the balance of low-intensity visibility and tonal separation."
+              },
+              {
+                "candidate_id": "test_4",
+                "gamma": 0.3544,
+                "reason": "Log-spaced test just above the selected gamma to check whether slightly darker rendering improves separation without losing detail."
+              },
+              {
+                "candidate_id": "test_5",
+                "gamma": 0.4808,
+                "reason": "Log-spaced upper-side refinement around the selected gamma, testing a darker mapping while remaining near the promising range."
+              }
+            ]
+          },
+          {
+            "experiment_id": "experiment_6f6aebea38fb4813873582cd5b237ce4",
+            "tests": [
+              {
+                "candidate_id": "test_1",
+                "gamma": 0.14142,
+                "reason": "Log-spaced lower-side refinement around the selected gamma, testing a somewhat brighter mapping."
+              },
+              {
+                "candidate_id": "test_2",
+                "gamma": 0.1922,
+                "reason": "Log-spaced lower-side refinement, closer to the selected gamma."
+              },
+              {
+                "candidate_id": "test_3",
+                "gamma": 0.2611,
+                "reason": "Log-spaced test just below the selected gamma to refine the balance of low-intensity visibility and tonal separation."
+              },
+              {
+                "candidate_id": "test_4",
+                "gamma": 0.3544,
+                "reason": "Log-spaced test just above the selected gamma to check whether slightly darker rendering improves separation without losing detail."
+              },
+              {
+                "candidate_id": "test_5",
+                "gamma": 0.4808,
+                "reason": "Log-spaced upper-side refinement around the selected gamma, testing a darker mapping while remaining near the promising range."
+              }
+            ]
+          },
+          {
+            "experiment_id": "experiment_9bf696e7feb643cd8a555bcf80cc06e6",
+            "tests": [
+              {
+                "candidate_id": "test_1",
+                "gamma": 0.14142,
+                "reason": "Log-spaced lower-side refinement around the selected gamma, testing a somewhat brighter mapping."
+              },
+              {
+                "candidate_id": "test_2",
+                "gamma": 0.1922,
+                "reason": "Log-spaced lower-side refinement, closer to the selected gamma."
+              },
+              {
+                "candidate_id": "test_3",
+                "gamma": 0.2611,
+                "reason": "Log-spaced test just below the selected gamma to refine the balance of low-intensity visibility and tonal separation."
+              },
+              {
+                "candidate_id": "test_4",
+                "gamma": 0.3544,
+                "reason": "Log-spaced test just above the selected gamma to check whether slightly darker rendering improves separation without losing detail."
+              },
+              {
+                "candidate_id": "test_5",
+                "gamma": 0.4808,
+                "reason": "Log-spaced upper-side refinement around the selected gamma, testing a darker mapping while remaining near the promising range."
+              }
+            ]
+          },
+          {
+            "experiment_id": "experiment_a47ef024e7d14b3a83d81bedda24255d",
+            "tests": [
+              {
+                "candidate_id": "test_1",
+                "gamma": 0.14142,
+                "reason": "Log-spaced lower-side refinement around the selected gamma, testing a somewhat brighter mapping."
+              },
+              {
+                "candidate_id": "test_2",
+                "gamma": 0.1922,
+                "reason": "Log-spaced lower-side refinement, closer to the selected gamma."
+              },
+              {
+                "candidate_id": "test_3",
+                "gamma": 0.2611,
+                "reason": "Log-spaced test just below the selected gamma to refine the balance of low-intensity visibility and tonal separation."
+              },
+              {
+                "candidate_id": "test_4",
+                "gamma": 0.3544,
+                "reason": "Log-spaced test just above the selected gamma to check whether slightly darker rendering improves separation without losing detail."
+              },
+              {
+                "candidate_id": "test_5",
+                "gamma": 0.4808,
+                "reason": "Log-spaced upper-side refinement around the selected gamma, testing a darker mapping while remaining near the promising range."
+              }
+            ]
+          }
+        ]
+      },
+      "winners": {
+        "experiment_1f77972a2eca40c2b75fc9d9fb143331": {
+          "gamma": 0.28284,
+          "dark_level": 0.0,
+          "light_level": 1.0,
+          "steps": 0,
+          "invert": false
+        },
+        "experiment_6f6aebea38fb4813873582cd5b237ce4": {
+          "gamma": 0.28284,
+          "dark_level": 0.0,
+          "light_level": 1.0,
+          "steps": 0,
+          "invert": false
+        },
+        "experiment_9bf696e7feb643cd8a555bcf80cc06e6": {
+          "gamma": 0.28284,
+          "dark_level": 0.0,
+          "light_level": 1.0,
+          "steps": 0,
+          "invert": false
+        },
+        "experiment_a47ef024e7d14b3a83d81bedda24255d": {
+          "gamma": 0.28284,
+          "dark_level": 0.0,
+          "light_level": 1.0,
+          "steps": 0,
+          "invert": false
+        }
+      },
+      "reference_settings": {
+        "experiment_1f77972a2eca40c2b75fc9d9fb143331": {
+          "gamma": 1.0,
+          "dark_level": 0.0,
+          "light_level": 1.0,
+          "steps": 0,
+          "invert": false
+        },
+        "experiment_6f6aebea38fb4813873582cd5b237ce4": {
+          "gamma": 1.0,
+          "dark_level": 0.0,
+          "light_level": 1.0,
+          "steps": 0,
+          "invert": false
+        },
+        "experiment_9bf696e7feb643cd8a555bcf80cc06e6": {
+          "gamma": 1.0,
+          "dark_level": 0.0,
+          "light_level": 1.0,
+          "steps": 0,
+          "invert": false
+        },
+        "experiment_a47ef024e7d14b3a83d81bedda24255d": {
+          "gamma": 1.0,
+          "dark_level": 0.0,
+          "light_level": 1.0,
+          "steps": 0,
+          "invert": false
+        }
+      },
+      "approvals": [
+        {
+          "metadata": {
+            "approval_id": "34cacb0fd0f347928d420bca577d8afd",
+            "trial_id": "6be46dbd-fafe-4457-86d8-f8629bd4b8cd",
+            "pdf_sha256": "cfbdde1f99cb356c60dbda39738c0073a33893a7fccf643e92fc18cae0d0463d",
+            "printer": "Office_Printer",
+            "print_settings": {
+              "pdf_path": "/Users/razmik/Documents/Agentic_system_with_hardware_integration/runs/20261017_221127_850186/print_tuning/trial_r1_6be46dbd.pdf",
+              "printer": "Office_Printer",
+              "copies": 1,
+              "paper": "A4",
+              "color_mode": "grayscale",
+              "sides": "one-sided",
+              "scale": "100%"
+            },
+            "approved_by": "graph human interrupt",
+            "reprint": false
+          },
+          "recorded_at": "2026-10-17T18:13:48.085085+00:00"
+        }
+      ],
+      "print_attempts": [
+        {
+          "attempt_id": "34cacb0fd0f347928d420bca577d8afd:submission",
+          "approval_id": "34cacb0fd0f347928d420bca577d8afd",
+          "trial_id": "6be46dbd-fafe-4457-86d8-f8629bd4b8cd",
+          "submission_state": "result_recorded",
+          "result": {
+            "ok": true,
+            "job_id": "Office_Printer-19",
+            "printer": "Office_Printer",
+            "file": "/Users/razmik/Documents/Agentic_system_with_hardware_integration/runs/20261017_221127_850186/print_tuning/trial_r1_6be46dbd.pdf",
+            "tracked": true
+          },
+          "job_results": [
+            {
+              "ok": true,
+              "job_id": "Office_Printer-19",
+              "state": "printing",
+              "confirmed": true,
+              "message": "fake job is printing"
+            },
+            {
+              "ok": true,
+              "job_id": "Office_Printer-19",
+              "state": "done",
+              "confirmed": true,
+              "message": "fake job is done"
+            }
+          ],
+          "recorded_at": "2026-10-17T18:13:48.092851+00:00"
+        }
+      ],
+      "retries": {
+        "rescans": 0,
+        "reprints": 0,
+        "trial_regenerations": 0
+      },
+      "reprint_requested": false
+    },
+    "2": {
+      "proposal": {
+        "stage": "review_gamma",
+        "assessment": "usable",
+        "issues": [],
+        "gamma_winners": [
+          {
+            "experiment_id": "experiment_1f77972a2eca40c2b75fc9d9fb143331",
+            "candidate_id": "test_3",
+            "reason": "Gamma 0.28284 best balances improved readability of both Initial and Final against the too-dark reference and the washed-out lower-gamma tests. Both panels retain separated gray levels with no measured collapse, and this candidate has the strongest combined contrast among the printed options.",
+            "confidence": "medium",
+            "tie_explanation": null
+          },
+          {
+            "experiment_id": "experiment_6f6aebea38fb4813873582cd5b237ce4",
+            "candidate_id": "test_3",
+            "reason": "Gamma 0.28284 gives both panels substantially more usable tonal separation than the dark reference while avoiding the washed-out appearance of the lowest gammas. Initial and Final retain distinct levels without measured collapse, with strong contrast in both.",
+            "confidence": "medium",
+            "tie_explanation": null
+          },
+          {
+            "experiment_id": "experiment_9bf696e7feb643cd8a555bcf80cc06e6",
+            "candidate_id": "test_3",
+            "reason": "Gamma 0.28284 improves both panels over the dark reference and preserves useful detail without the pale, washed-out look of the lowest gammas. It gives a more balanced Initial/Final contrast than the darker test_4, and all intended levels remain separated.",
+            "confidence": "medium",
+            "tie_explanation": null
+          },
+          {
+            "experiment_id": "experiment_a47ef024e7d14b3a83d81bedda24255d",
+            "candidate_id": "test_3",
+            "reason": "Gamma 0.28284 provides a good balance of tonal separation and visibility in both Initial and Final, improving on the reference's dark appearance without the washed-out lower-gamma tests. No measured levels collapse, and the candidate has the strongest combined contrast among the printed options.",
+            "confidence": "medium",
+            "tie_explanation": null
+          }
+        ],
+        "gamma_tests": [
+          {
+            "experiment_id": "experiment_1f77972a2eca40c2b75fc9d9fb143331",
+            "tests": [
+              {
+                "candidate_id": "test_1",
+                "gamma": 0.14142,
+                "reason": "Log-spaced lower-side refinement around the selected gamma, testing a somewhat brighter mapping."
+              },
+              {
+                "candidate_id": "test_2",
+                "gamma": 0.1922,
+                "reason": "Log-spaced lower-side refinement, closer to the selected gamma."
+              },
+              {
+                "candidate_id": "test_3",
+                "gamma": 0.2611,
+                "reason": "Log-spaced test just below the selected gamma to refine the balance of low-intensity visibility and tonal separation."
+              },
+              {
+                "candidate_id": "test_4",
+                "gamma": 0.3544,
+                "reason": "Log-spaced test just above the selected gamma to check whether slightly darker rendering improves separation without losing detail."
+              },
+              {
+                "candidate_id": "test_5",
+                "gamma": 0.4808,
+                "reason": "Log-spaced upper-side refinement around the selected gamma, testing a darker mapping while remaining near the promising range."
+              }
+            ]
+          },
+          {
+            "experiment_id": "experiment_6f6aebea38fb4813873582cd5b237ce4",
+            "tests": [
+              {
+                "candidate_id": "test_1",
+                "gamma": 0.14142,
+                "reason": "Log-spaced lower-side refinement around the selected gamma, testing a somewhat brighter mapping."
+              },
+              {
+                "candidate_id": "test_2",
+                "gamma": 0.1922,
+                "reason": "Log-spaced lower-side refinement, closer to the selected gamma."
+              },
+              {
+                "candidate_id": "test_3",
+                "gamma": 0.2611,
+                "reason": "Log-spaced test just below the selected gamma to refine the balance of low-intensity visibility and tonal separation."
+              },
+              {
+                "candidate_id": "test_4",
+                "gamma": 0.3544,
+                "reason": "Log-spaced test just above the selected gamma to check whether slightly darker rendering improves separation without losing detail."
+              },
+              {
+                "candidate_id": "test_5",
+                "gamma": 0.4808,
+                "reason": "Log-spaced upper-side refinement around the selected gamma, testing a darker mapping while remaining near the promising range."
+              }
+            ]
+          },
+          {
+            "experiment_id": "experiment_9bf696e7feb643cd8a555bcf80cc06e6",
+            "tests": [
+              {
+                "candidate_id": "test_1",
+                "gamma": 0.14142,
+                "reason": "Log-spaced lower-side refinement around the selected gamma, testing a somewhat brighter mapping."
+              },
+              {
+                "candidate_id": "test_2",
+                "gamma": 0.1922,
+                "reason": "Log-spaced lower-side refinement, closer to the selected gamma."
+              },
+              {
+                "candidate_id": "test_3",
+                "gamma": 0.2611,
+                "reason": "Log-spaced test just below the selected gamma to refine the balance of low-intensity visibility and tonal separation."
+              },
+              {
+                "candidate_id": "test_4",
+                "gamma": 0.3544,
+                "reason": "Log-spaced test just above the selected gamma to check whether slightly darker rendering improves separation without losing detail."
+              },
+              {
+                "candidate_id": "test_5",
+                "gamma": 0.4808,
+                "reason": "Log-spaced upper-side refinement around the selected gamma, testing a darker mapping while remaining near the promising range."
+              }
+            ]
+          },
+          {
+            "experiment_id": "experiment_a47ef024e7d14b3a83d81bedda24255d",
+            "tests": [
+              {
+                "candidate_id": "test_1",
+                "gamma": 0.14142,
+                "reason": "Log-spaced lower-side refinement around the selected gamma, testing a somewhat brighter mapping."
+              },
+              {
+                "candidate_id": "test_2",
+                "gamma": 0.1922,
+                "reason": "Log-spaced lower-side refinement, closer to the selected gamma."
+              },
+              {
+                "candidate_id": "test_3",
+                "gamma": 0.2611,
+                "reason": "Log-spaced test just below the selected gamma to refine the balance of low-intensity visibility and tonal separation."
+              },
+              {
+                "candidate_id": "test_4",
+                "gamma": 0.3544,
+                "reason": "Log-spaced test just above the selected gamma to check whether slightly darker rendering improves separation without losing detail."
+              },
+              {
+                "candidate_id": "test_5",
+                "gamma": 0.4808,
+                "reason": "Log-spaced upper-side refinement around the selected gamma, testing a darker mapping while remaining near the promising range."
+              }
+            ]
+          }
+        ]
+      },
+      "trial_result": {
+        "contract_version": 1,
+        "status": "ok",
+        "session_id": "df29ddee-a46b-47bd-82b6-f96a3ed43229",
+        "trial_id": "aeadf633-f46c-43f9-a026-fce5bab4a9d8",
+        "round_id": 2,
+        "pdf_path": "/Users/razmik/Documents/Agentic_system_with_hardware_integration/runs/20261017_221127_850186/print_tuning/trial_r2_aeadf633.pdf",
+        "pdf_sha256": "f6a831d0056a4276dd3383957464a4ed3187af9cf7ecb48f588d04982dea5823",
+        "manifest_path": "/Users/razmik/Documents/Agentic_system_with_hardware_integration/runs/20261017_221127_850186/print_tuning/trial_r2_aeadf633_manifest.json",
+        "page_count": 2
+      },
+      "trials": [
+        {
+          "result": {
+            "contract_version": 1,
+            "status": "ok",
+            "session_id": "df29ddee-a46b-47bd-82b6-f96a3ed43229",
+            "trial_id": "aeadf633-f46c-43f9-a026-fce5bab4a9d8",
+            "round_id": 2,
+            "pdf_path": "/Users/razmik/Documents/Agentic_system_with_hardware_integration/runs/20261017_221127_850186/print_tuning/trial_r2_aeadf633.pdf",
+            "pdf_sha256": "f6a831d0056a4276dd3383957464a4ed3187af9cf7ecb48f588d04982dea5823",
+            "manifest_path": "/Users/razmik/Documents/Agentic_system_with_hardware_integration/runs/20261017_221127_850186/print_tuning/trial_r2_aeadf633_manifest.json",
+            "page_count": 2
+          },
+          "manifest_sha256": "d22dd44dbd37467eb17dc1d8628018062fdc25d2ff03baa92a3da9c71701b284",
+          "recorded_at": "2026-10-17T18:15:45.371628+00:00"
+        }
+      ],
+      "evaluations": [
+        {
+          "record_id": "/Users/razmik/Documents/Agentic_system_with_hardware_integration/runs/20261017_221127_850186/print_tuning/scan_r2_aeadf633_91c6396a.json",
+          "result": {
+            "contract_version": 1,
+            "status": "ok",
+            "session_id": "df29ddee-a46b-47bd-82b6-f96a3ed43229",
+            "trial_id": "aeadf633-f46c-43f9-a026-fce5bab4a9d8",
+            "round_id": 2,
+            "evaluation_path": "/Users/razmik/Documents/Agentic_system_with_hardware_integration/runs/20261017_221127_850186/print_tuning/scan_r2_aeadf633_91c6396a.json",
+            "scan_quality": {
+              "usable": true,
+              "issues": []
+            },
+            "scan_files": [
+              {
+                "path": "/Users/razmik/Documents/Agentic_system_with_hardware_integration/runs/20261017_221127_850186/scans/round_2/fake_221614/scan_page_1.png",
+                "sha256": "a1b83c6cbcc28e5f5b0ae5eae47290bca7a664901fc32a7556095e75b5bfa956"
+              },
+              {
+                "path": "/Users/razmik/Documents/Agentic_system_with_hardware_integration/runs/20261017_221127_850186/scans/round_2/fake_221614/scan_page_2.png",
+                "sha256": "078c4781f9f94b6cf8ee48bc51bc0725c039c85b18fb576df048d71fc2e64fb1"
+              }
+            ]
+          },
+          "result_sha256": "20cd5002255b4c14236d0aedbd594052d26481debf8f34c5296cf1c6f39a8fee",
+          "evaluation_sha256": "35fdeda31e606d3a29325b20535b3f6663e73d343e4a0ea8d805cfd4a7215d0e",
+          "recorded_at": "2026-10-17T18:16:44.345569+00:00"
+        }
+      ],
+      "active_evaluation_id": "/Users/razmik/Documents/Agentic_system_with_hardware_integration/runs/20261017_221127_850186/print_tuning/scan_r2_aeadf633_91c6396a.json",
+      "reviews": [
+        {
+          "response": {
+            "stage": "review_gamma",
+            "assessment": "usable",
+            "issues": [],
+            "gamma_winners": [
+              {
+                "experiment_id": "experiment_1f77972a2eca40c2b75fc9d9fb143331",
+                "candidate_id": "test_4",
+                "reason": "Among the tested candidates, gamma 0.3544 gives a useful balance across both panels: Initial and Final retain separated gray levels, with slightly greater measured contrast than the reference in each. The more aggressive gamma 0.4808 is visibly darker and has a notably higher full-black share, while the lighter candidates lose contrast. Scan and patch measurements support a reliable comparison; this is the best tested candidate, not a proven optimum.",
+                "confidence": "medium",
+                "tie_explanation": null
+              },
+              {
+                "experiment_id": "experiment_6f6aebea38fb4813873582cd5b237ce4",
+                "candidate_id": "test_4",
+                "reason": "Gamma 0.3544 is a good two-panel compromise: measured Initial contrast is higher than the reference, while Final remains close in contrast and all intended levels remain separated. The lower-gamma candidates reduce contrast, and 0.4808 darkens the panels and raises the full-black share. This is the best tested balance, not a proven optimum.",
+                "confidence": "medium",
+                "tie_explanation": null
+              },
+              {
+                "experiment_id": "experiment_9bf696e7feb643cd8a555bcf80cc06e6",
+                "candidate_id": "test_4",
+                "reason": "Gamma 0.3544 improves measured contrast in Initial over the reference and keeps Final close, with no collapsed levels. Although 0.4808 has marginally higher aggregate contrast, its greater full-black share and darker appearance make it a less balanced choice across both panels. The scan and gray-patch evidence are usable; this is the best tested candidate, not a proven optimum.",
+                "confidence": "medium",
+                "tie_explanation": null
+              },
+              {
+                "experiment_id": "experiment_a47ef024e7d14b3a83d81bedda24255d",
+                "candidate_id": "test_4",
+                "reason": "Gamma 0.3544 modestly increases Initial contrast relative to the reference while retaining distinct levels in Final. Final contrast is somewhat lower than the reference, so the choice is a balance across panels rather than a win on every metric; the much darker 0.4808 option is less balanced. This is the best tested compromise, not a proven optimum.",
+                "confidence": "medium",
+                "tie_explanation": null
+              }
+            ],
+            "gamma_tests": [
+              {
+                "experiment_id": "experiment_1f77972a2eca40c2b75fc9d9fb143331",
+                "tests": [
+                  {
+                    "candidate_id": "test_1",
+                    "gamma": 0.225,
+                    "reason": "Log-spaced lower-side refinement around the selected gamma, to compare brighter rendering without returning to the lowest-contrast range."
+                  },
+                  {
+                    "candidate_id": "test_2",
+                    "gamma": 0.275,
+                    "reason": "Log-spaced lower-side refinement, checking a closer balance between low-intensity visibility and separation."
+                  },
+                  {
+                    "candidate_id": "test_3",
+                    "gamma": 0.33,
+                    "reason": "Log-spaced test just below the selected gamma to refine the two-panel contrast balance."
+                  },
+                  {
+                    "candidate_id": "test_4",
+                    "gamma": 0.395,
+                    "reason": "Log-spaced test just above the selected gamma to check whether a little more contrast helps without excessive darkening."
+                  },
+                  {
+                    "candidate_id": "test_5",
+                    "gamma": 0.475,
+                    "reason": "Log-spaced upper-side refinement to test a darker mapping near the range where the full-black share starts to rise."
+                  }
+                ]
+              },
+              {
+                "experiment_id": "experiment_6f6aebea38fb4813873582cd5b237ce4",
+                "tests": [
+                  {
+                    "candidate_id": "test_1",
+                    "gamma": 0.225,
+                    "reason": "Log-spaced lower-side refinement around the selected gamma, to compare brighter rendering without returning to the lowest-contrast range."
+                  },
+                  {
+                    "candidate_id": "test_2",
+                    "gamma": 0.275,
+                    "reason": "Log-spaced lower-side refinement, checking a closer balance between low-intensity visibility and separation."
+                  },
+                  {
+                    "candidate_id": "test_3",
+                    "gamma": 0.33,
+                    "reason": "Log-spaced test just below the selected gamma to refine the two-panel contrast balance."
+                  },
+                  {
+                    "candidate_id": "test_4",
+                    "gamma": 0.395,
+                    "reason": "Log-spaced test just above the selected gamma to check whether a little more contrast helps without excessive darkening."
+                  },
+                  {
+                    "candidate_id": "test_5",
+                    "gamma": 0.475,
+                    "reason": "Log-spaced upper-side refinement to test a darker mapping near the range where the full-black share starts to rise."
+                  }
+                ]
+              },
+              {
+                "experiment_id": "experiment_9bf696e7feb643cd8a555bcf80cc06e6",
+                "tests": [
+                  {
+                    "candidate_id": "test_1",
+                    "gamma": 0.225,
+                    "reason": "Log-spaced lower-side refinement around the selected gamma, to compare brighter rendering without returning to the lowest-contrast range."
+                  },
+                  {
+                    "candidate_id": "test_2",
+                    "gamma": 0.275,
+                    "reason": "Log-spaced lower-side refinement, checking a closer balance between low-intensity visibility and separation."
+                  },
+                  {
+                    "candidate_id": "test_3",
+                    "gamma": 0.33,
+                    "reason": "Log-spaced test just below the selected gamma to refine the two-panel contrast balance."
+                  },
+                  {
+                    "candidate_id": "test_4",
+                    "gamma": 0.395,
+                    "reason": "Log-spaced test just above the selected gamma to check whether a little more contrast helps without excessive darkening."
+                  },
+                  {
+                    "candidate_id": "test_5",
+                    "gamma": 0.475,
+                    "reason": "Log-spaced upper-side refinement to test a darker mapping near the range where the full-black share starts to rise."
+                  }
+                ]
+              },
+              {
+                "experiment_id": "experiment_a47ef024e7d14b3a83d81bedda24255d",
+                "tests": [
+                  {
+                    "candidate_id": "test_1",
+                    "gamma": 0.225,
+                    "reason": "Log-spaced lower-side refinement around the selected gamma, to compare brighter rendering without returning to the lowest-contrast range."
+                  },
+                  {
+                    "candidate_id": "test_2",
+                    "gamma": 0.275,
+                    "reason": "Log-spaced lower-side refinement, checking a closer balance between low-intensity visibility and separation."
+                  },
+                  {
+                    "candidate_id": "test_3",
+                    "gamma": 0.33,
+                    "reason": "Log-spaced test just below the selected gamma to refine the two-panel contrast balance."
+                  },
+                  {
+                    "candidate_id": "test_4",
+                    "gamma": 0.395,
+                    "reason": "Log-spaced test just above the selected gamma to check whether a little more contrast helps without excessive darkening."
+                  },
+                  {
+                    "candidate_id": "test_5",
+                    "gamma": 0.475,
+                    "reason": "Log-spaced upper-side refinement to test a darker mapping near the range where the full-black share starts to rise."
+                  }
+                ]
+              }
+            ]
+          },
+          "trial_id": "aeadf633-f46c-43f9-a026-fce5bab4a9d8",
+          "evaluation_record_id": "/Users/razmik/Documents/Agentic_system_with_hardware_integration/runs/20261017_221127_850186/print_tuning/scan_r2_aeadf633_91c6396a.json"
+        }
+      ],
+      "review": {
+        "stage": "review_gamma",
+        "assessment": "usable",
+        "issues": [],
+        "gamma_winners": [
+          {
+            "experiment_id": "experiment_1f77972a2eca40c2b75fc9d9fb143331",
+            "candidate_id": "test_4",
+            "reason": "Among the tested candidates, gamma 0.3544 gives a useful balance across both panels: Initial and Final retain separated gray levels, with slightly greater measured contrast than the reference in each. The more aggressive gamma 0.4808 is visibly darker and has a notably higher full-black share, while the lighter candidates lose contrast. Scan and patch measurements support a reliable comparison; this is the best tested candidate, not a proven optimum.",
+            "confidence": "medium",
+            "tie_explanation": null
+          },
+          {
+            "experiment_id": "experiment_6f6aebea38fb4813873582cd5b237ce4",
+            "candidate_id": "test_4",
+            "reason": "Gamma 0.3544 is a good two-panel compromise: measured Initial contrast is higher than the reference, while Final remains close in contrast and all intended levels remain separated. The lower-gamma candidates reduce contrast, and 0.4808 darkens the panels and raises the full-black share. This is the best tested balance, not a proven optimum.",
+            "confidence": "medium",
+            "tie_explanation": null
+          },
+          {
+            "experiment_id": "experiment_9bf696e7feb643cd8a555bcf80cc06e6",
+            "candidate_id": "test_4",
+            "reason": "Gamma 0.3544 improves measured contrast in Initial over the reference and keeps Final close, with no collapsed levels. Although 0.4808 has marginally higher aggregate contrast, its greater full-black share and darker appearance make it a less balanced choice across both panels. The scan and gray-patch evidence are usable; this is the best tested candidate, not a proven optimum.",
+            "confidence": "medium",
+            "tie_explanation": null
+          },
+          {
+            "experiment_id": "experiment_a47ef024e7d14b3a83d81bedda24255d",
+            "candidate_id": "test_4",
+            "reason": "Gamma 0.3544 modestly increases Initial contrast relative to the reference while retaining distinct levels in Final. Final contrast is somewhat lower than the reference, so the choice is a balance across panels rather than a win on every metric; the much darker 0.4808 option is less balanced. This is the best tested compromise, not a proven optimum.",
+            "confidence": "medium",
+            "tie_explanation": null
+          }
+        ],
+        "gamma_tests": [
+          {
+            "experiment_id": "experiment_1f77972a2eca40c2b75fc9d9fb143331",
+            "tests": [
+              {
+                "candidate_id": "test_1",
+                "gamma": 0.225,
+                "reason": "Log-spaced lower-side refinement around the selected gamma, to compare brighter rendering without returning to the lowest-contrast range."
+              },
+              {
+                "candidate_id": "test_2",
+                "gamma": 0.275,
+                "reason": "Log-spaced lower-side refinement, checking a closer balance between low-intensity visibility and separation."
+              },
+              {
+                "candidate_id": "test_3",
+                "gamma": 0.33,
+                "reason": "Log-spaced test just below the selected gamma to refine the two-panel contrast balance."
+              },
+              {
+                "candidate_id": "test_4",
+                "gamma": 0.395,
+                "reason": "Log-spaced test just above the selected gamma to check whether a little more contrast helps without excessive darkening."
+              },
+              {
+                "candidate_id": "test_5",
+                "gamma": 0.475,
+                "reason": "Log-spaced upper-side refinement to test a darker mapping near the range where the full-black share starts to rise."
+              }
+            ]
+          },
+          {
+            "experiment_id": "experiment_6f6aebea38fb4813873582cd5b237ce4",
+            "tests": [
+              {
+                "candidate_id": "test_1",
+                "gamma": 0.225,
+                "reason": "Log-spaced lower-side refinement around the selected gamma, to compare brighter rendering without returning to the lowest-contrast range."
+              },
+              {
+                "candidate_id": "test_2",
+                "gamma": 0.275,
+                "reason": "Log-spaced lower-side refinement, checking a closer balance between low-intensity visibility and separation."
+              },
+              {
+                "candidate_id": "test_3",
+                "gamma": 0.33,
+                "reason": "Log-spaced test just below the selected gamma to refine the two-panel contrast balance."
+              },
+              {
+                "candidate_id": "test_4",
+                "gamma": 0.395,
+                "reason": "Log-spaced test just above the selected gamma to check whether a little more contrast helps without excessive darkening."
+              },
+              {
+                "candidate_id": "test_5",
+                "gamma": 0.475,
+                "reason": "Log-spaced upper-side refinement to test a darker mapping near the range where the full-black share starts to rise."
+              }
+            ]
+          },
+          {
+            "experiment_id": "experiment_9bf696e7feb643cd8a555bcf80cc06e6",
+            "tests": [
+              {
+                "candidate_id": "test_1",
+                "gamma": 0.225,
+                "reason": "Log-spaced lower-side refinement around the selected gamma, to compare brighter rendering without returning to the lowest-contrast range."
+              },
+              {
+                "candidate_id": "test_2",
+                "gamma": 0.275,
+                "reason": "Log-spaced lower-side refinement, checking a closer balance between low-intensity visibility and separation."
+              },
+              {
+                "candidate_id": "test_3",
+                "gamma": 0.33,
+                "reason": "Log-spaced test just below the selected gamma to refine the two-panel contrast balance."
+              },
+              {
+                "candidate_id": "test_4",
+                "gamma": 0.395,
+                "reason": "Log-spaced test just above the selected gamma to check whether a little more contrast helps without excessive darkening."
+              },
+              {
+                "candidate_id": "test_5",
+                "gamma": 0.475,
+                "reason": "Log-spaced upper-side refinement to test a darker mapping near the range where the full-black share starts to rise."
+              }
+            ]
+          },
+          {
+            "experiment_id": "experiment_a47ef024e7d14b3a83d81bedda24255d",
+            "tests": [
+              {
+                "candidate_id": "test_1",
+                "gamma": 0.225,
+                "reason": "Log-spaced lower-side refinement around the selected gamma, to compare brighter rendering without returning to the lowest-contrast range."
+              },
+              {
+                "candidate_id": "test_2",
+                "gamma": 0.275,
+                "reason": "Log-spaced lower-side refinement, checking a closer balance between low-intensity visibility and separation."
+              },
+              {
+                "candidate_id": "test_3",
+                "gamma": 0.33,
+                "reason": "Log-spaced test just below the selected gamma to refine the two-panel contrast balance."
+              },
+              {
+                "candidate_id": "test_4",
+                "gamma": 0.395,
+                "reason": "Log-spaced test just above the selected gamma to check whether a little more contrast helps without excessive darkening."
+              },
+              {
+                "candidate_id": "test_5",
+                "gamma": 0.475,
+                "reason": "Log-spaced upper-side refinement to test a darker mapping near the range where the full-black share starts to rise."
+              }
+            ]
+          }
+        ]
+      },
+      "winners": {
+        "experiment_1f77972a2eca40c2b75fc9d9fb143331": {
+          "gamma": 0.3544,
+          "dark_level": 0.0,
+          "light_level": 1.0,
+          "steps": 0,
+          "invert": false
+        },
+        "experiment_6f6aebea38fb4813873582cd5b237ce4": {
+          "gamma": 0.3544,
+          "dark_level": 0.0,
+          "light_level": 1.0,
+          "steps": 0,
+          "invert": false
+        },
+        "experiment_9bf696e7feb643cd8a555bcf80cc06e6": {
+          "gamma": 0.3544,
+          "dark_level": 0.0,
+          "light_level": 1.0,
+          "steps": 0,
+          "invert": false
+        },
+        "experiment_a47ef024e7d14b3a83d81bedda24255d": {
+          "gamma": 0.3544,
+          "dark_level": 0.0,
+          "light_level": 1.0,
+          "steps": 0,
+          "invert": false
+        }
+      },
+      "reference_settings": {
+        "experiment_1f77972a2eca40c2b75fc9d9fb143331": {
+          "gamma": 0.28284,
+          "dark_level": 0.0,
+          "light_level": 1.0,
+          "steps": 0,
+          "invert": false
+        },
+        "experiment_6f6aebea38fb4813873582cd5b237ce4": {
+          "gamma": 0.28284,
+          "dark_level": 0.0,
+          "light_level": 1.0,
+          "steps": 0,
+          "invert": false
+        },
+        "experiment_9bf696e7feb643cd8a555bcf80cc06e6": {
+          "gamma": 0.28284,
+          "dark_level": 0.0,
+          "light_level": 1.0,
+          "steps": 0,
+          "invert": false
+        },
+        "experiment_a47ef024e7d14b3a83d81bedda24255d": {
+          "gamma": 0.28284,
+          "dark_level": 0.0,
+          "light_level": 1.0,
+          "steps": 0,
+          "invert": false
+        }
+      },
+      "approvals": [
+        {
+          "metadata": {
+            "approval_id": "c25d7046ce2f42b0b661ecd53fbca1e4",
+            "trial_id": "aeadf633-f46c-43f9-a026-fce5bab4a9d8",
+            "pdf_sha256": "f6a831d0056a4276dd3383957464a4ed3187af9cf7ecb48f588d04982dea5823",
+            "printer": "Office_Printer",
+            "print_settings": {
+              "pdf_path": "/Users/razmik/Documents/Agentic_system_with_hardware_integration/runs/20261017_221127_850186/print_tuning/trial_r2_aeadf633.pdf",
+              "printer": "Office_Printer",
+              "copies": 1,
+              "paper": "A4",
+              "color_mode": "grayscale",
+              "sides": "one-sided",
+              "scale": "100%"
+            },
+            "approved_by": "graph human interrupt",
+            "reprint": false
+          },
+          "recorded_at": "2026-10-17T18:15:59.259782+00:00"
+        }
+      ],
+      "print_attempts": [
+        {
+          "attempt_id": "c25d7046ce2f42b0b661ecd53fbca1e4:submission",
+          "approval_id": "c25d7046ce2f42b0b661ecd53fbca1e4",
+          "trial_id": "aeadf633-f46c-43f9-a026-fce5bab4a9d8",
+          "submission_state": "result_recorded",
+          "result": {
+            "ok": true,
+            "job_id": "Office_Printer-20",
+            "printer": "Office_Printer",
+            "file": "/Users/razmik/Documents/Agentic_system_with_hardware_integration/runs/20261017_221127_850186/print_tuning/trial_r2_aeadf633.pdf",
+            "tracked": true
+          },
+          "job_results": [
+            {
+              "ok": true,
+              "job_id": "Office_Printer-20",
+              "state": "printing",
+              "confirmed": true,
+              "message": "fake job is printing"
+            },
+            {
+              "ok": true,
+              "job_id": "Office_Printer-20",
+              "state": "done",
+              "confirmed": true,
+              "message": "fake job is done"
+            }
+          ],
+          "recorded_at": "2026-10-17T18:15:59.269616+00:00"
+        }
+      ],
+      "retries": {
+        "rescans": 0,
+        "reprints": 0,
+        "trial_regenerations": 0
+      },
+      "reprint_requested": false
+    },
+    "3": {
+      "proposal": {
+        "stage": "review_gamma",
+        "assessment": "usable",
+        "issues": [],
+        "gamma_winners": [
+          {
+            "experiment_id": "experiment_1f77972a2eca40c2b75fc9d9fb143331",
+            "candidate_id": "test_4",
+            "reason": "Among the tested candidates, gamma 0.3544 gives a useful balance across both panels: Initial and Final retain separated gray levels, with slightly greater measured contrast than the reference in each. The more aggressive gamma 0.4808 is visibly darker and has a notably higher full-black share, while the lighter candidates lose contrast. Scan and patch measurements support a reliable comparison; this is the best tested candidate, not a proven optimum.",
+            "confidence": "medium",
+            "tie_explanation": null
+          },
+          {
+            "experiment_id": "experiment_6f6aebea38fb4813873582cd5b237ce4",
+            "candidate_id": "test_4",
+            "reason": "Gamma 0.3544 is a good two-panel compromise: measured Initial contrast is higher than the reference, while Final remains close in contrast and all intended levels remain separated. The lower-gamma candidates reduce contrast, and 0.4808 darkens the panels and raises the full-black share. This is the best tested balance, not a proven optimum.",
+            "confidence": "medium",
+            "tie_explanation": null
+          },
+          {
+            "experiment_id": "experiment_9bf696e7feb643cd8a555bcf80cc06e6",
+            "candidate_id": "test_4",
+            "reason": "Gamma 0.3544 improves measured contrast in Initial over the reference and keeps Final close, with no collapsed levels. Although 0.4808 has marginally higher aggregate contrast, its greater full-black share and darker appearance make it a less balanced choice across both panels. The scan and gray-patch evidence are usable; this is the best tested candidate, not a proven optimum.",
+            "confidence": "medium",
+            "tie_explanation": null
+          },
+          {
+            "experiment_id": "experiment_a47ef024e7d14b3a83d81bedda24255d",
+            "candidate_id": "test_4",
+            "reason": "Gamma 0.3544 modestly increases Initial contrast relative to the reference while retaining distinct levels in Final. Final contrast is somewhat lower than the reference, so the choice is a balance across panels rather than a win on every metric; the much darker 0.4808 option is less balanced. This is the best tested compromise, not a proven optimum.",
+            "confidence": "medium",
+            "tie_explanation": null
+          }
+        ],
+        "gamma_tests": [
+          {
+            "experiment_id": "experiment_1f77972a2eca40c2b75fc9d9fb143331",
+            "tests": [
+              {
+                "candidate_id": "test_1",
+                "gamma": 0.225,
+                "reason": "Log-spaced lower-side refinement around the selected gamma, to compare brighter rendering without returning to the lowest-contrast range."
+              },
+              {
+                "candidate_id": "test_2",
+                "gamma": 0.275,
+                "reason": "Log-spaced lower-side refinement, checking a closer balance between low-intensity visibility and separation."
+              },
+              {
+                "candidate_id": "test_3",
+                "gamma": 0.33,
+                "reason": "Log-spaced test just below the selected gamma to refine the two-panel contrast balance."
+              },
+              {
+                "candidate_id": "test_4",
+                "gamma": 0.395,
+                "reason": "Log-spaced test just above the selected gamma to check whether a little more contrast helps without excessive darkening."
+              },
+              {
+                "candidate_id": "test_5",
+                "gamma": 0.475,
+                "reason": "Log-spaced upper-side refinement to test a darker mapping near the range where the full-black share starts to rise."
+              }
+            ]
+          },
+          {
+            "experiment_id": "experiment_6f6aebea38fb4813873582cd5b237ce4",
+            "tests": [
+              {
+                "candidate_id": "test_1",
+                "gamma": 0.225,
+                "reason": "Log-spaced lower-side refinement around the selected gamma, to compare brighter rendering without returning to the lowest-contrast range."
+              },
+              {
+                "candidate_id": "test_2",
+                "gamma": 0.275,
+                "reason": "Log-spaced lower-side refinement, checking a closer balance between low-intensity visibility and separation."
+              },
+              {
+                "candidate_id": "test_3",
+                "gamma": 0.33,
+                "reason": "Log-spaced test just below the selected gamma to refine the two-panel contrast balance."
+              },
+              {
+                "candidate_id": "test_4",
+                "gamma": 0.395,
+                "reason": "Log-spaced test just above the selected gamma to check whether a little more contrast helps without excessive darkening."
+              },
+              {
+                "candidate_id": "test_5",
+                "gamma": 0.475,
+                "reason": "Log-spaced upper-side refinement to test a darker mapping near the range where the full-black share starts to rise."
+              }
+            ]
+          },
+          {
+            "experiment_id": "experiment_9bf696e7feb643cd8a555bcf80cc06e6",
+            "tests": [
+              {
+                "candidate_id": "test_1",
+                "gamma": 0.225,
+                "reason": "Log-spaced lower-side refinement around the selected gamma, to compare brighter rendering without returning to the lowest-contrast range."
+              },
+              {
+                "candidate_id": "test_2",
+                "gamma": 0.275,
+                "reason": "Log-spaced lower-side refinement, checking a closer balance between low-intensity visibility and separation."
+              },
+              {
+                "candidate_id": "test_3",
+                "gamma": 0.33,
+                "reason": "Log-spaced test just below the selected gamma to refine the two-panel contrast balance."
+              },
+              {
+                "candidate_id": "test_4",
+                "gamma": 0.395,
+                "reason": "Log-spaced test just above the selected gamma to check whether a little more contrast helps without excessive darkening."
+              },
+              {
+                "candidate_id": "test_5",
+                "gamma": 0.475,
+                "reason": "Log-spaced upper-side refinement to test a darker mapping near the range where the full-black share starts to rise."
+              }
+            ]
+          },
+          {
+            "experiment_id": "experiment_a47ef024e7d14b3a83d81bedda24255d",
+            "tests": [
+              {
+                "candidate_id": "test_1",
+                "gamma": 0.225,
+                "reason": "Log-spaced lower-side refinement around the selected gamma, to compare brighter rendering without returning to the lowest-contrast range."
+              },
+              {
+                "candidate_id": "test_2",
+                "gamma": 0.275,
+                "reason": "Log-spaced lower-side refinement, checking a closer balance between low-intensity visibility and separation."
+              },
+              {
+                "candidate_id": "test_3",
+                "gamma": 0.33,
+                "reason": "Log-spaced test just below the selected gamma to refine the two-panel contrast balance."
+              },
+              {
+                "candidate_id": "test_4",
+                "gamma": 0.395,
+                "reason": "Log-spaced test just above the selected gamma to check whether a little more contrast helps without excessive darkening."
+              },
+              {
+                "candidate_id": "test_5",
+                "gamma": 0.475,
+                "reason": "Log-spaced upper-side refinement to test a darker mapping near the range where the full-black share starts to rise."
+              }
+            ]
+          }
+        ]
+      },
+      "trial_result": {
+        "contract_version": 1,
+        "status": "ok",
+        "session_id": "df29ddee-a46b-47bd-82b6-f96a3ed43229",
+        "trial_id": "fd788bdd-2dcc-41df-948a-f1c7ce520fad",
+        "round_id": 3,
+        "pdf_path": "/Users/razmik/Documents/Agentic_system_with_hardware_integration/runs/20261017_221127_850186/print_tuning/trial_r3_fd788bdd.pdf",
+        "pdf_sha256": "9ed62849c6c719430824c02f33de2aef5bae24c4577c22295c1e1250c1b7995d",
+        "manifest_path": "/Users/razmik/Documents/Agentic_system_with_hardware_integration/runs/20261017_221127_850186/print_tuning/trial_r3_fd788bdd_manifest.json",
+        "page_count": 2
+      },
+      "trials": [
+        {
+          "result": {
+            "contract_version": 1,
+            "status": "ok",
+            "session_id": "df29ddee-a46b-47bd-82b6-f96a3ed43229",
+            "trial_id": "fd788bdd-2dcc-41df-948a-f1c7ce520fad",
+            "round_id": 3,
+            "pdf_path": "/Users/razmik/Documents/Agentic_system_with_hardware_integration/runs/20261017_221127_850186/print_tuning/trial_r3_fd788bdd.pdf",
+            "pdf_sha256": "9ed62849c6c719430824c02f33de2aef5bae24c4577c22295c1e1250c1b7995d",
+            "manifest_path": "/Users/razmik/Documents/Agentic_system_with_hardware_integration/runs/20261017_221127_850186/print_tuning/trial_r3_fd788bdd_manifest.json",
+            "page_count": 2
+          },
+          "manifest_sha256": "0adb760b24e66729ff77152b7d5d95bd6928b932cdef464599c19cf1e0548cca",
+          "recorded_at": "2026-10-17T18:23:13.148738+00:00"
+        }
+      ],
+      "evaluations": [
+        {
+          "record_id": "/Users/razmik/Documents/Agentic_system_with_hardware_integration/runs/20261017_221127_850186/print_tuning/scan_r3_fd788bdd_2b19085e.json",
+          "result": {
+            "contract_version": 1,
+            "status": "ok",
+            "session_id": "df29ddee-a46b-47bd-82b6-f96a3ed43229",
+            "trial_id": "fd788bdd-2dcc-41df-948a-f1c7ce520fad",
+            "round_id": 3,
+            "evaluation_path": "/Users/razmik/Documents/Agentic_system_with_hardware_integration/runs/20261017_221127_850186/print_tuning/scan_r3_fd788bdd_2b19085e.json",
+            "scan_quality": {
+              "usable": true,
+              "issues": []
+            },
+            "scan_files": [
+              {
+                "path": "/Users/razmik/Documents/Agentic_system_with_hardware_integration/runs/20261017_221127_850186/scans/round_3/fake_222351/scan_page_1.png",
+                "sha256": "451105653579a4b76693cfdfeb717d97f8c9e7b44b1ad979faea94564f0ef988"
+              },
+              {
+                "path": "/Users/razmik/Documents/Agentic_system_with_hardware_integration/runs/20261017_221127_850186/scans/round_3/fake_222351/scan_page_2.png",
+                "sha256": "5c9a4dbf3823677bc33294f8ba2af4dd3e5ff9c43463113d557b520fbd4a04a0"
+              }
+            ]
+          },
+          "result_sha256": "d617fb8b43eeb1fe0cf2b7e7d5410a5c585c29a5ff380cf103114f6f1374fc31",
+          "evaluation_sha256": "96ccf0a78740751bf5049bc0cfa17aa1a4dff5a6fc5a2a0366cff3a20caeb3c0",
+          "recorded_at": "2026-10-17T18:24:35.118598+00:00"
+        }
+      ],
+      "active_evaluation_id": "/Users/razmik/Documents/Agentic_system_with_hardware_integration/runs/20261017_221127_850186/print_tuning/scan_r3_fd788bdd_2b19085e.json",
+      "reviews": [
+        {
+          "response": {
+            "stage": "review_gamma_final",
+            "assessment": "usable",
+            "issues": [],
+            "gamma_winners": [
+              {
+                "experiment_id": "experiment_1f77972a2eca40c2b75fc9d9fb143331",
+                "candidate_id": "reference",
+                "reason": "Retain the reference (gamma 0.3544). It is effectively tied with test_3 (gamma 0.33): measured Initial and Final contrast are nearly identical, and both preserve all intended levels. Test_4 merges one level in Final, while the darker test_5 increases full-black share and loses Final contrast. The reference is therefore the sound tied choice among the tested candidates.",
+                "confidence": "medium",
+                "tie_explanation": "Reference and test_3 have essentially equal two-panel contrast and level separation; retaining the current reference avoids a negligible change."
+              },
+              {
+                "experiment_id": "experiment_6f6aebea38fb4813873582cd5b237ce4",
+                "candidate_id": "test_3",
+                "reason": "Choose test_3 (gamma 0.33). It has the strongest balanced measured contrast across Initial and Final among these candidates, modestly above the reference overall, while preserving all intended levels in both panels and keeping full-black share low. The brighter tests lower contrast, while test_4 and test_5 darken the rendering and increase black share.",
+                "confidence": "medium",
+                "tie_explanation": null
+              },
+              {
+                "experiment_id": "experiment_9bf696e7feb643cd8a555bcf80cc06e6",
+                "candidate_id": "reference",
+                "reason": "Retain the reference (gamma 0.3544). Test_4 (gamma 0.395) is an effective tie, with a negligible increase in combined contrast, but Initial improves only slightly while Final contrast is slightly lower. Both preserve all intended levels; the more aggressive test_5 darkens the panels and substantially reduces Final contrast. The reference is the balanced tied choice.",
+                "confidence": "medium",
+                "tie_explanation": "Reference and test_4 are nearly indistinguishable in combined contrast and both preserve level separation; the small aggregate difference does not justify changing the reference."
+              },
+              {
+                "experiment_id": "experiment_a47ef024e7d14b3a83d81bedda24255d",
+                "candidate_id": "reference",
+                "reason": "Retain the reference (gamma 0.3544). Test_3 (gamma 0.33) is effectively tied: its Final contrast is slightly higher, while Initial is nearly the same, and both panels retain all intended levels. The measured combined-contrast difference is negligible. Higher-gamma alternatives reduce Final contrast and increasingly darken the rendering.",
+                "confidence": "medium",
+                "tie_explanation": "Reference and test_3 provide essentially equal two-panel readability and level separation; retaining the reference is appropriate for this effective tie."
+              }
+            ]
+          },
+          "trial_id": "fd788bdd-2dcc-41df-948a-f1c7ce520fad",
+          "evaluation_record_id": "/Users/razmik/Documents/Agentic_system_with_hardware_integration/runs/20261017_221127_850186/print_tuning/scan_r3_fd788bdd_2b19085e.json"
+        }
+      ],
+      "review": {
+        "stage": "review_gamma_final",
+        "assessment": "usable",
+        "issues": [],
+        "gamma_winners": [
+          {
+            "experiment_id": "experiment_1f77972a2eca40c2b75fc9d9fb143331",
+            "candidate_id": "reference",
+            "reason": "Retain the reference (gamma 0.3544). It is effectively tied with test_3 (gamma 0.33): measured Initial and Final contrast are nearly identical, and both preserve all intended levels. Test_4 merges one level in Final, while the darker test_5 increases full-black share and loses Final contrast. The reference is therefore the sound tied choice among the tested candidates.",
+            "confidence": "medium",
+            "tie_explanation": "Reference and test_3 have essentially equal two-panel contrast and level separation; retaining the current reference avoids a negligible change."
+          },
+          {
+            "experiment_id": "experiment_6f6aebea38fb4813873582cd5b237ce4",
+            "candidate_id": "test_3",
+            "reason": "Choose test_3 (gamma 0.33). It has the strongest balanced measured contrast across Initial and Final among these candidates, modestly above the reference overall, while preserving all intended levels in both panels and keeping full-black share low. The brighter tests lower contrast, while test_4 and test_5 darken the rendering and increase black share.",
+            "confidence": "medium",
+            "tie_explanation": null
+          },
+          {
+            "experiment_id": "experiment_9bf696e7feb643cd8a555bcf80cc06e6",
+            "candidate_id": "reference",
+            "reason": "Retain the reference (gamma 0.3544). Test_4 (gamma 0.395) is an effective tie, with a negligible increase in combined contrast, but Initial improves only slightly while Final contrast is slightly lower. Both preserve all intended levels; the more aggressive test_5 darkens the panels and substantially reduces Final contrast. The reference is the balanced tied choice.",
+            "confidence": "medium",
+            "tie_explanation": "Reference and test_4 are nearly indistinguishable in combined contrast and both preserve level separation; the small aggregate difference does not justify changing the reference."
+          },
+          {
+            "experiment_id": "experiment_a47ef024e7d14b3a83d81bedda24255d",
+            "candidate_id": "reference",
+            "reason": "Retain the reference (gamma 0.3544). Test_3 (gamma 0.33) is effectively tied: its Final contrast is slightly higher, while Initial is nearly the same, and both panels retain all intended levels. The measured combined-contrast difference is negligible. Higher-gamma alternatives reduce Final contrast and increasingly darken the rendering.",
+            "confidence": "medium",
+            "tie_explanation": "Reference and test_3 provide essentially equal two-panel readability and level separation; retaining the reference is appropriate for this effective tie."
+          }
+        ]
+      },
+      "winners": {
+        "experiment_1f77972a2eca40c2b75fc9d9fb143331": {
+          "gamma": 0.3544,
+          "dark_level": 0.0,
+          "light_level": 1.0,
+          "steps": 0,
+          "invert": false
+        },
+        "experiment_6f6aebea38fb4813873582cd5b237ce4": {
+          "gamma": 0.33,
+          "dark_level": 0.0,
+          "light_level": 1.0,
+          "steps": 0,
+          "invert": false
+        },
+        "experiment_9bf696e7feb643cd8a555bcf80cc06e6": {
+          "gamma": 0.3544,
+          "dark_level": 0.0,
+          "light_level": 1.0,
+          "steps": 0,
+          "invert": false
+        },
+        "experiment_a47ef024e7d14b3a83d81bedda24255d": {
+          "gamma": 0.3544,
+          "dark_level": 0.0,
+          "light_level": 1.0,
+          "steps": 0,
+          "invert": false
+        }
+      },
+      "reference_settings": {
+        "experiment_1f77972a2eca40c2b75fc9d9fb143331": {
+          "gamma": 0.3544,
+          "dark_level": 0.0,
+          "light_level": 1.0,
+          "steps": 0,
+          "invert": false
+        },
+        "experiment_6f6aebea38fb4813873582cd5b237ce4": {
+          "gamma": 0.3544,
+          "dark_level": 0.0,
+          "light_level": 1.0,
+          "steps": 0,
+          "invert": false
+        },
+        "experiment_9bf696e7feb643cd8a555bcf80cc06e6": {
+          "gamma": 0.3544,
+          "dark_level": 0.0,
+          "light_level": 1.0,
+          "steps": 0,
+          "invert": false
+        },
+        "experiment_a47ef024e7d14b3a83d81bedda24255d": {
+          "gamma": 0.3544,
+          "dark_level": 0.0,
+          "light_level": 1.0,
+          "steps": 0,
+          "invert": false
+        }
+      },
+      "approvals": [
+        {
+          "metadata": {
+            "approval_id": "6f6213d330cb42a19a7666d0f456bbde",
+            "trial_id": "fd788bdd-2dcc-41df-948a-f1c7ce520fad",
+            "pdf_sha256": "9ed62849c6c719430824c02f33de2aef5bae24c4577c22295c1e1250c1b7995d",
+            "printer": "Office_Printer",
+            "print_settings": {
+              "pdf_path": "/Users/razmik/Documents/Agentic_system_with_hardware_integration/runs/20261017_221127_850186/print_tuning/trial_r3_fd788bdd.pdf",
+              "printer": "Office_Printer",
+              "copies": 1,
+              "paper": "A4",
+              "color_mode": "grayscale",
+              "sides": "one-sided",
+              "scale": "100%"
+            },
+            "approved_by": "graph human interrupt",
+            "reprint": false
+          },
+          "recorded_at": "2026-10-17T18:23:30.309270+00:00"
+        }
+      ],
+      "print_attempts": [
+        {
+          "attempt_id": "6f6213d330cb42a19a7666d0f456bbde:submission",
+          "approval_id": "6f6213d330cb42a19a7666d0f456bbde",
+          "trial_id": "fd788bdd-2dcc-41df-948a-f1c7ce520fad",
+          "submission_state": "result_recorded",
+          "result": {
+            "ok": true,
+            "job_id": "Office_Printer-21",
+            "printer": "Office_Printer",
+            "file": "/Users/razmik/Documents/Agentic_system_with_hardware_integration/runs/20261017_221127_850186/print_tuning/trial_r3_fd788bdd.pdf",
+            "tracked": true
+          },
+          "job_results": [
+            {
+              "ok": true,
+              "job_id": "Office_Printer-21",
+              "state": "printing",
+              "confirmed": true,
+              "message": "fake job is printing"
+            },
+            {
+              "ok": true,
+              "job_id": "Office_Printer-21",
+              "state": "done",
+              "confirmed": true,
+              "message": "fake job is done"
+            }
+          ],
+          "recorded_at": "2026-10-17T18:23:30.322079+00:00"
+        }
+      ],
+      "retries": {
+        "rescans": 0,
+        "reprints": 0,
+        "trial_regenerations": 0
+      },
+      "reprint_requested": false
+    }
+  },
+  "decisions": [
+    {
+      "stage": "propose_gamma",
+      "trial_id": null,
+      "evaluation_record_id": null,
+      "response": {
+        "stage": "propose_gamma",
+        "experiments": [
+          {
+            "experiment_id": "experiment_1f77972a2eca40c2b75fc9d9fb143331",
+            "tests": [
+              {
+                "candidate_id": "test_1",
+                "gamma": 0.1,
+                "reason": "The Initial and Final previews appear very dark, with limited visible low-intensity detail. This low-end log-spaced test probes strong brightening."
+              },
+              {
+                "candidate_id": "test_2",
+                "gamma": 0.16818,
+                "reason": "Log-spaced between 0.1 and 0.8 to test a strong but less extreme brightening of the dark previews."
+              },
+              {
+                "candidate_id": "test_3",
+                "gamma": 0.28284,
+                "reason": "Log-spaced intermediate test to assess whether brightening reveals detail without washing out both panels."
+              },
+              {
+                "candidate_id": "test_4",
+                "gamma": 0.47568,
+                "reason": "Log-spaced intermediate test, allowing comparison of moderate brightening against more aggressive options."
+              },
+              {
+                "candidate_id": "test_5",
+                "gamma": 0.8,
+                "reason": "A mild brightening test near the reference gamma, useful for checking whether a smaller adjustment improves readability."
+              }
+            ]
+          },
+          {
+            "experiment_id": "experiment_6f6aebea38fb4813873582cd5b237ce4",
+            "tests": [
+              {
+                "candidate_id": "test_1",
+                "gamma": 0.1,
+                "reason": "The Initial and Final previews appear very dark, with limited visible low-intensity detail. This low-end log-spaced test probes strong brightening."
+              },
+              {
+                "candidate_id": "test_2",
+                "gamma": 0.16818,
+                "reason": "Log-spaced between 0.1 and 0.8 to test a strong but less extreme brightening of the dark previews."
+              },
+              {
+                "candidate_id": "test_3",
+                "gamma": 0.28284,
+                "reason": "Log-spaced intermediate test to assess whether brightening reveals detail without washing out both panels."
+              },
+              {
+                "candidate_id": "test_4",
+                "gamma": 0.47568,
+                "reason": "Log-spaced intermediate test, allowing comparison of moderate brightening against more aggressive options."
+              },
+              {
+                "candidate_id": "test_5",
+                "gamma": 0.8,
+                "reason": "A mild brightening test near the reference gamma, useful for checking whether a smaller adjustment improves readability."
+              }
+            ]
+          },
+          {
+            "experiment_id": "experiment_9bf696e7feb643cd8a555bcf80cc06e6",
+            "tests": [
+              {
+                "candidate_id": "test_1",
+                "gamma": 0.1,
+                "reason": "The Initial and Final previews appear very dark, with limited visible low-intensity detail. This low-end log-spaced test probes strong brightening."
+              },
+              {
+                "candidate_id": "test_2",
+                "gamma": 0.16818,
+                "reason": "Log-spaced between 0.1 and 0.8 to test a strong but less extreme brightening of the dark previews."
+              },
+              {
+                "candidate_id": "test_3",
+                "gamma": 0.28284,
+                "reason": "Log-spaced intermediate test to assess whether brightening reveals detail without washing out both panels."
+              },
+              {
+                "candidate_id": "test_4",
+                "gamma": 0.47568,
+                "reason": "Log-spaced intermediate test, allowing comparison of moderate brightening against more aggressive options."
+              },
+              {
+                "candidate_id": "test_5",
+                "gamma": 0.8,
+                "reason": "A mild brightening test near the reference gamma, useful for checking whether a smaller adjustment improves readability."
+              }
+            ]
+          },
+          {
+            "experiment_id": "experiment_a47ef024e7d14b3a83d81bedda24255d",
+            "tests": [
+              {
+                "candidate_id": "test_1",
+                "gamma": 0.1,
+                "reason": "The Initial and Final previews appear very dark, with limited visible low-intensity detail. This low-end log-spaced test probes strong brightening."
+              },
+              {
+                "candidate_id": "test_2",
+                "gamma": 0.16818,
+                "reason": "Log-spaced between 0.1 and 0.8 to test a strong but less extreme brightening of the dark previews."
+              },
+              {
+                "candidate_id": "test_3",
+                "gamma": 0.28284,
+                "reason": "Log-spaced intermediate test to assess whether brightening reveals detail without washing out both panels."
+              },
+              {
+                "candidate_id": "test_4",
+                "gamma": 0.47568,
+                "reason": "Log-spaced intermediate test, allowing comparison of moderate brightening against more aggressive options."
+              },
+              {
+                "candidate_id": "test_5",
+                "gamma": 0.8,
+                "reason": "A mild brightening test near the reference gamma, useful for checking whether a smaller adjustment improves readability."
+              }
+            ]
+          }
+        ]
+      },
+      "accepted_at": "2026-10-17T18:13:12.162270+00:00"
+    },
+    {
+      "stage": "review_gamma",
+      "trial_id": "6be46dbd-fafe-4457-86d8-f8629bd4b8cd",
+      "evaluation_record_id": "/Users/razmik/Documents/Agentic_system_with_hardware_integration/runs/20261017_221127_850186/print_tuning/scan_r1_6be46dbd_e4354d51.json",
+      "response": {
+        "stage": "review_gamma",
+        "assessment": "usable",
+        "issues": [],
+        "gamma_winners": [
+          {
+            "experiment_id": "experiment_1f77972a2eca40c2b75fc9d9fb143331",
+            "candidate_id": "test_3",
+            "reason": "Gamma 0.28284 best balances improved readability of both Initial and Final against the too-dark reference and the washed-out lower-gamma tests. Both panels retain separated gray levels with no measured collapse, and this candidate has the strongest combined contrast among the printed options.",
+            "confidence": "medium",
+            "tie_explanation": null
+          },
+          {
+            "experiment_id": "experiment_6f6aebea38fb4813873582cd5b237ce4",
+            "candidate_id": "test_3",
+            "reason": "Gamma 0.28284 gives both panels substantially more usable tonal separation than the dark reference while avoiding the washed-out appearance of the lowest gammas. Initial and Final retain distinct levels without measured collapse, with strong contrast in both.",
+            "confidence": "medium",
+            "tie_explanation": null
+          },
+          {
+            "experiment_id": "experiment_9bf696e7feb643cd8a555bcf80cc06e6",
+            "candidate_id": "test_3",
+            "reason": "Gamma 0.28284 improves both panels over the dark reference and preserves useful detail without the pale, washed-out look of the lowest gammas. It gives a more balanced Initial/Final contrast than the darker test_4, and all intended levels remain separated.",
+            "confidence": "medium",
+            "tie_explanation": null
+          },
+          {
+            "experiment_id": "experiment_a47ef024e7d14b3a83d81bedda24255d",
+            "candidate_id": "test_3",
+            "reason": "Gamma 0.28284 provides a good balance of tonal separation and visibility in both Initial and Final, improving on the reference's dark appearance without the washed-out lower-gamma tests. No measured levels collapse, and the candidate has the strongest combined contrast among the printed options.",
+            "confidence": "medium",
+            "tie_explanation": null
+          }
+        ],
+        "gamma_tests": [
+          {
+            "experiment_id": "experiment_1f77972a2eca40c2b75fc9d9fb143331",
+            "tests": [
+              {
+                "candidate_id": "test_1",
+                "gamma": 0.14142,
+                "reason": "Log-spaced lower-side refinement around the selected gamma, testing a somewhat brighter mapping."
+              },
+              {
+                "candidate_id": "test_2",
+                "gamma": 0.1922,
+                "reason": "Log-spaced lower-side refinement, closer to the selected gamma."
+              },
+              {
+                "candidate_id": "test_3",
+                "gamma": 0.2611,
+                "reason": "Log-spaced test just below the selected gamma to refine the balance of low-intensity visibility and tonal separation."
+              },
+              {
+                "candidate_id": "test_4",
+                "gamma": 0.3544,
+                "reason": "Log-spaced test just above the selected gamma to check whether slightly darker rendering improves separation without losing detail."
+              },
+              {
+                "candidate_id": "test_5",
+                "gamma": 0.4808,
+                "reason": "Log-spaced upper-side refinement around the selected gamma, testing a darker mapping while remaining near the promising range."
+              }
+            ]
+          },
+          {
+            "experiment_id": "experiment_6f6aebea38fb4813873582cd5b237ce4",
+            "tests": [
+              {
+                "candidate_id": "test_1",
+                "gamma": 0.14142,
+                "reason": "Log-spaced lower-side refinement around the selected gamma, testing a somewhat brighter mapping."
+              },
+              {
+                "candidate_id": "test_2",
+                "gamma": 0.1922,
+                "reason": "Log-spaced lower-side refinement, closer to the selected gamma."
+              },
+              {
+                "candidate_id": "test_3",
+                "gamma": 0.2611,
+                "reason": "Log-spaced test just below the selected gamma to refine the balance of low-intensity visibility and tonal separation."
+              },
+              {
+                "candidate_id": "test_4",
+                "gamma": 0.3544,
+                "reason": "Log-spaced test just above the selected gamma to check whether slightly darker rendering improves separation without losing detail."
+              },
+              {
+                "candidate_id": "test_5",
+                "gamma": 0.4808,
+                "reason": "Log-spaced upper-side refinement around the selected gamma, testing a darker mapping while remaining near the promising range."
+              }
+            ]
+          },
+          {
+            "experiment_id": "experiment_9bf696e7feb643cd8a555bcf80cc06e6",
+            "tests": [
+              {
+                "candidate_id": "test_1",
+                "gamma": 0.14142,
+                "reason": "Log-spaced lower-side refinement around the selected gamma, testing a somewhat brighter mapping."
+              },
+              {
+                "candidate_id": "test_2",
+                "gamma": 0.1922,
+                "reason": "Log-spaced lower-side refinement, closer to the selected gamma."
+              },
+              {
+                "candidate_id": "test_3",
+                "gamma": 0.2611,
+                "reason": "Log-spaced test just below the selected gamma to refine the balance of low-intensity visibility and tonal separation."
+              },
+              {
+                "candidate_id": "test_4",
+                "gamma": 0.3544,
+                "reason": "Log-spaced test just above the selected gamma to check whether slightly darker rendering improves separation without losing detail."
+              },
+              {
+                "candidate_id": "test_5",
+                "gamma": 0.4808,
+                "reason": "Log-spaced upper-side refinement around the selected gamma, testing a darker mapping while remaining near the promising range."
+              }
+            ]
+          },
+          {
+            "experiment_id": "experiment_a47ef024e7d14b3a83d81bedda24255d",
+            "tests": [
+              {
+                "candidate_id": "test_1",
+                "gamma": 0.14142,
+                "reason": "Log-spaced lower-side refinement around the selected gamma, testing a somewhat brighter mapping."
+              },
+              {
+                "candidate_id": "test_2",
+                "gamma": 0.1922,
+                "reason": "Log-spaced lower-side refinement, closer to the selected gamma."
+              },
+              {
+                "candidate_id": "test_3",
+                "gamma": 0.2611,
+                "reason": "Log-spaced test just below the selected gamma to refine the balance of low-intensity visibility and tonal separation."
+              },
+              {
+                "candidate_id": "test_4",
+                "gamma": 0.3544,
+                "reason": "Log-spaced test just above the selected gamma to check whether slightly darker rendering improves separation without losing detail."
+              },
+              {
+                "candidate_id": "test_5",
+                "gamma": 0.4808,
+                "reason": "Log-spaced upper-side refinement around the selected gamma, testing a darker mapping while remaining near the promising range."
+              }
+            ]
+          }
+        ]
+      },
+      "accepted_at": "2026-10-17T18:15:42.424307+00:00"
+    },
+    {
+      "stage": "review_gamma",
+      "trial_id": "aeadf633-f46c-43f9-a026-fce5bab4a9d8",
+      "evaluation_record_id": "/Users/razmik/Documents/Agentic_system_with_hardware_integration/runs/20261017_221127_850186/print_tuning/scan_r2_aeadf633_91c6396a.json",
+      "response": {
+        "stage": "review_gamma",
+        "assessment": "usable",
+        "issues": [],
+        "gamma_winners": [
+          {
+            "experiment_id": "experiment_1f77972a2eca40c2b75fc9d9fb143331",
+            "candidate_id": "test_4",
+            "reason": "Among the tested candidates, gamma 0.3544 gives a useful balance across both panels: Initial and Final retain separated gray levels, with slightly greater measured contrast than the reference in each. The more aggressive gamma 0.4808 is visibly darker and has a notably higher full-black share, while the lighter candidates lose contrast. Scan and patch measurements support a reliable comparison; this is the best tested candidate, not a proven optimum.",
+            "confidence": "medium",
+            "tie_explanation": null
+          },
+          {
+            "experiment_id": "experiment_6f6aebea38fb4813873582cd5b237ce4",
+            "candidate_id": "test_4",
+            "reason": "Gamma 0.3544 is a good two-panel compromise: measured Initial contrast is higher than the reference, while Final remains close in contrast and all intended levels remain separated. The lower-gamma candidates reduce contrast, and 0.4808 darkens the panels and raises the full-black share. This is the best tested balance, not a proven optimum.",
+            "confidence": "medium",
+            "tie_explanation": null
+          },
+          {
+            "experiment_id": "experiment_9bf696e7feb643cd8a555bcf80cc06e6",
+            "candidate_id": "test_4",
+            "reason": "Gamma 0.3544 improves measured contrast in Initial over the reference and keeps Final close, with no collapsed levels. Although 0.4808 has marginally higher aggregate contrast, its greater full-black share and darker appearance make it a less balanced choice across both panels. The scan and gray-patch evidence are usable; this is the best tested candidate, not a proven optimum.",
+            "confidence": "medium",
+            "tie_explanation": null
+          },
+          {
+            "experiment_id": "experiment_a47ef024e7d14b3a83d81bedda24255d",
+            "candidate_id": "test_4",
+            "reason": "Gamma 0.3544 modestly increases Initial contrast relative to the reference while retaining distinct levels in Final. Final contrast is somewhat lower than the reference, so the choice is a balance across panels rather than a win on every metric; the much darker 0.4808 option is less balanced. This is the best tested compromise, not a proven optimum.",
+            "confidence": "medium",
+            "tie_explanation": null
+          }
+        ],
+        "gamma_tests": [
+          {
+            "experiment_id": "experiment_1f77972a2eca40c2b75fc9d9fb143331",
+            "tests": [
+              {
+                "candidate_id": "test_1",
+                "gamma": 0.225,
+                "reason": "Log-spaced lower-side refinement around the selected gamma, to compare brighter rendering without returning to the lowest-contrast range."
+              },
+              {
+                "candidate_id": "test_2",
+                "gamma": 0.275,
+                "reason": "Log-spaced lower-side refinement, checking a closer balance between low-intensity visibility and separation."
+              },
+              {
+                "candidate_id": "test_3",
+                "gamma": 0.33,
+                "reason": "Log-spaced test just below the selected gamma to refine the two-panel contrast balance."
+              },
+              {
+                "candidate_id": "test_4",
+                "gamma": 0.395,
+                "reason": "Log-spaced test just above the selected gamma to check whether a little more contrast helps without excessive darkening."
+              },
+              {
+                "candidate_id": "test_5",
+                "gamma": 0.475,
+                "reason": "Log-spaced upper-side refinement to test a darker mapping near the range where the full-black share starts to rise."
+              }
+            ]
+          },
+          {
+            "experiment_id": "experiment_6f6aebea38fb4813873582cd5b237ce4",
+            "tests": [
+              {
+                "candidate_id": "test_1",
+                "gamma": 0.225,
+                "reason": "Log-spaced lower-side refinement around the selected gamma, to compare brighter rendering without returning to the lowest-contrast range."
+              },
+              {
+                "candidate_id": "test_2",
+                "gamma": 0.275,
+                "reason": "Log-spaced lower-side refinement, checking a closer balance between low-intensity visibility and separation."
+              },
+              {
+                "candidate_id": "test_3",
+                "gamma": 0.33,
+                "reason": "Log-spaced test just below the selected gamma to refine the two-panel contrast balance."
+              },
+              {
+                "candidate_id": "test_4",
+                "gamma": 0.395,
+                "reason": "Log-spaced test just above the selected gamma to check whether a little more contrast helps without excessive darkening."
+              },
+              {
+                "candidate_id": "test_5",
+                "gamma": 0.475,
+                "reason": "Log-spaced upper-side refinement to test a darker mapping near the range where the full-black share starts to rise."
+              }
+            ]
+          },
+          {
+            "experiment_id": "experiment_9bf696e7feb643cd8a555bcf80cc06e6",
+            "tests": [
+              {
+                "candidate_id": "test_1",
+                "gamma": 0.225,
+                "reason": "Log-spaced lower-side refinement around the selected gamma, to compare brighter rendering without returning to the lowest-contrast range."
+              },
+              {
+                "candidate_id": "test_2",
+                "gamma": 0.275,
+                "reason": "Log-spaced lower-side refinement, checking a closer balance between low-intensity visibility and separation."
+              },
+              {
+                "candidate_id": "test_3",
+                "gamma": 0.33,
+                "reason": "Log-spaced test just below the selected gamma to refine the two-panel contrast balance."
+              },
+              {
+                "candidate_id": "test_4",
+                "gamma": 0.395,
+                "reason": "Log-spaced test just above the selected gamma to check whether a little more contrast helps without excessive darkening."
+              },
+              {
+                "candidate_id": "test_5",
+                "gamma": 0.475,
+                "reason": "Log-spaced upper-side refinement to test a darker mapping near the range where the full-black share starts to rise."
+              }
+            ]
+          },
+          {
+            "experiment_id": "experiment_a47ef024e7d14b3a83d81bedda24255d",
+            "tests": [
+              {
+                "candidate_id": "test_1",
+                "gamma": 0.225,
+                "reason": "Log-spaced lower-side refinement around the selected gamma, to compare brighter rendering without returning to the lowest-contrast range."
+              },
+              {
+                "candidate_id": "test_2",
+                "gamma": 0.275,
+                "reason": "Log-spaced lower-side refinement, checking a closer balance between low-intensity visibility and separation."
+              },
+              {
+                "candidate_id": "test_3",
+                "gamma": 0.33,
+                "reason": "Log-spaced test just below the selected gamma to refine the two-panel contrast balance."
+              },
+              {
+                "candidate_id": "test_4",
+                "gamma": 0.395,
+                "reason": "Log-spaced test just above the selected gamma to check whether a little more contrast helps without excessive darkening."
+              },
+              {
+                "candidate_id": "test_5",
+                "gamma": 0.475,
+                "reason": "Log-spaced upper-side refinement to test a darker mapping near the range where the full-black share starts to rise."
+              }
+            ]
+          }
+        ]
+      },
+      "accepted_at": "2026-10-17T18:23:10.122201+00:00"
+    },
+    {
+      "stage": "review_gamma_final",
+      "trial_id": "fd788bdd-2dcc-41df-948a-f1c7ce520fad",
+      "evaluation_record_id": "/Users/razmik/Documents/Agentic_system_with_hardware_integration/runs/20261017_221127_850186/print_tuning/scan_r3_fd788bdd_2b19085e.json",
+      "response": {
+        "stage": "review_gamma_final",
+        "assessment": "usable",
+        "issues": [],
+        "gamma_winners": [
+          {
+            "experiment_id": "experiment_1f77972a2eca40c2b75fc9d9fb143331",
+            "candidate_id": "reference",
+            "reason": "Retain the reference (gamma 0.3544). It is effectively tied with test_3 (gamma 0.33): measured Initial and Final contrast are nearly identical, and both preserve all intended levels. Test_4 merges one level in Final, while the darker test_5 increases full-black share and loses Final contrast. The reference is therefore the sound tied choice among the tested candidates.",
+            "confidence": "medium",
+            "tie_explanation": "Reference and test_3 have essentially equal two-panel contrast and level separation; retaining the current reference avoids a negligible change."
+          },
+          {
+            "experiment_id": "experiment_6f6aebea38fb4813873582cd5b237ce4",
+            "candidate_id": "test_3",
+            "reason": "Choose test_3 (gamma 0.33). It has the strongest balanced measured contrast across Initial and Final among these candidates, modestly above the reference overall, while preserving all intended levels in both panels and keeping full-black share low. The brighter tests lower contrast, while test_4 and test_5 darken the rendering and increase black share.",
+            "confidence": "medium",
+            "tie_explanation": null
+          },
+          {
+            "experiment_id": "experiment_9bf696e7feb643cd8a555bcf80cc06e6",
+            "candidate_id": "reference",
+            "reason": "Retain the reference (gamma 0.3544). Test_4 (gamma 0.395) is an effective tie, with a negligible increase in combined contrast, but Initial improves only slightly while Final contrast is slightly lower. Both preserve all intended levels; the more aggressive test_5 darkens the panels and substantially reduces Final contrast. The reference is the balanced tied choice.",
+            "confidence": "medium",
+            "tie_explanation": "Reference and test_4 are nearly indistinguishable in combined contrast and both preserve level separation; the small aggregate difference does not justify changing the reference."
+          },
+          {
+            "experiment_id": "experiment_a47ef024e7d14b3a83d81bedda24255d",
+            "candidate_id": "reference",
+            "reason": "Retain the reference (gamma 0.3544). Test_3 (gamma 0.33) is effectively tied: its Final contrast is slightly higher, while Initial is nearly the same, and both panels retain all intended levels. The measured combined-contrast difference is negligible. Higher-gamma alternatives reduce Final contrast and increasingly darken the rendering.",
+            "confidence": "medium",
+            "tie_explanation": "Reference and test_3 provide essentially equal two-panel readability and level separation; retaining the reference is appropriate for this effective tie."
+          }
+        ]
+      },
+      "accepted_at": "2026-10-17T18:28:44.158094+00:00"
+    }
+  ],
+  "outcomes": [],
+  "revision": 28,
+  "created_at": "2026-10-17T18:12:59.134417+00:00",
+  "updated_at": "2026-10-17T18:28:44.159816+00:00"
+}

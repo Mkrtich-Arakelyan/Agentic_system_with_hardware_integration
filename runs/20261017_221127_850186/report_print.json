@@ -1,0 +1,207 @@
+{
+  "contract_version": 1,
+  "figure": {
+    "contract_version": 1,
+    "status": "ok",
+    "figure_path": "/Users/razmik/Documents/Agentic_system_with_hardware_integration/runs/20261017_221127_850186/print_tuning/final_heatmaps_df29ddee.png",
+    "figure_sha256": "811cac04aa2f8c4319ad9189c21b6e97c7c25c146136a81e6c68c6cee7dea49a",
+    "width_mm": 180.0,
+    "height_mm": 200.0,
+    "experiments": [
+      {
+        "experiment_id": "experiment_1f77972a2eca40c2b75fc9d9fb143331",
+        "label": "enhancement 1.0 → 4.7",
+        "mapping": {
+          "gamma": 0.3544,
+          "dark_level": 0.0,
+          "light_level": 1.0,
+          "steps": 0,
+          "invert": false
+        },
+        "limits": {
+          "lo": 0.0022630647033853265,
+          "hi": 5.219409982153995,
+          "method": "percentile",
+          "hi_raised_to_focus_peak": true
+        }
+      },
+      {
+        "experiment_id": "experiment_6f6aebea38fb4813873582cd5b237ce4",
+        "label": "enhancement 1.0 → 6.5",
+        "mapping": {
+          "gamma": 0.33,
+          "dark_level": 0.0,
+          "light_level": 1.0,
+          "steps": 0,
+          "invert": false
+        },
+        "limits": {
+          "lo": 0.00397762872197956,
+          "hi": 4.7233486384696235,
+          "method": "percentile",
+          "hi_raised_to_focus_peak": true
+        }
+      },
+      {
+        "experiment_id": "experiment_9bf696e7feb643cd8a555bcf80cc06e6",
+        "label": "enhancement 1.0 → 6.5",
+        "mapping": {
+          "gamma": 0.3544,
+          "dark_level": 0.0,
+          "light_level": 1.0,
+          "steps": 0,
+          "invert": false
+        },
+        "limits": {
+          "lo": 0.004187099957244465,
+          "hi": 3.6665663022994694,
+          "method": "percentile",
+          "hi_raised_to_focus_peak": true
+        }
+      },
+      {
+        "experiment_id": "experiment_a47ef024e7d14b3a83d81bedda24255d",
+        "label": "enhancement 1.0 → 6.7",
+        "mapping": {
+          "gamma": 0.3544,
+          "dark_level": 0.0,
+          "light_level": 1.0,
+          "steps": 0,
+          "invert": false
+        },
+        "limits": {
+          "lo": 0.002573253835417678,
+          "hi": 4.986342543287121,
+          "method": "percentile",
+          "hi_raised_to_focus_peak": true
+        }
+      }
+    ],
+    "inputs_sha256": "afa882e517bcb192dd4ed2086f677aa52eeba41d7bdbd4d7eda171b6576a9569",
+    "session_id": "df29ddee-a46b-47bd-82b6-f96a3ed43229"
+  },
+  "figure_history": [
+    {
+      "contract_version": 1,
+      "status": "ok",
+      "figure_path": "/Users/razmik/Documents/Agentic_system_with_hardware_integration/runs/20261017_221127_850186/print_tuning/final_heatmaps_df29ddee.png",
+      "figure_sha256": "811cac04aa2f8c4319ad9189c21b6e97c7c25c146136a81e6c68c6cee7dea49a",
+      "width_mm": 180.0,
+      "height_mm": 200.0,
+      "experiments": [
+        {
+          "experiment_id": "experiment_1f77972a2eca40c2b75fc9d9fb143331",
+          "label": "enhancement 1.0 → 4.7",
+          "mapping": {
+            "gamma": 0.3544,
+            "dark_level": 0.0,
+            "light_level": 1.0,
+            "steps": 0,
+            "invert": false
+          },
+          "limits": {
+            "lo": 0.0022630647033853265,
+            "hi": 5.219409982153995,
+            "method": "percentile",
+            "hi_raised_to_focus_peak": true
+          }
+        },
+        {
+          "experiment_id": "experiment_6f6aebea38fb4813873582cd5b237ce4",
+          "label": "enhancement 1.0 → 6.5",
+          "mapping": {
+            "gamma": 0.33,
+            "dark_level": 0.0,
+            "light_level": 1.0,
+            "steps": 0,
+            "invert": false
+          },
+          "limits": {
+            "lo": 0.00397762872197956,
+            "hi": 4.7233486384696235,
+            "method": "percentile",
+            "hi_raised_to_focus_peak": true
+          }
+        },
+        {
+          "experiment_id": "experiment_9bf696e7feb643cd8a555bcf80cc06e6",
+          "label": "enhancement 1.0 → 6.5",
+          "mapping": {
+            "gamma": 0.3544,
+            "dark_level": 0.0,
+            "light_level": 1.0,
+            "steps": 0,
+            "invert": false
+          },
+          "limits": {
+            "lo": 0.004187099957244465,
+            "hi": 3.6665663022994694,
+            "method": "percentile",
+            "hi_raised_to_focus_peak": true
+          }
+        },
+        {
+          "experiment_id": "experiment_a47ef024e7d14b3a83d81bedda24255d",
+          "label": "enhancement 1.0 → 6.7",
+          "mapping": {
+            "gamma": 0.3544,
+            "dark_level": 0.0,
+            "light_level": 1.0,
+            "steps": 0,
+            "invert": false
+          },
+          "limits": {
+            "lo": 0.002573253835417678,
+            "hi": 4.986342543287121,
+            "method": "percentile",
+            "hi_raised_to_focus_peak": true
+          }
+        }
+      ],
+      "inputs_sha256": "afa882e517bcb192dd4ed2086f677aa52eeba41d7bdbd4d7eda171b6576a9569",
+      "session_id": "df29ddee-a46b-47bd-82b6-f96a3ed43229"
+    }
+  ],
+  "pending": null,
+  "attempts": [
+    {
+      "args": {
+        "pdf_path": "/Users/razmik/Documents/Agentic_system_with_hardware_integration/runs/20261017_221127_850186/report.pdf",
+        "printer": "Office_Printer",
+        "copies": 1
+      },
+      "report_sha256": "48efdb97d3de3cec06dcb2fd8a8aa0796bee3340cf8db5743f0f8de94a528f5a",
+      "figure_sha256": "811cac04aa2f8c4319ad9189c21b6e97c7c25c146136a81e6c68c6cee7dea49a",
+      "inputs_sha256": "afa882e517bcb192dd4ed2086f677aa52eeba41d7bdbd4d7eda171b6576a9569",
+      "attempt_id": "804cb95404b24babbff38f9a4d847ba7",
+      "approved_at": "2026-10-17T18:31:31.613823+00:00",
+      "intent_at": "2026-10-17T18:31:31.613836+00:00",
+      "result": {
+        "ok": true,
+        "job_id": "Office_Printer-22",
+        "printer": "Office_Printer",
+        "file": "/Users/razmik/Documents/Agentic_system_with_hardware_integration/runs/20261017_221127_850186/report.pdf",
+        "tracked": true
+      },
+      "readings": [
+        {
+          "ok": true,
+          "job_id": "Office_Printer-22",
+          "state": "printing",
+          "confirmed": true,
+          "message": "fake job is printing"
+        },
+        {
+          "ok": true,
+          "job_id": "Office_Printer-22",
+          "state": "done",
+          "confirmed": true,
+          "message": "fake job is done"
+        }
+      ],
+      "resolution": {}
+    }
+  ],
+  "skip": null,
+  "stopped": false
+}

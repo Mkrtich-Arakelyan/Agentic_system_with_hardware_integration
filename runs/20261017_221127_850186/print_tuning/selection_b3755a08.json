@@ -1,0 +1,292 @@
+{
+  "schema_version": "selection/1",
+  "selection_id": "b3755a08-8a59-5ad4-be09-f4db4c72990a",
+  "selection_version": 1,
+  "run_id": "20261017_221127_850186",
+  "created_at": "2026-10-17T18:12:59.149076+00:00",
+  "count": 4,
+  "chosen_by": "scientist",
+  "group_reason": "Together, these four valid, directly comparable runs answer the requested iteration-budget question: they hold the bench, search seed, macropixel size, and measurement regions fixed while spanning all four requested budgets, allowing validated enhancement to be judged against iteration cost and diminishing returns.",
+  "items": [
+    {
+      "item_id": "experiment_1f77972a2eca40c2b75fc9d9fb143331",
+      "label": "enhancement 1.0 → 4.7",
+      "panels": [
+        {
+          "name": "Initial",
+          "kind": "heatmap",
+          "data_path": "/Users/razmik/Documents/Agentic_system_with_hardware_integration/runs/20261017_221127_850186/experiment_1f77972a2eca40c2b75fc9d9fb143331/initial_intensity.npy",
+          "sha256": "ca7951dc9e85337cb7b2861b1a4d971e0e2589ec14e401445ef7014a12921eae",
+          "marks": [
+            {
+              "type": "box",
+              "row": 16,
+              "col": 16,
+              "size": 3
+            }
+          ]
+        },
+        {
+          "name": "Final",
+          "kind": "heatmap",
+          "data_path": "/Users/razmik/Documents/Agentic_system_with_hardware_integration/runs/20261017_221127_850186/experiment_1f77972a2eca40c2b75fc9d9fb143331/final_intensity.npy",
+          "sha256": "bc76a1f78b908379f1602f956c8b42462e915a49256441c11fa81bf6570a46a7",
+          "marks": [
+            {
+              "type": "box",
+              "row": 16,
+              "col": 16,
+              "size": 3
+            }
+          ]
+        }
+      ],
+      "source": {
+        "experiment_id": "experiment_1f77972a2eca40c2b75fc9d9fb143331",
+        "settings": {
+          "dmd_shape": [
+            16,
+            16
+          ],
+          "camera_shape": [
+            32,
+            32
+          ],
+          "target_position": [
+            16,
+            16
+          ],
+          "transmission_seed": 42,
+          "noise_seed": 43,
+          "noise_std": 0.01,
+          "macropixel_size": 2,
+          "focus_size": 3,
+          "background_size": 9,
+          "iterations": 100,
+          "search_seed": 42,
+          "shots_per_measurement": 3,
+          "validation_shots": 5
+        },
+        "initial_enhancement": 0.9999396821307399,
+        "final_enhancement": 4.735178142196899,
+        "results_json": "/Users/razmik/Documents/Agentic_system_with_hardware_integration/runs/20261017_221127_850186/experiment_1f77972a2eca40c2b75fc9d9fb143331/results.json",
+        "reasons": {
+          "validity": "Successful recorded run with 100 iterations and five-shot validation; final_enhancement is 4.735178142196899.",
+          "comparability": "Matches the other selected runs on macropixel size 2, focus size 3, background size 9, search seed 42, and bench; iteration budget is the only changed setting.",
+          "relevance": "Provides the requested 100-iteration baseline for the fixed-macropixel budget comparison.",
+          "information_gained": "Shows the validated result at the lowest requested budget, enabling comparison of gains from larger budgets."
+        }
+      }
+    },
+    {
+      "item_id": "experiment_6f6aebea38fb4813873582cd5b237ce4",
+      "label": "enhancement 1.0 → 6.5",
+      "panels": [
+        {
+          "name": "Initial",
+          "kind": "heatmap",
+          "data_path": "/Users/razmik/Documents/Agentic_system_with_hardware_integration/runs/20261017_221127_850186/experiment_6f6aebea38fb4813873582cd5b237ce4/initial_intensity.npy",
+          "sha256": "8ed402490e3d3ab4159b42df4371b41b1a148eb6a627f4a754f09c0b56b113d4",
+          "marks": [
+            {
+              "type": "box",
+              "row": 16,
+              "col": 16,
+              "size": 3
+            }
+          ]
+        },
+        {
+          "name": "Final",
+          "kind": "heatmap",
+          "data_path": "/Users/razmik/Documents/Agentic_system_with_hardware_integration/runs/20261017_221127_850186/experiment_6f6aebea38fb4813873582cd5b237ce4/final_intensity.npy",
+          "sha256": "2e889dc3e25eca5c6df477a47aff49d247913f1cacefcd0d1ab49234986cd621",
+          "marks": [
+            {
+              "type": "box",
+              "row": 16,
+              "col": 16,
+              "size": 3
+            }
+          ]
+        }
+      ],
+      "source": {
+        "experiment_id": "experiment_6f6aebea38fb4813873582cd5b237ce4",
+        "settings": {
+          "dmd_shape": [
+            16,
+            16
+          ],
+          "camera_shape": [
+            32,
+            32
+          ],
+          "target_position": [
+            16,
+            16
+          ],
+          "transmission_seed": 42,
+          "noise_seed": 43,
+          "noise_std": 0.01,
+          "macropixel_size": 2,
+          "focus_size": 3,
+          "background_size": 9,
+          "iterations": 300,
+          "search_seed": 42,
+          "shots_per_measurement": 3,
+          "validation_shots": 5
+        },
+        "initial_enhancement": 1.0013053240927148,
+        "final_enhancement": 6.48978856664429,
+        "results_json": "/Users/razmik/Documents/Agentic_system_with_hardware_integration/runs/20261017_221127_850186/experiment_6f6aebea38fb4813873582cd5b237ce4/results.json",
+        "reasons": {
+          "validity": "Successful recorded run with 300 iterations and five-shot validation; final_enhancement is 6.48978856664429.",
+          "comparability": "Matches the other selected runs on all recorded settings except the iteration budget.",
+          "relevance": "Provides the requested 300-iteration comparison point.",
+          "information_gained": "Shows a substantial improvement over the 100-iteration result and provides the reference point for assessing diminishing returns at 600 and 1,000 iterations."
+        }
+      }
+    },
+    {
+      "item_id": "experiment_9bf696e7feb643cd8a555bcf80cc06e6",
+      "label": "enhancement 1.0 → 6.5",
+      "panels": [
+        {
+          "name": "Initial",
+          "kind": "heatmap",
+          "data_path": "/Users/razmik/Documents/Agentic_system_with_hardware_integration/runs/20261017_221127_850186/experiment_9bf696e7feb643cd8a555bcf80cc06e6/initial_intensity.npy",
+          "sha256": "668ecd30d58621f93f780d477731b60fd16c07fa1d8f749148653ac160993cbf",
+          "marks": [
+            {
+              "type": "box",
+              "row": 16,
+              "col": 16,
+              "size": 3
+            }
+          ]
+        },
+        {
+          "name": "Final",
+          "kind": "heatmap",
+          "data_path": "/Users/razmik/Documents/Agentic_system_with_hardware_integration/runs/20261017_221127_850186/experiment_9bf696e7feb643cd8a555bcf80cc06e6/final_intensity.npy",
+          "sha256": "0a64567032bd3ff5a09faf5b2940cef891cff0e35c11ccd43d403ce0a3c66ef9",
+          "marks": [
+            {
+              "type": "box",
+              "row": 16,
+              "col": 16,
+              "size": 3
+            }
+          ]
+        }
+      ],
+      "source": {
+        "experiment_id": "experiment_9bf696e7feb643cd8a555bcf80cc06e6",
+        "settings": {
+          "dmd_shape": [
+            16,
+            16
+          ],
+          "camera_shape": [
+            32,
+            32
+          ],
+          "target_position": [
+            16,
+            16
+          ],
+          "transmission_seed": 42,
+          "noise_seed": 43,
+          "noise_std": 0.01,
+          "macropixel_size": 2,
+          "focus_size": 3,
+          "background_size": 9,
+          "iterations": 600,
+          "search_seed": 42,
+          "shots_per_measurement": 3,
+          "validation_shots": 5
+        },
+        "initial_enhancement": 1.0036640929185807,
+        "final_enhancement": 6.532685709841096,
+        "results_json": "/Users/razmik/Documents/Agentic_system_with_hardware_integration/runs/20261017_221127_850186/experiment_9bf696e7feb643cd8a555bcf80cc06e6/results.json",
+        "reasons": {
+          "validity": "Successful recorded run with 600 iterations and five-shot validation; final_enhancement is 6.532685709841096.",
+          "comparability": "Matches the other selected runs on all recorded settings except the iteration budget.",
+          "relevance": "Provides the requested 600-iteration comparison point.",
+          "information_gained": "Its modest increase over the 300-iteration result quantifies the return from doubling that budget in this run."
+        }
+      }
+    },
+    {
+      "item_id": "experiment_a47ef024e7d14b3a83d81bedda24255d",
+      "label": "enhancement 1.0 → 6.7",
+      "panels": [
+        {
+          "name": "Initial",
+          "kind": "heatmap",
+          "data_path": "/Users/razmik/Documents/Agentic_system_with_hardware_integration/runs/20261017_221127_850186/experiment_a47ef024e7d14b3a83d81bedda24255d/initial_intensity.npy",
+          "sha256": "ea896532473433cfc84a0e9c45058643ac2c0a2f4c76ed0c2cab1d07e6835a6e",
+          "marks": [
+            {
+              "type": "box",
+              "row": 16,
+              "col": 16,
+              "size": 3
+            }
+          ]
+        },
+        {
+          "name": "Final",
+          "kind": "heatmap",
+          "data_path": "/Users/razmik/Documents/Agentic_system_with_hardware_integration/runs/20261017_221127_850186/experiment_a47ef024e7d14b3a83d81bedda24255d/final_intensity.npy",
+          "sha256": "f459f214b5c5061acccf69586f4603c066c82616ca4af0ff02efcbdb68dfd98a",
+          "marks": [
+            {
+              "type": "box",
+              "row": 16,
+              "col": 16,
+              "size": 3
+            }
+          ]
+        }
+      ],
+      "source": {
+        "experiment_id": "experiment_a47ef024e7d14b3a83d81bedda24255d",
+        "settings": {
+          "dmd_shape": [
+            16,
+            16
+          ],
+          "camera_shape": [
+            32,
+            32
+          ],
+          "target_position": [
+            16,
+            16
+          ],
+          "transmission_seed": 42,
+          "noise_seed": 43,
+          "noise_std": 0.01,
+          "macropixel_size": 2,
+          "focus_size": 3,
+          "background_size": 9,
+          "iterations": 1000,
+          "search_seed": 42,
+          "shots_per_measurement": 3,
+          "validation_shots": 5
+        },
+        "initial_enhancement": 1.0072026078741516,
+        "final_enhancement": 6.703996556136898,
+        "results_json": "/Users/razmik/Documents/Agentic_system_with_hardware_integration/runs/20261017_221127_850186/experiment_a47ef024e7d14b3a83d81bedda24255d/results.json",
+        "reasons": {
+          "validity": "Successful recorded run with 1,000 iterations and five fresh validation shots; final_enhancement is 6.703996556136898.",
+          "comparability": "Matches the other selected runs on all recorded settings except the iteration budget.",
+          "relevance": "Provides the requested maximum-budget comparison point.",
+          "information_gained": "Gives the highest recorded validated enhancement and shows the additional gain and cost at the maximum permitted budget."
+        }
+      }
+    }
+  ]
+}
