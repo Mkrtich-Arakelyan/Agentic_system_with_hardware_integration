@@ -1,0 +1,292 @@
+{
+  "schema_version": "selection/1",
+  "selection_id": "60f9ed70-9deb-5f13-9c0b-4eac391ccb31",
+  "selection_version": 1,
+  "run_id": "20261017_144308_429177",
+  "created_at": "2026-10-17T10:46:03.512967+00:00",
+  "count": 4,
+  "chosen_by": "scientist",
+  "group_reason": "Together, these four successful experiments cover all planned macropixel sizes (1, 2, 4, and 8) while keeping the metric regions, search seed, and iteration budget fixed, allowing a direct fixed-budget comparison of validated enhancement; the cap and fresh noise differences are noted as limitations.",
+  "items": [
+    {
+      "item_id": "experiment_dbff339b85ce42699275093e1e0babcd",
+      "label": "enhancement 0.6 → 22.8",
+      "panels": [
+        {
+          "name": "Initial",
+          "kind": "heatmap",
+          "data_path": "/Users/razmik/Documents/Agentic_system_with_hardware_integration/runs/20261017_144308_429177/experiment_dbff339b85ce42699275093e1e0babcd/initial_intensity.npy",
+          "sha256": "aa57e01c61f48ea7f3cb24d810fce2d6290b4381e23179db1329e0eed83b5cb0",
+          "marks": [
+            {
+              "type": "box",
+              "row": 16,
+              "col": 16,
+              "size": 3
+            }
+          ]
+        },
+        {
+          "name": "Final",
+          "kind": "heatmap",
+          "data_path": "/Users/razmik/Documents/Agentic_system_with_hardware_integration/runs/20261017_144308_429177/experiment_dbff339b85ce42699275093e1e0babcd/final_intensity.npy",
+          "sha256": "e72023977aa01055d6f43f7657fe67455b95f97f5fb16c84abca210a74a9d2ac",
+          "marks": [
+            {
+              "type": "box",
+              "row": 16,
+              "col": 16,
+              "size": 3
+            }
+          ]
+        }
+      ],
+      "source": {
+        "experiment_id": "experiment_dbff339b85ce42699275093e1e0babcd",
+        "settings": {
+          "dmd_shape": [
+            16,
+            16
+          ],
+          "camera_shape": [
+            32,
+            32
+          ],
+          "target_position": [
+            16,
+            16
+          ],
+          "transmission_seed": 42,
+          "noise_seed": 43,
+          "noise_std": 0.01,
+          "macropixel_size": 1,
+          "focus_size": 3,
+          "background_size": 9,
+          "iterations": 1000,
+          "search_seed": 42,
+          "shots_per_measurement": 3,
+          "validation_shots": 5
+        },
+        "initial_enhancement": 0.5534061993530904,
+        "final_enhancement": 22.786012807191785,
+        "results_json": "/Users/razmik/Documents/Agentic_system_with_hardware_integration/runs/20261017_144308_429177/experiment_dbff339b85ce42699275093e1e0babcd/results.json",
+        "reasons": {
+          "validity": "Successful recorded result with a validated final_enhancement of 22.7860.",
+          "comparability": "Shares focus_size=3, background_size=9, iterations=1000, and search_seed=42 with the other selected experiments; only macropixel_size differs.",
+          "relevance": "Provides the finest-grid result for the macropixel-size comparison.",
+          "information_gained": "Shows the observed high-enhancement endpoint for size 1 under the common iteration budget, while the cap limits fine-grid iteration coverage."
+        }
+      }
+    },
+    {
+      "item_id": "experiment_0bf9ddf950094096a83ef6e54da60334",
+      "label": "enhancement 1.0 → 6.7",
+      "panels": [
+        {
+          "name": "Initial",
+          "kind": "heatmap",
+          "data_path": "/Users/razmik/Documents/Agentic_system_with_hardware_integration/runs/20261017_144308_429177/experiment_0bf9ddf950094096a83ef6e54da60334/initial_intensity.npy",
+          "sha256": "6506c7f000f9a64f1d72d929e36482df604d33b05e87075efbbbc0301a740a49",
+          "marks": [
+            {
+              "type": "box",
+              "row": 16,
+              "col": 16,
+              "size": 3
+            }
+          ]
+        },
+        {
+          "name": "Final",
+          "kind": "heatmap",
+          "data_path": "/Users/razmik/Documents/Agentic_system_with_hardware_integration/runs/20261017_144308_429177/experiment_0bf9ddf950094096a83ef6e54da60334/final_intensity.npy",
+          "sha256": "5eedb719e00a4260782a65fd5ad59e97cea1b729edb543681a384984a26e57ae",
+          "marks": [
+            {
+              "type": "box",
+              "row": 16,
+              "col": 16,
+              "size": 3
+            }
+          ]
+        }
+      ],
+      "source": {
+        "experiment_id": "experiment_0bf9ddf950094096a83ef6e54da60334",
+        "settings": {
+          "dmd_shape": [
+            16,
+            16
+          ],
+          "camera_shape": [
+            32,
+            32
+          ],
+          "target_position": [
+            16,
+            16
+          ],
+          "transmission_seed": 42,
+          "noise_seed": 43,
+          "noise_std": 0.01,
+          "macropixel_size": 2,
+          "focus_size": 3,
+          "background_size": 9,
+          "iterations": 1000,
+          "search_seed": 42,
+          "shots_per_measurement": 3,
+          "validation_shots": 5
+        },
+        "initial_enhancement": 1.0030232025837593,
+        "final_enhancement": 6.6809176445338165,
+        "results_json": "/Users/razmik/Documents/Agentic_system_with_hardware_integration/runs/20261017_144308_429177/experiment_0bf9ddf950094096a83ef6e54da60334/results.json",
+        "reasons": {
+          "validity": "Successful recorded result with a validated final_enhancement of 6.6809.",
+          "comparability": "Shares focus_size=3, background_size=9, iterations=1000, and search_seed=42 with the other selected experiments; only macropixel_size differs.",
+          "relevance": "Adds the size-2 result between the finest and coarser tested grids.",
+          "information_gained": "Shows the validated outcome at an intermediate control scale under the same iteration budget."
+        }
+      }
+    },
+    {
+      "item_id": "experiment_d4c01d44524c4b6d8fdf4d3f2d780f8a",
+      "label": "enhancement 1.0 → 2.8",
+      "panels": [
+        {
+          "name": "Initial",
+          "kind": "heatmap",
+          "data_path": "/Users/razmik/Documents/Agentic_system_with_hardware_integration/runs/20261017_144308_429177/experiment_d4c01d44524c4b6d8fdf4d3f2d780f8a/initial_intensity.npy",
+          "sha256": "5b54c2a621de31ee41aa5c8374ed41640d10c2e9709fc9c6a36b8c3688512277",
+          "marks": [
+            {
+              "type": "box",
+              "row": 16,
+              "col": 16,
+              "size": 3
+            }
+          ]
+        },
+        {
+          "name": "Final",
+          "kind": "heatmap",
+          "data_path": "/Users/razmik/Documents/Agentic_system_with_hardware_integration/runs/20261017_144308_429177/experiment_d4c01d44524c4b6d8fdf4d3f2d780f8a/final_intensity.npy",
+          "sha256": "2519e79a3ddde6afe51cb86fc45bb3c091dc5c3e130372348fe4e9b2aa1feb2d",
+          "marks": [
+            {
+              "type": "box",
+              "row": 16,
+              "col": 16,
+              "size": 3
+            }
+          ]
+        }
+      ],
+      "source": {
+        "experiment_id": "experiment_d4c01d44524c4b6d8fdf4d3f2d780f8a",
+        "settings": {
+          "dmd_shape": [
+            16,
+            16
+          ],
+          "camera_shape": [
+            32,
+            32
+          ],
+          "target_position": [
+            16,
+            16
+          ],
+          "transmission_seed": 42,
+          "noise_seed": 43,
+          "noise_std": 0.01,
+          "macropixel_size": 4,
+          "focus_size": 3,
+          "background_size": 9,
+          "iterations": 1000,
+          "search_seed": 42,
+          "shots_per_measurement": 3,
+          "validation_shots": 5
+        },
+        "initial_enhancement": 0.9896264808270737,
+        "final_enhancement": 2.8477067883797154,
+        "results_json": "/Users/razmik/Documents/Agentic_system_with_hardware_integration/runs/20261017_144308_429177/experiment_d4c01d44524c4b6d8fdf4d3f2d780f8a/results.json",
+        "reasons": {
+          "validity": "Successful recorded result with a validated final_enhancement of 2.8477.",
+          "comparability": "Shares focus_size=3, background_size=9, iterations=1000, and search_seed=42 with the other selected experiments; only macropixel_size differs.",
+          "relevance": "Tests a coarser, size-4 control grid in the same metric and fixed-budget comparison.",
+          "information_gained": "Provides evidence that the lower enhancement trend continues at size 4 in this run."
+        }
+      }
+    },
+    {
+      "item_id": "experiment_e309e0568d494bce9e80704fbc901f1c",
+      "label": "enhancement 0.7 → 1.2",
+      "panels": [
+        {
+          "name": "Initial",
+          "kind": "heatmap",
+          "data_path": "/Users/razmik/Documents/Agentic_system_with_hardware_integration/runs/20261017_144308_429177/experiment_e309e0568d494bce9e80704fbc901f1c/initial_intensity.npy",
+          "sha256": "0e20d1d441ac4b3bcd3b0fc0f56d3199a07fdcc328227db329b68b236f6da095",
+          "marks": [
+            {
+              "type": "box",
+              "row": 16,
+              "col": 16,
+              "size": 3
+            }
+          ]
+        },
+        {
+          "name": "Final",
+          "kind": "heatmap",
+          "data_path": "/Users/razmik/Documents/Agentic_system_with_hardware_integration/runs/20261017_144308_429177/experiment_e309e0568d494bce9e80704fbc901f1c/final_intensity.npy",
+          "sha256": "1cdd58b3c1926dd81e88afc91bfeb3a5d74de559cb28a2f6c56c6f297b849a15",
+          "marks": [
+            {
+              "type": "box",
+              "row": 16,
+              "col": 16,
+              "size": 3
+            }
+          ]
+        }
+      ],
+      "source": {
+        "experiment_id": "experiment_e309e0568d494bce9e80704fbc901f1c",
+        "settings": {
+          "dmd_shape": [
+            16,
+            16
+          ],
+          "camera_shape": [
+            32,
+            32
+          ],
+          "target_position": [
+            16,
+            16
+          ],
+          "transmission_seed": 42,
+          "noise_seed": 43,
+          "noise_std": 0.01,
+          "macropixel_size": 8,
+          "focus_size": 3,
+          "background_size": 9,
+          "iterations": 1000,
+          "search_seed": 42,
+          "shots_per_measurement": 3,
+          "validation_shots": 5
+        },
+        "initial_enhancement": 0.6581674167428626,
+        "final_enhancement": 1.1640491893546112,
+        "results_json": "/Users/razmik/Documents/Agentic_system_with_hardware_integration/runs/20261017_144308_429177/experiment_e309e0568d494bce9e80704fbc901f1c/results.json",
+        "reasons": {
+          "validity": "Successful recorded result with a validated final_enhancement of 1.1640.",
+          "comparability": "Shares focus_size=3, background_size=9, iterations=1000, and search_seed=42 with the other selected experiments; only macropixel_size differs.",
+          "relevance": "Provides the coarsest valid grid endpoint for the scientific comparison.",
+          "information_gained": "Shows the lowest validated enhancement among the four tested settings and completes the scale range."
+        }
+      }
+    }
+  ]
+}
