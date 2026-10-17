@@ -601,8 +601,11 @@ def record_print_approval(
         _need(bool(entry["print_attempts"]) and all(a["result"] is not None or a.get("human_resolution") for a in entry["print_attempts"]), "Prior submission outcome must be recorded before approving a reprint")
         _increment(session, entry, "reprints")
     else:
-        _need(not any(a["metadata"]["trial_id"] == trial_id for a in entry["approvals"])
-              and not entry["print_attempts"], "Another print requires explicit reprint approval")
+        # A fresh human approval may supersede an UNUSED approval for different
+        # effective settings. Retain both records; never use this to repeat a job.
+        _need(not entry["print_attempts"] and all(
+                  a["metadata"]["trial_id"] != trial_id or a["metadata"]["print_settings"] != print_settings
+                  for a in entry["approvals"]), "Another print requires explicit reprint approval")
     entry["approvals"].append({"metadata": data, "recorded_at": _now()})
     return _write(path, session)
 

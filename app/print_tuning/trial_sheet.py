@@ -13,6 +13,7 @@ import re
 import uuid
 from datetime import datetime, timezone
 from pathlib import Path
+from app.printing.settings import TRIAL_SIDES
 
 import numpy as np
 from matplotlib import rc_context
@@ -46,7 +47,7 @@ THIN, THICK = 0.3, 1.2            # outline widths in pt
 
 ID_PATTERN = re.compile(r"^[A-Za-z0-9_-]+$")
 DEFAULT_PRINT_SETTINGS = {"printer": None, "monochrome": True, "scaling": "none", "paper": "A4",
-                          "tray": None, "copies": 1}
+                          "tray": None, "copies": 1, "sides": TRIAL_SIDES}
 CORNERS = ("top_left", "top_right", "bottom_left", "bottom_right")
 
 Box = tuple[float, float, float, float]

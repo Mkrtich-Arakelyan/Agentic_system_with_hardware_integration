@@ -9,6 +9,7 @@ from langgraph.graph import END, START, StateGraph
 from langgraph.types import interrupt
 
 from app.workflow.state import State
+from app.report_policy import REPORT_PAGES
 import app.workflow.reporting as report_records
 from app.workflow.tuning import (
     TuningSessionError, initialize_tuning_session, load_tuning_session,
@@ -225,7 +226,8 @@ def build_graph(
     # The report turn checks human approval only for submit_print, so it gets only that action
     # and the readings. cancel_job stays with the graph's own skip path (via printer_map), and
     # submit_trial_print is kept for the trial-sheet turn, which has its own approval.
-    report_tools = [coding_tool, *(item for item in printer_tools if item.name in REPORT_PRINTER_TOOLS),
+    from app.workflow.report_document import create_report_tool
+    report_tools = [create_report_tool(run_dir), *(item for item in printer_tools if item.name in REPORT_PRINTER_TOOLS),
                     info_tool]
 
     def _invoke_printer(name: str, args: dict) -> dict:
@@ -381,6 +383,19 @@ def build_graph(
             return blocked(str(error))
         try:
             journal = report_records.load_record(run_dir)
+            revision = journal.get("revision")
+            if not revision and state.get("report_revision_pending") and not state.get("report_revision"):
+                prefix = "Change request for the report: "
+                legacy = next((turn["text"][len(prefix):] for turn in reversed(state.get("dialogue", []))
+                               if turn.get("role") == "human" and turn.get("text", "").startswith(prefix)), None)
+                if legacy:
+                    revision = report_records.request_revision(run_dir, legacy)
+                    journal = report_records.load_record(run_dir)
+                else:
+                    return workflow_failure("Pending revision instructions are missing; restart with --report-revision TEXT.")
+            if revision:
+                state = {**state, "report_revision_pending": True, "report_revision": revision,
+                         "pending_print": {}, "approval": {}}
             if state.get("experiment_selection") != session["accepted_selection"]:
                 raise ValueError("Graph scientific selection differs from the session's frozen selection/reasons")
             if not journal["attempts"] and (state.get("active_job_id") or any(
@@ -389,16 +404,25 @@ def build_graph(
             status = report_records.print_state(journal)
             if status == "stopped":
                 return {"route": "end", "stop_reason": "stopped_by_human", "print_outcome": "stopped"}
-            if status == "uncertain" and not journal.get("skip"):
+            if (status == "uncertain" and not journal.get("skip")) or (revision and status == "pending"):
                 return {"route": "report_print_confirmation"}
             figure, changed = report_records.prepare_figure(
                 state.get("tuning_session_path", run_dir / "tuning_session.json"), session, run_dir)
             state = {**state, "final_figure_path": figure["figure_path"], "final_figure_metadata": figure}
             artifact_update = {"final_figure_path": figure["figure_path"], "final_figure_metadata": figure}
+            if revision:
+                artifact_update.update(report_revision_pending=True, report_revision=revision,
+                                       pending_print={}, approval={})
             if changed:
                 state.update(pending_print={}, approval={}, print_outcome="", report={})
                 artifact_update.update(pending_print={}, approval={}, print_outcome="", report={})
             current = report_records.inspect_tuned_report(run_dir / "report.pdf", figure)
+            completed_revision = next((item for item in journal.get("revisions", [])
+                if item["id"] == (state.get("report_revision") or {}).get("id")
+                and item["after_sha256"] == current.get("sha256")), None)
+            if not revision and completed_revision:
+                state.update(report_revision_pending=False, report_revision=None)
+                artifact_update.update(report_revision_pending=False, report_revision=None)
             state["report"] = current
             artifact_update["report"] = current
             if journal.get("skip") == {"report_sha256": current.get("sha256"), "figure_sha256": figure["figure_sha256"],
@@ -409,7 +433,7 @@ def build_graph(
             if status == "printed":
                 report = current
                 attempt = journal["attempts"][-1]
-                if report_records.attempt_matches(attempt, report, figure):
+                if not revision and report_records.attempt_matches(attempt, report, figure):
                     return {**artifact_update, "route": "finish_gate", "report": report, "print_outcome": "printed"}
             if status == "pending":
                 job = journal["attempts"][-1]["result"]["job_id"]
@@ -445,9 +469,18 @@ def build_graph(
         outcome = result["outcome"]
         if outcome == "tool_ran":
             reading = result["result"]
-            if result["tool_name"] == "write_and_run" and result.get("report", {}).get("figure_embedded") \
-                    and not result["report"].get("error"):
-                update["report_revision_pending"] = False
+            if state.get("report_revision_pending"):
+                applied = (result["tool_name"] == "build_final_report" and reading.get("ok") is True
+                           and reading.get("revision_id") == (state.get("report_revision") or {}).get("id")
+                           and not report_records.load_record(run_dir).get("revision")
+                           and result.get("report", {}).get("figure_embedded")
+                           and not result["report"].get("error"))
+                if applied:
+                    update.update(report_revision_pending=False, report_revision=None, pending_print={}, approval={})
+                else:
+                    update.update(workflow_failure("Report revision was not applied: " + str(
+                        reading.get("error", reading.get("stderr", "No verified content change was produced.")))))
+                    return update
             active_id = state.get("active_job_id")
             read_id = None
             if result["tool_name"] == "job_status":
@@ -500,24 +533,33 @@ def build_graph(
                     update.update(route="report_and_print", pending_print={}, dialogue=[{
                         "role": "system", "text": "Report approval refused: " + str(error)}])
         elif outcome == "needs_information":
-            update["route"] = "orchestrator"
+            if state.get("report_revision_pending"):
+                update.update(workflow_failure("Revision requires clarification; experiments and tuning will not be rerun."))
+            else:
+                update["route"] = "orchestrator"
         else:
             update["route"] = "report_and_print"
         return update
 
     def workflow_failure(message):
-        recovery = (message + " No hardware fault is established. Retry resumes the executor with the existing "
-                    "validated report and requests a separate exact-PDF approval; retry never approves printing. "
+        recovery = (message + " No hardware fault is established. Retry resumes pending report generation or the "
+                    "submission-request phase. Pending revisions block approval of the old PDF; retry never approves printing. "
                     "If this repeats, stop, inspect the executor/provider tool-call configuration, then restart "
                     "with --resume after the process exits. Keep report_print.json and all print history intact.")
         return {"route": "report_workflow_problem", "report_workflow_failure": recovery,
                 "dialogue": [{"role": "system", "text": recovery}]}
 
     def report_workflow_problem_node(state):
+        revision = report_records.load_record(run_dir).get("revision")
         reply = interrupt({"kind": "report_workflow_problem", "message": state.get("report_workflow_failure"),
-            "question": "Report workflow stalled. Retry the approval-request workflow, or stop for application recovery.",
-            "choices": ["retry", "stop"]})
+            "question": "Report workflow stalled. Retry generation, correct revision instructions, or stop." if revision else
+                        "Report workflow stalled. Retry the approval-request workflow, or stop for application recovery.",
+            "choices": ["retry", "correct", "stop"] if revision else ["retry", "stop"]})
         choice = reply.get("action") if isinstance(reply, dict) else str(reply).strip().lower()
+        if choice == "correct" and revision and isinstance(reply, dict) and reply.get("instructions", "").strip():
+            revised = report_records.request_revision(run_dir, reply["instructions"])
+            return {"route": "report_and_print", "report_revision": revised, "report_revision_pending": True,
+                    "hardware_passes": 0, "report_request_passes": 0, "pending_print": {}, "approval": {}}
         if choice == "stop":
             return {"route": "end", "stop_reason": "stopped_by_human", "print_outcome": "stopped"}
         if choice != "retry":
@@ -527,6 +569,8 @@ def build_graph(
                 "dialogue": [{"role": "human", "text": "Retry report workflow; this is not approval to print."}]}
 
     def print_approval_node(state: State) -> dict:
+        if state.get("report_revision_pending") or report_records.load_record(run_dir).get("revision"):
+            return {"route": "report_and_print", "pending_print": {}, "approval": {}}
         pending = state.get("pending_print") or {}
         args = dict(pending.get("args", {}))
         report = state.get("report") or {}
@@ -539,7 +583,8 @@ def build_graph(
             "pdf_sha256": pending.get("report_sha256"),
             "question": "Print this report? Type yes, or describe what to change.",
         })
-        text = str(reply).strip()
+        exact_text = str(reply)
+        text = exact_text.strip()
 
         if text.lower() in ("yes", "y", "approve"):
             # No non-idempotent action is performed inside an interrupt node.
@@ -551,11 +596,14 @@ def build_graph(
                 "Retry is not approval. Review the exact PDF, printer and hash, then explicitly approve."}]}
 
         # No limit on change rounds: the human decides when to approve.
+        revision = report_records.request_revision(run_dir, exact_text)
         return {
             "pending_print": {},
+            "approval": {},
             "hardware_passes": 0,
             "report_request_passes": 0,
             "report_revision_pending": True,
+            "report_revision": revision,
             "route": "report_and_print",
             "dialogue": [{"role": "human", "text": "Change request for the report: " + text}],
         }
@@ -571,7 +619,8 @@ def build_graph(
         result = attempt["result"] or {}
         update = {"active_job_id": result.get("job_id"), "pending_print": {}, "approval": {}}
         if status == "printed":
-            return {**update, "route": "finish_gate", "print_outcome": "printed"}
+            return {**update, "route": "report_and_print" if journal.get("revision") else "finish_gate",
+                    "print_outcome": "printed"}
         if status == "uncertain":
             return {**update, "route": "report_print_confirmation", "print_outcome": "uncertain"}
         if status == "failed":
@@ -582,6 +631,8 @@ def build_graph(
         return {**update, "route": "report_and_print"}
 
     def report_submit_node(state):
+        if state.get("report_revision_pending") or report_records.load_record(run_dir).get("revision"):
+            return {"route": "report_and_print", "pending_print": {}, "approval": {}}
         pending = state.get("pending_print") or {}
         try:
             journal = report_records.load_record(run_dir)
@@ -695,6 +746,8 @@ def build_graph(
         return update
 
     def finish_gate_node(state: State) -> dict:
+        if state.get("report_revision_pending") or report_records.load_record(run_dir).get("revision"):
+            return {"route": "report_and_print"}
         missing = []
         try:
             session = load_tuning_session(state["tuning_session_path"])
@@ -718,8 +771,8 @@ def build_graph(
         count = _count_successful_focusing_results(state)
         if count < MIN_EXPERIMENTS:
             missing.append(f"{MIN_EXPERIMENTS} successful focusing experiments (found {count})")
-        if not report.get("exists") or report.get("pages") != 1:
-            missing.append("a one-page report.pdf")
+        if not report.get("exists") or report.get("pages") != REPORT_PAGES:
+            missing.append("a two-page report.pdf")
         if not missing:
             return {"stop_reason": "finished", "route": "end", "report": report,
                     "final_figure_path": figure["figure_path"], "final_figure_metadata": figure,
@@ -864,7 +917,8 @@ def build_graph(
                         if a["metadata"]["approval_id"] not in consumed
                         and a["metadata"]["trial_id"] == pending["trial_id"]
                         and a["metadata"]["pdf_sha256"] == pending["pdf_sha256"]
-                        and a["metadata"]["printer"] == pending["args"]["printer"]]
+                        and a["metadata"]["printer"] == pending["args"]["printer"]
+                        and a["metadata"]["print_settings"] == pending["print_settings"]]
             update.update(route="tuning_approval", pending_trial_print={
                 **pending, "approval_id": reusable[-1] if reusable else uuid4().hex})
         elif result.get("tool_name") == "job_status" and result.get("tool_executed") and result.get("result"):
@@ -912,11 +966,19 @@ def build_graph(
 
     def tuning_approval_node(state):
         pending = state.get("pending_trial_print") or {}
+        try:
+            fresh = _pending_trial(session_for(state), Path(state["tuning_session_path"]).resolve().parent, pending["args"])
+            if fresh != {k: v for k, v in pending.items() if k != "approval_id"}:
+                return {"route": "tuning_printer", "pending_trial_print": None, "dialogue": [{
+                    "role": "system", "text": "Trial artifacts or effective print settings changed; fresh approval is required."}]}
+        except (TuningSessionError, KeyError, ValueError, OSError) as error:
+            return {**problem(state, "Approval invalid; fresh approval is required: " + str(error)), "pending_trial_print": None}
         reply = interrupt({"kind": "trial_print_approval", "pdf_path": pending.get("args", {}).get("pdf_path"),
                            "page_count": pending.get("trial_result", {}).get("page_count"),
                            "printer": pending.get("args", {}).get("printer"),
                            "session_id": pending.get("session_id"), "round_id": pending.get("round_id"),
                            "trial_id": pending.get("trial_id"), "pdf_sha256": pending.get("pdf_sha256"),
+                           "print_settings": pending["print_settings"],
                            "question": "Approve printing this exact trial PDF? Choose approve or stop.",
                            "choices": ["approve", "stop"]})
         if isinstance(reply, dict) and reply.get("action") == "stop":
@@ -940,8 +1002,7 @@ def build_graph(
                 raise TuningSessionError("Pending approval no longer matches the active trial/artifacts")
             record_print_approval(state["tuning_session_path"], approval_id=approval_id,
                 trial_id=pending["trial_id"], pdf_sha256=pending["pdf_sha256"], printer=pending["args"]["printer"],
-                print_settings={**pending["args"], "copies": 1, "paper": "A4", "color_mode": "grayscale",
-                                "sides": "one-sided", "scale": "100%"},
+                print_settings=pending["print_settings"],
                 approved_by="graph human interrupt", reprint=bool(entry["print_attempts"]))
             begin_print_attempt(state["tuning_session_path"], approval_id=approval_id, attempt_id=attempt_id)
         except (TuningSessionError, KeyError, ValueError, OSError) as error:
@@ -966,7 +1027,7 @@ def build_graph(
         reply = interrupt({"kind": "tuning_scan", "round_id": session["active_round"],
             "trial_id": session["active_trial_id"],
             "suggested_scan_directory": str(run_dir / "scans" / f"round_{session['active_round']}"),
-            "question": "Scan the printed pages with your phone, save them, and supply explicit paths; or reprint/stop.",
+            "question": "Scan BOTH faces of each printed sheet as separate pages, keeping all markers visible. Save and supply explicit paths; or reprint/stop.",
             "choices": ["scan", "reprint", "stop"]})
         if not isinstance(reply, dict):
             return {"route": "tuning_scan"}

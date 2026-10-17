@@ -5,7 +5,7 @@ gives its tools to the executor. Every tool calls app.printing.connector, which 
 the only code that talks to the printer, and returns the connector's result with
 an "ok" field added, or {"ok": false, "error": ...}.
 
-Tools: list_printers, printer_status, submit_print (the one-page report),
+Tools: list_printers, printer_status, submit_print (the two-page report),
 submit_trial_print (the trial sheets from trial_sheet.py, printed at 100% size in
 grayscale), cancel_job (only when the human skips printing) and job_status.
 
@@ -26,6 +26,7 @@ from mcp.server.fastmcp import FastMCP
 from pypdf import PdfReader
 
 from app.printing import connector
+from app.report_policy import REPORT_PAGES
 
 mcp = FastMCP("office-printer")
 TRIAL_PDF_NAME = re.compile(r"^trial_r\d+_[A-Za-z0-9]{8}\.pdf$")   # as written by trial_sheet.py
@@ -104,11 +105,13 @@ def printer_status(printer: str) -> dict:
 
 @mcp.tool()
 def submit_print(pdf_path: str, printer: str, copies: int = 1) -> dict:
-    """Action: print a one-page PDF report and return the job id.
+    """Action: print the two-page PDF report and return the job id.
 
-    Only call this after the human has approved printing; then read job_status
+    In report executor mode, emitting this call REQUESTS application approval;
+    the graph intercepts it and blocks actual submission until explicit approval.
+    When the application invokes this MCP action after approval, read job_status
     with the returned job_id until the job is done.
-    pdf_path: path of the one-page PDF report.
+    pdf_path: path of the two-page PDF report.
     printer: the exact printer name.
     copies: must be 1.
     Returns {"ok": true, "job_id", "printer", "file", "tracked"} or {"ok": false, "error"}.
@@ -121,8 +124,8 @@ def submit_print(pdf_path: str, printer: str, copies: int = 1) -> dict:
     pages, error = _pdf_pages(pdf)
     if error:
         return error
-    if pages != 1:
-        return {"ok": False, "error": f"the PDF must have exactly 1 page, it has {pages}"}
+    if pages != REPORT_PAGES:
+        return {"ok": False, "error": f"the report PDF must have exactly {REPORT_PAGES} pages, it has {pages}"}
     error = _printer_ready(printer)
     if error:
         return error
@@ -136,7 +139,7 @@ def submit_trial_print(pdf_path: str, printer: str) -> dict:
     Only for trial sheets (trial_r<round>_<id>.pdf with its trial_r<round>_<id>_manifest.json
     next to it), and only call it after the human has approved printing. The report is
     never printed with this tool: the report must use submit_print.
-    Prints 1 copy, A4, grayscale, one-sided, at 100% size (no fit-to-page), because the
+    Prints 1 copy, A4, grayscale, two-sided (long-edge), at 100% size (no fit-to-page), because the
     sheet is measured in mm on the scan. Then read job_status with the returned job_id.
     pdf_path: path of the trial sheet PDF (2 pages for 4 experiments).
     printer: the exact printer name.
@@ -158,7 +161,7 @@ def submit_trial_print(pdf_path: str, printer: str) -> dict:
         return {"ok": False, "error": f"no usable trial manifest {manifest_path.name} next to the PDF: {error}"}
     if pages < 2:
         return {"ok": False, "error": f"a trial sheet has at least 2 pages, this PDF has {pages}; "
-                                      "a one-page report must use submit_print"}
+                                      "a two-page report must use submit_print"}
     if pages != expected_pages:
         return {"ok": False, "error": f"the PDF has {pages} pages but its manifest says {expected_pages}"}
     if hashlib.sha256(pdf.read_bytes()).hexdigest() != expected_sha256:

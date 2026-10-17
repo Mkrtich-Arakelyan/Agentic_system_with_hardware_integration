@@ -10,6 +10,7 @@ import shutil
 import sys
 import traceback
 from uuid import uuid4
+from app.printing.settings import TRIAL_PRINT_REMINDER
 
 BASE_DIR = Path(__file__).resolve().parents[2]
 REQUIRED_DEPENDENCIES = {
@@ -33,7 +34,7 @@ DEFAULT_REQUEST = (
     "answer the scientific question, requesting more runs if needed. "
     "Judge whether the comparison is fair, compare "
     "performance and computational cost, and suggest the next experiment. Then "
-    "produce a one-page report with one graph, its explanation and a verdict, and "
+    "produce a two-page report with one graph, its explanation and a verdict, and "
     "print it on the office printer after my approval."
 )
 # Paper color: asked once per new run; empty or one of these words means plain white (None).
@@ -52,8 +53,6 @@ RESUME_DROPPED_KEYS = (
 )
 SCAN_ROUNDS = (1, 2, 3)
 DEFAULT_SCAN_FORMATS = ("pdf", "png", "jpg", "jpeg")
-TRIAL_PRINT_REMINDER = ("Print settings: A4, grayscale, one-sided, Actual size / 100% "
-                        "(no fit to page, no scaling).")
 TUNING_KINDS = ("tuning_printer", "trial_print_approval", "tuning_scan", "tuning_print_confirmation",
                 "tuning_poll", "tuning_problem")
 
@@ -70,7 +69,7 @@ def write_experiments_table(state: dict, run_dir: Path) -> None:
     best = max((result["final_enhancement"] for result in results), default=None)
     for number, result in enumerate(results, 1):
         settings = result["settings"]
-        values = [str(settings.get(name, "—")) for name in (
+        values = [str(settings.get(name, "-")) for name in (
             "macropixel_size", "focus_size", "background_size", "iterations", "search_seed",
         )]
         final = f"{result['final_enhancement']:.3f}"
@@ -334,12 +333,13 @@ def _ask_tuning(payload: dict, default_printer: str | None) -> dict:
         print(f"Trial sheet for round {payload.get('round_id')} (trial {payload.get('trial_id')})\n"
               f"PDF: {payload.get('pdf_path')}\nPages: {payload.get('page_count')}\n"
               f"Printer: {payload.get('printer')}\nPDF sha256: {payload.get('pdf_sha256')}\n"
-              + TRIAL_PRINT_REMINDER)
+              + (f"Effective settings: {json.dumps(payload['print_settings'], ensure_ascii=False)}\n"
+                 if payload.get("print_settings") else "") + TRIAL_PRINT_REMINDER)
         return {"action": _ask_choice(question, choices)[0]}
     if kind == "tuning_scan":
         folder = Path(payload.get("suggested_scan_directory") or Path.cwd())
         folder.mkdir(parents=True, exist_ok=True)
-        print(f"Round {payload.get('round_id')} (trial {payload.get('trial_id')}): scan the printed pages.\n"
+        print(f"Round {payload.get('round_id')} (trial {payload.get('trial_id')}): scan BOTH sides of the printed sheets as separate pages.\n"
               f"Save the scans in: {folder}\n"
               'Type "scan", then enter each file path on its own line and finish with a blank line. '
               'You will confirm the selected files before they are used. '
@@ -374,6 +374,12 @@ def ask_human(payload: dict, default_printer: str | None = None) -> str | dict:
     print("\n" + "=" * 60, flush=True)
     if kind in TUNING_KINDS:
         return _ask_tuning(payload, default_printer)
+    if kind == "report_workflow_problem" and "correct" in payload.get("choices", []):
+        print(payload.get("message", ""), flush=True)
+        choice, _ = _ask_choice(payload["question"], payload["choices"])
+        if choice == "correct":
+            return {"action": "correct", "instructions": input("Replacement revision instructions:\n> ")}
+        return {"action": choice}
     if kind == "print_approval":
         print(f"Report: {payload.get('pdf_path')}\nPages: {payload.get('pages')}\n"
               f"Printer: {payload.get('printer') or 'the default printer'}\n"
@@ -392,13 +398,24 @@ def ask_human(payload: dict, default_printer: str | None = None) -> str | dict:
             return {"action": _ask_choice(payload.get("question", "Your answer:"), payload["choices"])[0]}
         allowed = None
     while True:
-        reply = input(payload.get("question", "Your answer:") + "\n> ").strip()
-        if not reply:
+        reply = input(payload.get("question", "Your answer:") + "\n> ")
+        if not reply.strip():
             continue
         first_word = reply.split()[0].lower().strip(".,!:;")
         if allowed is None or first_word in allowed:
             return reply
         print("Please answer with one of: " + ", ".join(allowed), flush=True)
+
+
+def request_saved_report_revision(run_dir, state, instructions):
+    """Explicit CLI revision, without rerunning scientific/tuning work."""
+    from app.workflow.tuning import load_tuning_session
+    from app.workflow.reporting import request_revision
+    session = load_tuning_session(Path(run_dir) / "tuning_session.json")
+    if session["status"] != "completed" or session["phase"] != "completed" or not session.get("final_settings"):
+        raise ValueError("Report revision requires completed tuning; experiments/tuning will not be rerun")
+    revision = request_revision(run_dir, instructions)
+    return {**state, "report_revision_pending": True, "report_revision": revision, "pending_print": {}, "approval": {}}
 
 
 def main() -> int:
@@ -411,6 +428,8 @@ def main() -> int:
     parser.add_argument("--model", help="Override the configured model.")
     parser.add_argument("--request", help="Override the autonomous request for a new run.")
     parser.add_argument("--resume", type=Path, metavar="RUN_DIR", help="Continue a saved run in the same folder.")
+    parser.add_argument("--report-revision", metavar="TEXT",
+                        help="With --resume, request report edits without rerunning experiments or tuning.")
     parser.add_argument("--resume-stopped-tuning", action="store_true",
                         help="With --resume, back up JSON records and explicitly reopen human-stopped tuning.")
     parser.add_argument("--initial-decisions", type=positive_int, metavar="N",
@@ -429,6 +448,8 @@ def main() -> int:
     args = parser.parse_args()
     if args.resume_stopped_tuning and not args.resume:
         parser.error("--resume-stopped-tuning requires --resume RUN_DIR.")
+    if args.report_revision is not None and (not args.resume or not args.report_revision.strip()):
+        parser.error("--report-revision requires --resume RUN_DIR and nonempty instructions.")
     if args.resume and args.request is not None:
         parser.error("--request cannot change the request of a resumed run.")
     if args.resume and args.paper_color is not None:
@@ -473,6 +494,13 @@ def main() -> int:
         or (FAKE_PRINTER_NAME if fake_printer else None)
     )
 
+    # Fail before models, approval, run creation, or stopped-session recovery.
+    from app.printing.connector import PrinterError, trial_print_preflight
+    try:
+        trial_print_preflight(fake_printer=fake_printer)
+    except PrinterError as error:
+        parser.error(str(error))
+
     saved_config = None
     if args.resume:
         run_dir = args.resume.resolve()
@@ -482,6 +510,11 @@ def main() -> int:
         except (OSError, ValueError, KeyError, TypeError) as error:
             parser.error(f"Cannot resume {run_dir}: {error}")
         args.request = saved_config["request"]
+        if args.report_revision is not None:
+            try:
+                state = request_saved_report_revision(run_dir, state, args.report_revision)
+            except (OSError, ValueError) as error:
+                parser.error(str(error))
     else:
         # Asked before the run folder exists, so stopping at the question leaves no empty folder.
         paper_color = clean_paper_color(args.paper_color) if args.paper_color is not None else ask_paper_color()
@@ -573,11 +606,11 @@ def main() -> int:
             "that change one setting.\n"
             "Computational cost is compared by iterations and camera shots per measurement "
             "(and by wall_time_seconds and camera_shots if the results include them).\n"
-            "The final product is report.pdf in the output directory: one A4 page with one "
+            "The final product is report.pdf in the output directory: two A4 portrait pages with one "
             "graph, its explanation, a fairness judgement, performance vs cost, a suggested "
-            "next experiment and a verdict. The executor builds it with write_and_run from "
-            "the saved files experiments.csv and each experiment's results.json; it must "
-            f"not type numbers into the script. Scripts must finish within {RUN_TIMEOUT_SECONDS} seconds.\n"
+            "next experiment and a verdict on page 1; Hardware loop results on page 2. "
+            "The executor calls build_final_report, which uses a reusable layout, frozen "
+            "scientific evidence and existing accepted scans. No additional tuning round is needed.\n"
             "The office printer is reached only through the executor's printer tools in the "
             "report-and-print turn. The graph asks the human before any print. "
             "Printer states: idle, printing, stopped, offline, error, unknown, out_of_paper, "

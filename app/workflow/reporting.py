@@ -5,7 +5,7 @@ never modified here. Atomic writes persist print intent BEFORE external I/O;
 an intent without an outcome is uncertain after process restart. Callers MUST
 serialize operations per run. This is not a persistent LangGraph checkpointer.
 PDF validation requires the supplied PNG's exact decoded pixels to be painted
-on the single page, fully inside it at a useful size. Human approval still
+on the hardware-results page, fully inside it at a useful size. Human approval still
 checks layout, occlusion, and scientific wording; this is not a semantic audit.
 """
 
@@ -20,7 +20,8 @@ from uuid import uuid4
 
 from PIL import Image
 
-from app.print_tuning.final_figures import render_final_heatmaps
+from app.print_tuning.final_figures import render_report_comparison as render_final_heatmaps
+from app.report_policy import REPORT_PAGES, REPORT_VERSION, COMPARISON_VERSION, COMPARISON_PAGE
 from app.print_tuning.tuning_tools import _load_selection, _session_inputs
 
 
@@ -83,14 +84,15 @@ def prepare_figure(session_path, session, run_dir):
     for item in selection["items"]:
         for panel in item["panels"]:
             _need(sha(panel["data_path"]) == panel["sha256"], "Original scientific array changed after selection")
-    fingerprint = _digest({"session_id": session["session_id"], "run_id": session["run_id"],
+    fingerprint = _digest({"report_version": REPORT_VERSION, "reference_settings": session.get("rounds", {}).get("1", {}).get("reference_settings"),
+        "session_id": session["session_id"], "run_id": session["run_id"],
         "selection_sha256": session["selection_sha256"], "config": session["config_snapshot"],
         "selected_experiments": session["selected_experiments"], "final_settings": session["final_settings"]})
     record = load_record(run_dir)
     old = record["figure"]
     expected = [{"experiment_id": e["experiment_id"], "mapping": session["final_settings"][e["experiment_id"]],
                  "limits": e["limits"]} for e in session["selected_experiments"]]
-    if old and old["inputs_sha256"] == fingerprint and Path(old["figure_path"]).is_file() \
+    if old and old.get("comparison_version") == COMPARISON_VERSION and old["inputs_sha256"] == fingerprint and Path(old["figure_path"]).is_file() \
             and sha(old["figure_path"]) == old["figure_sha256"] and old.get("session_id") == session["session_id"] \
             and [{k: row.get(k) for k in ("experiment_id", "mapping", "limits")} for row in old.get("experiments", [])] == expected:
         return deepcopy(old), False
@@ -123,14 +125,14 @@ def inspect_tuned_report(path, figure):
                   inputs_sha256=figure["inputs_sha256"])
     try:
         _need(sha(figure["figure_path"]) == figure["figure_sha256"], "Final figure changed")
-        _need(report["exists"] and report["pages"] == 1, "report.pdf must have exactly one page")
+        _need(report["exists"] and report["pages"] == REPORT_PAGES, f"report.pdf must have exactly {REPORT_PAGES} pages")
         with Image.open(figure["figure_path"]) as source:
             expected = source.convert("RGB")
             size, pixels = expected.size, expected.tobytes()
         with pymupdf.open(path) as document:
-            page = document[0]
-            _need(abs(page.rect.width - 595.276) < 3 and abs(page.rect.height - 841.89) < 3,
-                  "Report must be one A4 portrait page")
+            _need(all(abs(p.rect.width - 595.276) < 3 and abs(p.rect.height - 841.89) < 3 for p in document),
+                  "Report must have two A4 portrait pages")
+            page = document[COMPARISON_PAGE]
             images = page.get_image_info(xrefs=True)
             _need(len(images) <= 64, "Too many PDF images to validate")
             for image in images:
@@ -155,11 +157,39 @@ def inspect_tuned_report(path, figure):
 
 
 def require_report(report):
-    _need(report.get("exists") and report.get("pages") == 1 and report.get("figure_embedded")
+    _need(report.get("exists") and report.get("pages") == REPORT_PAGES and report.get("figure_embedded")
           and not report.get("error"), "Invalid final report: " + str(report.get("error", "missing tuned figure")))
 
 
+def request_revision(run_dir, instructions):
+    """Persist exact human wording and invalidate approval, retaining all attempts."""
+    _need(isinstance(instructions, str) and instructions.strip(), "Revision instructions are required")
+    record = load_record(run_dir)
+    previous = record.get("revision")
+    revision = {"id": uuid4().hex, "instructions": instructions,
+                "before_sha256": sha(Path(run_dir) / "report.pdf"), "requested_at": _now()}
+    if previous:
+        revision["prior_instructions"] = [*previous.get("prior_instructions", []), previous["instructions"]]
+    record.update(revision=revision, pending=None, skip=None)
+    save_record(run_dir, record)
+    return deepcopy(revision)
+
+
+def complete_revision(run_dir, revision_id, report, checks):
+    record = load_record(run_dir)
+    revision = record.get("revision")
+    _need(revision and revision["id"] == revision_id, "Revision changed during generation")
+    require_report(report)
+    _need(report["sha256"] != revision["before_sha256"],
+          "No content change was produced; revision remains pending. Correct the edits and retry.")
+    record.setdefault("revisions", []).append({**revision, "after_sha256": report["sha256"],
+        "checks": checks, "completed_at": _now(), "review": "Human review required; semantics not proven"})
+    record.update(revision=None, pending=None, skip=None)
+    save_record(run_dir, record)
+
+
 def pending_request(run_dir, args, report, figure):
+    _need(not load_record(run_dir).get("revision"), "Report revision is pending; rebuild before approval")
     require_report(report)
     args = deepcopy(args)
     _need(set(args) == {"pdf_path", "printer", "copies"} and type(args["copies"]) is int
@@ -181,6 +211,7 @@ def pending_request(run_dir, args, report, figure):
 def start_submission(run_dir, pending, report, figure):
     """Return (attempt, new_intent). False MUST never call the printer again."""
     record = load_record(run_dir)
+    _need(not record.get("revision"), "Report revision is pending; physical submission is blocked")
     for attempt in record["attempts"]:
         if attempt["attempt_id"] == pending["attempt_id"]:
             _need(all(attempt[k] == pending.get(k) for k in ("args", "report_sha256", "figure_sha256", "inputs_sha256")),

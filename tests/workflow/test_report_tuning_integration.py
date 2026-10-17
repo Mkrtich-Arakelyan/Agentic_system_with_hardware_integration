@@ -57,7 +57,7 @@ class ReportIntegrationTests(unittest.TestCase):
         self.state = {"dialogue": [], "execution_results": [
             {"tool_name": "run_focusing_experiment", "result": r} for r in self.fixture.results],
             "experiment_selection": deepcopy(self.fixture.selection), "tuning_session_path": str(self.path)}
-        self.code = StructuredTool.from_function(self.write_pdf, name="write_and_run", description="Fake script boundary")
+        self.code = StructuredTool.from_function(self.write_pdf, name="build_final_report", description="Fake report boundary")
         self.printers = [StructuredTool.from_function(self.submit, name="submit_print", description="Fake print"),
                          StructuredTool.from_function(self.job, name="job_status", description="Fake reading")]
         self.information = StructuredTool.from_function(lambda missing, human_request: {},
@@ -70,7 +70,8 @@ class ReportIntegrationTests(unittest.TestCase):
         def capture(name, node, *args, **kwargs):
             self.nodes[name] = node
             return add(name, node, *args, **kwargs)
-        with patch.object(graph_module, "StateGraph", return_value=builder), patch.object(builder, "add_node", side_effect=capture):
+        with patch.object(graph_module, "StateGraph", return_value=builder), patch.object(builder, "add_node", side_effect=capture), \
+                patch("app.workflow.report_document.create_report_tool", return_value=self.code):
             self.graph = graph_module.build_graph(self.model, Mock(), self.code, self.printers,
                 self.information, self.root, 5, InMemorySaver())
 
@@ -82,7 +83,7 @@ class ReportIntegrationTests(unittest.TestCase):
             if self.requests:
                 name, args = self.requests.pop(0)
             elif not (self.root / "report.pdf").exists():
-                name, args = "write_and_run", {"filename": "report_1.py", "code": "# injected fake boundary"}
+                name, args = "build_final_report", {}
             elif reporting.print_state(reporting.load_record(self.root)) == "pending":
                 name, args = "job_status", {"job_id": "Report-7"}
             else:
@@ -90,18 +91,18 @@ class ReportIntegrationTests(unittest.TestCase):
             return AIMessage(content="", tool_calls=[{"id": "call", "name": name, "args": args}])
         return SimpleNamespace(invoke=invoke)
 
-    def write_pdf(self, filename: str, code: str) -> dict:
+    def write_pdf(self, findings: dict | None = None) -> dict:
         figure = reporting.load_record(self.root)["figure"]
         self.make_pdf(figure["figure_path"])
         return {"exit_code": 0, "stdout": "Created report", "stderr": ""}
 
-    def make_pdf(self, image, *, pages=1, tiny=False):
+    def make_pdf(self, image, *, pages=2, tiny=False):
         with pymupdf.open() as document:
             page = document.new_page(width=595.276, height=841.89)
             page.insert_text((30, 35), "Scientific comparison - tuned presentation")
-            page.insert_image(pymupdf.Rect(30, 60, 50, 80) if tiny else pymupdf.Rect(30, 70, 565, 700), filename=str(image))
             for _ in range(pages - 1):
                 document.new_page(width=595.276, height=841.89)
+            document[min(1, pages - 1)].insert_image(pymupdf.Rect(30, 60, 50, 80) if tiny else pymupdf.Rect(30, 70, 565, 700), filename=str(image))
             document.save(self.root / "report.pdf")
 
     def submit(self, pdf_path: str, printer: str, copies: int = 1) -> dict:
@@ -138,7 +139,7 @@ class ReportIntegrationTests(unittest.TestCase):
             self.assertEqual(render.call_count, 1)
             self.assertEqual(render.call_args.args[0], str(self.path))
         self.assertEqual(result["stop_reason"], "finished")
-        self.assertEqual(result["report"]["pages"], 1)
+        self.assertEqual(result["report"]["pages"], 2)
         self.assertTrue(result["report"]["figure_embedded"])
         self.assertEqual(self.path.read_bytes(), original)
         meta = result["final_figure_metadata"]
@@ -214,7 +215,7 @@ class ReportIntegrationTests(unittest.TestCase):
         # Same dimensions/placement, different pixels: a resource-name or size
         # check alone would incorrectly accept this untuned replacement.
         Image.new("L", size, 128).save(other)
-        for image, pages, tiny in ((other, 1, False), (figure["figure_path"], 2, False), (figure["figure_path"], 1, True)):
+        for image, pages, tiny in ((other, 2, False), (figure["figure_path"], 1, False), (figure["figure_path"], 2, True)):
             self.make_pdf(image, pages=pages, tiny=tiny)
             report = reporting.inspect_tuned_report(self.root / "report.pdf", figure)
             self.assertTrue(report.get("error"))
@@ -397,9 +398,91 @@ class ReportIntegrationTests(unittest.TestCase):
         self.requests = [("request_information", {"missing": "scientific review", "human_request": "change claim"})]
         update = report_and_print({**state, "report_revision_pending": True}, self.model,
                                   [self.code, *self.printers, self.information], self.root)
-        self.assertEqual(update["outcome"], "needs_information")
-        self.assertEqual(self.model.bind_tools.call_args.kwargs["tool_choice"], "any")
+        self.assertEqual(update["outcome"], "no_tool")
+        self.assertEqual(self.model.bind_tools.call_args.kwargs["tool_choice"], "build_final_report")
         self.assertFalse(self.submitted)
+
+    def test_revision_reaches_real_builder_and_requires_fresh_approval(self):
+        self.start()
+        old = reporting.sha(self.root / "report.pdf")
+        from app.workflow.report_document import create_report_tool
+        self.code = create_report_tool(self.root)
+        self.build()
+        self.config["configurable"]["thread_id"] = uuid4().hex
+        self.start()
+        instructions = "  Add a sentence at the end asking for the reader opinion  "
+        self.requests = [("build_final_report", {"findings": {"closing_note": "What is your opinion of these results?"}})]
+        result = self.resume(instructions)
+        self.assertEqual(self.kind(result), "print_approval")
+        self.assertFalse(self.submitted)
+        self.assertNotEqual(reporting.sha(self.root / "report.pdf"), old)
+        journal = reporting.load_record(self.root)
+        self.assertIsNone(journal.get("revision"))
+        self.assertEqual(journal["revisions"][-1]["instructions"], instructions)
+        self.assertEqual(journal["attempts"], [])
+        self.assertTrue((self.root / "report_versions" / (old + ".pdf")).exists())
+        with pymupdf.open(self.root / "report.pdf") as pdf:
+            self.assertIn("What is your opinion", " ".join(p.get_text() for p in pdf))
+        self.assertEqual(result["pending_print"]["report_sha256"], reporting.sha(self.root / "report.pdf"))
+
+    def test_pending_revision_blocks_old_pdf_submission_and_resume(self):
+        self.start()
+        snapshot = dict(self.graph.get_state(self.config).values)
+        revision = reporting.request_revision(self.root, "Make the title clearer")
+        self.assertEqual(self.nodes["report_submit"](snapshot)["route"], "report_and_print")
+        self.assertFalse(self.submitted)
+        self.requests = [("submit_print", snapshot["pending_print"]["args"])]
+        update = self.nodes["report_and_print"](snapshot)
+        self.assertTrue(update["report_revision_pending"])
+        self.assertEqual(update["report_revision"], revision)
+        self.assertIsNone(reporting.load_record(self.root)["pending"])
+
+    def test_failed_revision_stays_pending_and_pauses_for_correction(self):
+        self.start()
+        from app.workflow.report_document import create_report_tool
+        self.code = create_report_tool(self.root)
+        self.build()
+        self.config["configurable"]["thread_id"] = uuid4().hex
+        self.start()
+        self.requests = [("build_final_report", {})]
+        result = self.resume("Make it clearer")
+        self.assertEqual(self.kind(result), "report_workflow_problem")
+        self.assertTrue(result["report_revision_pending"])
+        self.assertIn("No content change", result["report_workflow_failure"])
+        self.assertEqual(reporting.load_record(self.root)["revision"]["instructions"], "Make it clearer")
+        self.assertFalse(self.submitted)
+
+    def test_revision_waits_for_uncertain_submission_resolution(self):
+        self.submission = RuntimeError("lost outcome")
+        self.approve()
+        before = deepcopy(reporting.load_record(self.root)["attempts"])
+        revision = reporting.request_revision(self.root, "Clarify the title")
+        snapshot = dict(self.graph.get_state(self.config).values)
+        self.assertEqual(self.nodes["report_and_print"](snapshot)["route"], "report_print_confirmation")
+        from app.workflow.report_document import create_report_tool
+        result = create_report_tool(self.root).invoke({"revision_id": revision["id"],
+            "revision_instructions": revision["instructions"], "findings": {"title": "Clarified comparison"}})
+        self.assertFalse(result["ok"])
+        self.assertEqual(reporting.load_record(self.root)["attempts"], before)
+        self.assertEqual(len(self.submitted), 1)
+        reporting.resolve_attempt(self.root, "printed")
+        # Resolving the old copy must not discard the new pending revision.
+        self.assertEqual(self.nodes["finish_gate"](snapshot)["route"], "report_and_print")
+        self.assertEqual(reporting.load_record(self.root)["revision"], revision)
+
+    def test_revision_of_printed_report_keeps_old_attempt_and_requires_new_approval(self):
+        self.approve()
+        before = deepcopy(reporting.load_record(self.root)["attempts"])
+        from app.workflow.report_document import create_report_tool
+        self.code = create_report_tool(self.root)
+        self.build()
+        reporting.request_revision(self.root, "Add a reader question")
+        self.requests = [("build_final_report", {"findings": {"closing_note": "What should the next comparison test?"}})]
+        self.config["configurable"]["thread_id"] = uuid4().hex
+        result = self.graph.invoke(self.state, self.config)
+        self.assertEqual(self.kind(result), "print_approval")
+        self.assertEqual(reporting.load_record(self.root)["attempts"], before)
+        self.assertEqual(len(self.submitted), 1)
 
     def test_executor_never_executes_submit_even_when_state_claims_approval(self):
         result = self.start()

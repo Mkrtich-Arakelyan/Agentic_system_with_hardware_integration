@@ -21,6 +21,7 @@ class State(TypedDict, total=False):
     report_request_passes: int
     report_workflow_failure: str
     report_revision_pending: bool
+    report_revision: dict | None
     budget_summary: str
     last_printer_reading: dict
     scientist_response: dict

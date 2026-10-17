@@ -1,4 +1,4 @@
-# Local credentials and generated Python files.
+﻿# Local credentials and generated Python files.
 .env
 .env.*
 !.env.example
@@ -16,3 +16,5 @@ runs/
 .DS_Store
 # Local scan diagnostics contain real scan crops; tests use generated fixtures.
 /tmp/scan_alignment_diagnostics/
+# Generated report bundles and visual-review previews
+/output/

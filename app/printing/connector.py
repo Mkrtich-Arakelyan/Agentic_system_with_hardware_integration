@@ -6,9 +6,9 @@ Interface: the operating system's own print commands, run through subprocess.
   - macOS / Linux: CUPS commands lp, lpstat and cancel.
 
 Two ways to print:
-  - submit_print:       the one-page report, with the system's default print settings.
+  - submit_print:       the two-page report, with the system's default print settings.
   - submit_trial_print: the grayscale trial sheets from trial_sheet.py: one copy, A4,
-                        grayscale, one-sided and at 100% size (no fit-to-page), because the
+                        grayscale, two-sided (long-edge) and at 100% size (no fit-to-page), because the
                         sheet's positions are measured in mm on the scan. On Windows this
                         needs SumatraPDF (SUMATRA_PATH), since the default path may scale.
 cancel_job removes a job that has not printed yet.
@@ -39,10 +39,12 @@ Job ids look like "<printer>-<number>", e.g. Office_Printer-1, and untracked one
 import json
 import os
 import re
+import shutil
 import subprocess
 import sys
 import time
 from pathlib import Path
+from app.printing.settings import TRIAL_LP_OPTIONS, TRIAL_SUMATRA_SETTINGS, TRIAL_SIDES
 
 FAKE_PRINTER = "Office_Printer"
 FAKE_JOBS_FILE = Path(os.environ.get("FAKE_PRINTER_FILE", Path(__file__).resolve().parents[2] / "fake_printer_jobs.json"))
@@ -58,10 +60,7 @@ UNCERTAIN_DETAILS = {
 FAKE_QUEUE_SECONDS = 1.0   # a fake job waits this long, then prints
 FAKE_PRINT_SECONDS = 3.0   # a fake job is done this long after submission
 
-# Trial sheets: measured in mm, so 1 copy, A4, gray, one-sided and never scaled.
-TRIAL_LP_OPTIONS = ["-n", "1", "-o", "media=A4", "-o", "ColorModel=Gray", "-o", "print-color-mode=monochrome",
-                    "-o", "sides=one-sided", "-o", "print-scaling=none", "-o", "nofit-to-page"]
-TRIAL_SUMATRA_SETTINGS = "noscale,monochrome,simplex,paper=A4,1x"
+# Effective trial options are shared with the approval and journal paths.
 
 
 class PrinterError(Exception):
@@ -74,6 +73,25 @@ def _fake():
 
 def _windows():
     return sys.platform.startswith("win")
+
+
+def trial_print_preflight(*, fake_printer=None):
+    """Validate local printing configuration without commands, printer I/O or writes.
+
+    SUMATRA_PATH remains authoritative; never silently replace a bad configured
+    path with another installation. A bare executable name may resolve via PATH.
+    """
+    if (fake_printer if fake_printer is not None else _fake()) or not _windows():
+        return None
+    configured = os.environ.get("SUMATRA_PATH", "").strip()
+    resolved = shutil.which(configured) if configured else None
+    if not resolved or not Path(resolved).is_file() or Path(resolved).suffix.lower() != ".exe":
+        raise PrinterError(
+            f"Trial-print configuration: SUMATRA_PATH={configured!r} does not resolve to an existing .exe. "
+            "Set SUMATRA_PATH to the installed SumatraPDF.exe (also check "
+            r"%LOCALAPPDATA%\SumatraPDF\SumatraPDF.exe), then restart. "
+            "If absent, install SumatraPDF. No print was requested by this check.")
+    return str(Path(resolved).resolve())
 
 
 def _run(cmd):
@@ -290,15 +308,12 @@ def submit_print(pdf_path, printer):
 
 
 def submit_trial_print(pdf_path, printer):
-    """Send a trial sheet PDF: 1 copy, A4, grayscale, one-sided, 100% size. Same result as submit_print."""
+    """Send a trial sheet PDF: 1 copy, A4, gray, long-edge duplex, 100% size."""
     pdf = _existing_pdf(pdf_path)
     if _fake():
-        return _fake_submit(pdf, printer, kind="trial")
+        return _fake_submit(pdf, printer, kind="trial", sides=TRIAL_SIDES)
     if _windows():
-        sumatra = os.environ.get("SUMATRA_PATH")
-        if not sumatra:
-            raise PrinterError("trial sheets need SumatraPDF (set SUMATRA_PATH): the default Windows "
-                               "print path may scale the page, and the sheet is measured in mm")
+        sumatra = trial_print_preflight()
         return _windows_submit(printer, pdf, lambda: _run(
             [sumatra, "-print-to", printer, "-print-settings", TRIAL_SUMATRA_SETTINGS, "-silent", str(pdf)]))
     return _lp_submit(printer, pdf, TRIAL_LP_OPTIONS)

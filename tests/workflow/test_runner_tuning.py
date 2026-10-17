@@ -9,6 +9,7 @@ import pytest
 
 from app.print_tuning.tuning_tools import create_tuning_tools
 from app.workflow import runner
+from app.printing import connector
 from app.workflow.tuning import (
     begin_print_attempt, load_tuning_session, record_print_approval,
     record_scan_for_executor, record_stop,
@@ -28,6 +29,37 @@ def answers(monkeypatch, *replies):
         return reply() if callable(reply) else reply
     monkeypatch.setattr("builtins.input", fake_input)
     return prompts
+
+
+def test_report_revision_input_keeps_exact_wording_and_correction(monkeypatch):
+    text = "  Add a reader question at the end.  "
+    answers(monkeypatch, text)
+    assert runner.ask_human({"kind": "print_approval", "question": "Print?"}) == text
+    answers(monkeypatch, "correct", text)
+    assert runner.ask_human({"kind": "report_workflow_problem", "question": "Retry/correct/stop?",
+                            "choices": ["retry", "correct", "stop"]}) == {"action": "correct", "instructions": text}
+
+
+def test_missing_sumatra_stops_startup_before_resume_or_approval(monkeypatch, tmp_path, capsys):
+    run = tmp_path / "run"
+    run.mkdir()
+    (run / "config.json").write_text('{}', encoding="utf-8")
+    original = (run / "config.json").read_bytes()
+    monkeypatch.setattr(runner.sys, "argv", ["main.py", "--resume", str(run),
+        "--resume-stopped-tuning", "--no-fake-printer", "--printer", "Offline"])
+    monkeypatch.setenv("OPENAI_API_KEY", "offline-test-key")
+    monkeypatch.setenv("SUMATRA_PATH", "missing-sumatra.exe")
+    monkeypatch.setattr(connector, "_windows", lambda: True)
+    monkeypatch.setattr(connector.shutil, "which", lambda value: None)
+    monkeypatch.setattr(runner, "load_resume", lambda *a, **k: pytest.fail("must not mutate resume records"))
+    monkeypatch.setattr(runner, "ask_human", lambda *a, **k: pytest.fail("must not request approval"))
+    monkeypatch.setattr(connector, "_run", lambda *a: pytest.fail("must not contact printer"))
+    with pytest.raises(SystemExit) as exit:
+        runner.main()
+    assert exit.value.code == 2
+    assert "SUMATRA_PATH" in capsys.readouterr().err
+    assert (run / "config.json").read_bytes() == original
+    assert list(run.iterdir()) == [run / "config.json"]
 
 
 # ---------- ask_human: the tuning pauses ----------
@@ -56,7 +88,7 @@ def test_trial_print_approval_shows_the_exact_sheet(monkeypatch, capsys):
     assert runner.ask_human(payload) == {"action": "approve"}
     out = capsys.readouterr().out
     for text in ("trial_r1_abcd1234.pdf", "Pages: 2", "Office_Printer", "round 1", "trial-1", "f" * 64,
-                 "A4, grayscale, one-sided, Actual size / 100%"):
+                 "A4, grayscale, two-sided (long-edge), Actual size / 100%"):
         assert text in out
     answers(monkeypatch, "stop")
     assert runner.ask_human(payload) == {"action": "stop"}
@@ -233,7 +265,7 @@ def test_report_workflow_recovery_and_exact_pdf_display(monkeypatch, capsys):
     assert "submit_print" in capsys.readouterr().out
     answers(monkeypatch, "retry")
     assert runner.ask_human({"kind": "print_approval", "pdf_path": "report.pdf", "printer": "ir2425",
-                             "pages": 1, "copies": 1, "pdf_sha256": "a" * 64}) == "retry"
+                             "pages": 2, "copies": 1, "pdf_sha256": "a" * 64}) == "retry"
     out = capsys.readouterr().out
     assert "a" * 64 in out and "ir2425" in out and "report.pdf" in out
 
@@ -267,7 +299,7 @@ def test_unknown_kinds_and_the_old_kinds(monkeypatch):
     answers(monkeypatch, "retry")
     assert runner.ask_human({"kind": "printer_problem", "reading": {}, "question": "?", "choices": ["retry", "skip"]}) == "retry"
     answers(monkeypatch, "yes")
-    assert runner.ask_human({"kind": "print_approval", "pdf_path": "r.pdf", "pages": 1, "printer": "P",
+    assert runner.ask_human({"kind": "print_approval", "pdf_path": "r.pdf", "pages": 2, "printer": "P",
                              "copies": 1, "question": "?"}) == "yes"
 
 

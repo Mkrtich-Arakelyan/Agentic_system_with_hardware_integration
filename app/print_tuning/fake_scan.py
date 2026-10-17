@@ -6,11 +6,13 @@ included, like darker paper or a dim scan). It saves one PNG per page that read_
 evaluate_scan accept.
 """
 import math
+import json
 from pathlib import Path
 
 import numpy as np
 import pymupdf
 from PIL import Image
+from PIL.PngImagePlugin import PngInfo
 
 MAX_ROTATION_DEG = 5.0             # a scan lying more crooked than this is not a useful stand-in
 
@@ -58,5 +60,8 @@ def fake_scan(pdf_path, out_dir, *, dpi: int = 300, rotate_deg: float = 0.0, noi
             if noise:
                 gray = gray + rng.normal(0.0, noise, gray.shape)
             pixels = np.clip(np.round(gray * 255), 0, 255).astype(np.uint8)
-            Image.fromarray(pixels, "L").save(path, dpi=(dpi, dpi))
+            metadata = PngInfo()
+            metadata.add_text("scan_provenance", json.dumps({"kind": "synthetic", "generator": "fake_scan",
+                "dpi": dpi, "noise": noise, "darken": darken, "rotate_deg": rotate_deg, "seed": seed}))
+            Image.fromarray(pixels, "L").save(path, dpi=(dpi, dpi), pnginfo=metadata)
     return [str(path) for path in paths]

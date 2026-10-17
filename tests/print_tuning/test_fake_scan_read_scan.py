@@ -68,6 +68,16 @@ def _evaluation_files(result: dict) -> list[Path]:
     return [json_path, *sorted(json_path.with_name(json_path.stem + "_tiles").iterdir())]
 
 
+def test_duplex_faces_match_page_codes_in_reverse_file_order(run, tmp_path):
+    scans = fake_scan(run["trial"]["pdf_path"], tmp_path / "faces")
+    originals = _hashes(scans)
+    result = run["read_scan"].invoke({"scan_paths": list(reversed(scans))})
+    assert result["status"] == "ok", result
+    assert [page["page_number"] for page in result["pages"]] == [1, 2]
+    assert [page["scan_index"] for page in result["pages"]] == [1, 0]
+    assert _hashes(scans) == originals
+
+
 def test_milestone_fake_scan_then_read_scan(run, tmp_path):
     scans = fake_scan(run["trial"]["pdf_path"], tmp_path / "scan")
     assert [Path(p).name for p in scans] == ["scan_page_1.png", "scan_page_2.png"]
