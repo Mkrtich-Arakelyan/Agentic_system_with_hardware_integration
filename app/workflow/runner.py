@@ -153,10 +153,12 @@ def human_stop_message(state: dict, run_dir: Path) -> str:
 
 def save_run(state: dict, run_dir: Path) -> None:
     """Save the latest graph state and a role-labelled transcript."""
-    (run_dir / "state.json").write_text(
+    state_temp = run_dir / "state.json.tmp"
+    state_temp.write_text(
         json.dumps(state, indent=2, ensure_ascii=False, allow_nan=False),
         encoding="utf-8",
     )
+    state_temp.replace(run_dir / "state.json")
     transcript = "\n\n".join(
         f"[{turn['role']}]\n{turn['text']}" for turn in state["dialogue"]
     )
@@ -420,6 +422,173 @@ def request_saved_report_revision(run_dir, state, instructions):
     return {**state, "report_revision_pending": True, "report_revision": revision, "pending_print": {}, "approval": {}}
 
 
+def create_run(root, request, initial_decisions=10, paper_color=None):
+    run_dir = Path(root) / datetime.now().strftime("%Y%m%d_%H%M%S_%f")
+    run_dir.mkdir(parents=True, exist_ok=False)
+    state = {"dialogue": [{"role": "user", "text": request}], "execution_results": [],
+             "decision_count": 0, "decision_budget": initial_decisions,
+             "stop_reason": "running", "paper_color": clean_paper_color(paper_color)}
+    return run_dir, state
+
+
+def prepare_workflow(run_dir, state, *, request, model, specialist_model=None,
+                     initial_decisions=10, extra_decisions=5, fake_printer=False,
+                     printer_name=None, cycle_limit=3, saved_config=None, api_key=None,
+                     fake_jobs_file=None):
+    """Shared CLI/web setup. No terminal input, argument parsing, or graph execution."""
+    from app.agents.common import MIN_EXPERIMENTS
+
+    from langchain_openai import ChatOpenAI
+    from langgraph.checkpoint.memory import InMemorySaver
+    from app.agents.report_and_print import create_information_tool
+    from app.experiments.bench import SimulatedBench, SEARCH_SHOTS, VALIDATION_SHOTS
+    from app.workflow.graph import build_graph
+    from app.experiments.tools import create_coding_tool, create_focusing_tool, RUN_TIMEOUT_SECONDS
+    from app.print_tuning.tuning_tools import create_tuning_tools
+
+    if saved_config:
+        bench_options = dict(saved_config["bench"])
+        for name in ("dmd_shape", "camera_shape", "target_position"):
+            if name in bench_options:
+                bench_options[name] = tuple(bench_options[name])
+        bench = SimulatedBench(**bench_options)
+        print("Resuming in the same folder with the same transmission matrix and target. "
+              "The measurement-noise sequence restarts from its saved seed.", flush=True)
+    else:
+        bench = SimulatedBench(
+            dmd_shape=(16, 16), camera_shape=(32, 32),
+            transmission_seed=42, noise_seed=43, noise_std=0.01,
+        )
+    bench_settings = {
+        "dmd_shape": bench.dmd_shape,
+        "camera_shape": bench.camera_shape,
+        "target_position": bench.target_position,
+        "transmission_seed": bench.transmission_seed,
+        "noise_seed": bench.noise_seed,
+        "noise_std": bench.noise_std,
+    }
+    context = (
+        "Homework 3: hardware in the loop.\n"
+        f"Bench settings: {json.dumps(bench_settings)}\n"
+        "These dimensions and noise settings are simulation choices, not hardware specifications.\n"
+        "The DMD controls binary amplitudes 0 or 1; an illuminated pattern cannot be all off.\n"
+        "A fixed complex transmission matrix maps 256 DMD pixels to 1024 camera pixels.\n"
+        "Camera intensity is I = abs(T @ pattern.ravel()) ** 2, followed by fresh "
+        "additive Gaussian noise and clipping negative measurements to zero. "
+        "Intensities are relative simulation units.\n"
+        "One shared bench is used for the whole run: its matrix and target stay fixed, "
+        "and its independent noise generator advances between captures.\n"
+        "Use run_focusing_experiment for all optical experiments. Choose its parameters "
+        "autonomously; do not recreate the bench or implement another search.\n"
+        "Valid macropixel sizes are 1, 2, 4, and 8: each divides both DMD dimensions "
+        "and leaves at least two controllable blocks. Each iteration flips one block.\n"
+        "Focus and background sizes must be positive odd integers, with background "
+        "larger than focus. Both centred squares must fit around the fixed target; "
+        "the four background regions must be nonempty. Coordinates are (row, column).\n"
+        "Background is the larger square outside the focus square, divided into "
+        "top-left, top-right, bottom-left, and bottom-right regions. The target row "
+        "belongs to bottom regions and the target column to right regions.\n"
+        "Enhancement = focus mean / max(mean of the four background-region means, 1e-12). "
+        "The four means have equal weight, regardless of region pixel counts.\n"
+        f"Average {SEARCH_SHOTS} fresh captures for each search measurement and "
+        f"{VALIDATION_SHOTS} fresh captures for final validation. The returned final "
+        "enhancement comes from validation, not the highest noisy search score.\n"
+        "Use 1 to 1,000 iterations per tool call. Improvement is not guaranteed.\n"
+        "Keeping focus and background regions fixed makes comparisons between "
+        "macropixel sizes or iteration budgets easier to interpret. Changing the "
+        "regions changes the metric; acknowledge that when comparing results.\n"
+        f"The run compares at least {MIN_EXPERIMENTS} successful focusing experiments "
+        "that change one setting.\n"
+        "Computational cost is compared by iterations and camera shots per measurement "
+        "(and by wall_time_seconds and camera_shots if the results include them).\n"
+        "The final product is report.pdf in the output directory: 2 or 3 A4 portrait pages with one "
+        "graph, its explanation, a fairness judgement, performance vs cost, a suggested "
+        "next experiment and a verdict on page 1; Hardware loop results on page 2. "
+        "The executor calls build_final_report, which uses a reusable layout, frozen "
+        "scientific evidence and existing accepted scans. No additional tuning round is needed.\n"
+        "The office printer is reached only through the executor's printer tools in the "
+        "report-and-print turn. The graph asks the human before any print. "
+        "Printer states: idle, printing, stopped, offline, error, unknown, out_of_paper, "
+        "paper_jam. Job states: waiting, printing, done, failed, uncertain.\n"
+        "Print tuning: after the four experiments are chosen, the graph tunes how their heatmaps "
+        "print in three-step cycles: gamma, then shared dark/light gray levels, then gray steps. "
+        "After each accepted cycle the human chooses Continue, Finish or Stop; continuation is not print approval.\n"
+        "Every trial sheet print needs human approval of that exact PDF and printer. The human "
+        f"scans both faces into {run_dir / 'scans'}/cycle_N/step_N. Legacy round_N paths remain accepted.\n"
+        + (
+            f"The office printer is named {printer_name}; pass printer=\"{printer_name}\" "
+            "to printer_status and submit_print.\n"
+            if printer_name else
+            "Call list_printers first and pass the office printer's exact name as printer "
+            "to printer_status and submit_print.\n"
+        ) +
+        paper_context_line(state.get("paper_color")) +
+        f"Output directory: {run_dir}\n"
+        "The focusing tool saves initial/final camera images, the final pattern, "
+        "results.json, and an experiments.csv table. Do not duplicate these outputs.\n"
+        "Base all conclusions on recorded tool results, never proposals or invented "
+        "measurements."
+    )
+    if not saved_config:
+        state["dialogue"].insert(0, {"role": "system", "text": context})
+    run_config = dict(saved_config) if saved_config else {
+        "provider": "openai",
+        "api": "responses",
+        "reasoning_effort": "medium",
+        "python": sys.version,
+        "bench": bench_settings,
+        "max_tuning_cycles": cycle_limit,
+        "request": request,
+        "script_timeout_seconds": RUN_TIMEOUT_SECONDS,
+    }
+    run_config.pop("max_orchestrator_decisions", None)
+    run_config.pop("printer_backend", None)
+    run_config.update(
+        model=model, min_experiments=MIN_EXPERIMENTS,
+        initial_decisions=initial_decisions, extra_decisions=extra_decisions,
+        fake_printer=fake_printer, printer_name=printer_name, specialist_model=specialist_model,
+    )
+    (run_dir / "config.json").write_text(
+        json.dumps(run_config, indent=2, ensure_ascii=False), encoding="utf-8"
+    )
+    save_run(state, run_dir)
+
+    # Only variables the printer files read; FAKE_PRINTER_PROBLEM comes from the shell.
+    printer_env = {"PRINTER_MODE": "fake" if fake_printer else "real"}
+    if fake_jobs_file is not None:
+        printer_env["FAKE_PRINTER_FILE"] = str(fake_jobs_file)
+    if printer_name:
+        printer_env["PRINTER_ALLOWED"] = printer_name
+    try:
+        from app.printing.tools import load_printer_tools
+
+        printer_tools = load_printer_tools(printer_env)
+    except Exception as error:
+        print(f"Could not start the printer MCP server: {error}", file=sys.stderr, flush=True)
+        raise
+
+    def chat_model(model):
+        return ChatOpenAI(
+            model=model, api_key=api_key, max_tokens=16384,
+            timeout=120, max_retries=2,
+            use_responses_api=True, output_version="responses/v1",
+            reasoning={"effort": "medium"},
+            store=False, include=["reasoning.encrypted_content"],
+        )
+
+    llm = chat_model(model)
+    coding_tool = create_coding_tool(run_dir)
+    focusing_tool = create_focusing_tool(run_dir, bench)
+    tuning_tools = create_tuning_tools(run_dir)
+    check_tuning_tools(printer_tools, tuning_tools)
+    workflow = build_graph(
+        llm, focusing_tool, coding_tool, printer_tools, create_information_tool(),
+        run_dir, extra_decisions, InMemorySaver(), tuning_tools=tuning_tools, max_cycles=cycle_limit,
+        **({"specialist_llm": chat_model(specialist_model)} if specialist_model else {}),
+    )
+    return workflow
+
+
 def main() -> int:
     # Model replies can contain symbols unsupported by redirected Windows consoles.
     # Keep saved evidence in UTF-8 and prevent display errors from stopping a run.
@@ -524,16 +693,7 @@ def main() -> int:
     else:
         # Asked before the run folder exists, so stopping at the question leaves no empty folder.
         paper_color = clean_paper_color(args.paper_color) if args.paper_color is not None else ask_paper_color()
-        run_dir = BASE_DIR / "runs" / datetime.now().strftime("%Y%m%d_%H%M%S_%f")
-        run_dir.mkdir(parents=True, exist_ok=False)
-        state = {
-            "dialogue": [{"role": "user", "text": args.request}],
-            "execution_results": [],
-            "decision_count": 0,
-            "decision_budget": initial_decisions,
-            "stop_reason": "running",
-            "paper_color": paper_color,
-        }
+        run_dir, state = create_run(BASE_DIR / "runs", args.request, initial_decisions, paper_color)
     args.model = args.model or (saved_config or {}).get("model") or os.getenv("OPENAI_MODEL", "gpt-5-nano")
     specialist_model = (args.specialist_model or (saved_config or {}).get("specialist_model")
                         or os.getenv("OPENAI_SPECIALIST_MODEL") or None)
@@ -549,154 +709,12 @@ def main() -> int:
     print(f"Trial scan directories: {folders[0]} ... {folders[-1]}", flush=True)
 
     try:
-        from langchain_openai import ChatOpenAI
-        from langgraph.checkpoint.memory import InMemorySaver
         from langgraph.types import Command
-        from app.agents.report_and_print import create_information_tool
-        from app.experiments.bench import SimulatedBench, SEARCH_SHOTS, VALIDATION_SHOTS
-        from app.workflow.graph import build_graph
-        from app.experiments.tools import create_coding_tool, create_focusing_tool, RUN_TIMEOUT_SECONDS
-        from app.print_tuning.tuning_tools import create_tuning_tools
-
-        if saved_config:
-            bench_options = dict(saved_config["bench"])
-            for name in ("dmd_shape", "camera_shape", "target_position"):
-                if name in bench_options:
-                    bench_options[name] = tuple(bench_options[name])
-            bench = SimulatedBench(**bench_options)
-            print("Resuming in the same folder with the same transmission matrix and target. "
-                  "The measurement-noise sequence restarts from its saved seed.", flush=True)
-        else:
-            bench = SimulatedBench(
-                dmd_shape=(16, 16), camera_shape=(32, 32),
-                transmission_seed=42, noise_seed=43, noise_std=0.01,
-            )
-        bench_settings = {
-            "dmd_shape": bench.dmd_shape,
-            "camera_shape": bench.camera_shape,
-            "target_position": bench.target_position,
-            "transmission_seed": bench.transmission_seed,
-            "noise_seed": bench.noise_seed,
-            "noise_std": bench.noise_std,
-        }
-        context = (
-            "Homework 3: hardware in the loop.\n"
-            f"Bench settings: {json.dumps(bench_settings)}\n"
-            "These dimensions and noise settings are simulation choices, not hardware specifications.\n"
-            "The DMD controls binary amplitudes 0 or 1; an illuminated pattern cannot be all off.\n"
-            "A fixed complex transmission matrix maps 256 DMD pixels to 1024 camera pixels.\n"
-            "Camera intensity is I = abs(T @ pattern.ravel()) ** 2, followed by fresh "
-            "additive Gaussian noise and clipping negative measurements to zero. "
-            "Intensities are relative simulation units.\n"
-            "One shared bench is used for the whole run: its matrix and target stay fixed, "
-            "and its independent noise generator advances between captures.\n"
-            "Use run_focusing_experiment for all optical experiments. Choose its parameters "
-            "autonomously; do not recreate the bench or implement another search.\n"
-            "Valid macropixel sizes are 1, 2, 4, and 8: each divides both DMD dimensions "
-            "and leaves at least two controllable blocks. Each iteration flips one block.\n"
-            "Focus and background sizes must be positive odd integers, with background "
-            "larger than focus. Both centred squares must fit around the fixed target; "
-            "the four background regions must be nonempty. Coordinates are (row, column).\n"
-            "Background is the larger square outside the focus square, divided into "
-            "top-left, top-right, bottom-left, and bottom-right regions. The target row "
-            "belongs to bottom regions and the target column to right regions.\n"
-            "Enhancement = focus mean / max(mean of the four background-region means, 1e-12). "
-            "The four means have equal weight, regardless of region pixel counts.\n"
-            f"Average {SEARCH_SHOTS} fresh captures for each search measurement and "
-            f"{VALIDATION_SHOTS} fresh captures for final validation. The returned final "
-            "enhancement comes from validation, not the highest noisy search score.\n"
-            "Use 1 to 1,000 iterations per tool call. Improvement is not guaranteed.\n"
-            "Keeping focus and background regions fixed makes comparisons between "
-            "macropixel sizes or iteration budgets easier to interpret. Changing the "
-            "regions changes the metric; acknowledge that when comparing results.\n"
-            f"The run compares at least {MIN_EXPERIMENTS} successful focusing experiments "
-            "that change one setting.\n"
-            "Computational cost is compared by iterations and camera shots per measurement "
-            "(and by wall_time_seconds and camera_shots if the results include them).\n"
-            "The final product is report.pdf in the output directory: 2 or 3 A4 portrait pages with one "
-            "graph, its explanation, a fairness judgement, performance vs cost, a suggested "
-            "next experiment and a verdict on page 1; Hardware loop results on page 2. "
-            "The executor calls build_final_report, which uses a reusable layout, frozen "
-            "scientific evidence and existing accepted scans. No additional tuning round is needed.\n"
-            "The office printer is reached only through the executor's printer tools in the "
-            "report-and-print turn. The graph asks the human before any print. "
-            "Printer states: idle, printing, stopped, offline, error, unknown, out_of_paper, "
-            "paper_jam. Job states: waiting, printing, done, failed, uncertain.\n"
-            "Print tuning: after the four experiments are chosen, the graph tunes how their heatmaps "
-            "print in three-step cycles: gamma, then shared dark/light gray levels, then gray steps. "
-            "After each accepted cycle the human chooses Continue, Finish or Stop; continuation is not print approval.\n"
-            "Every trial sheet print needs human approval of that exact PDF and printer. The human "
-            f"scans both faces into {run_dir / 'scans'}/cycle_N/step_N. Legacy round_N paths remain accepted.\n"
-            + (
-                f"The office printer is named {printer_name}; pass printer=\"{printer_name}\" "
-                "to printer_status and submit_print.\n"
-                if printer_name else
-                "Call list_printers first and pass the office printer's exact name as printer "
-                "to printer_status and submit_print.\n"
-            ) +
-            paper_context_line(state.get("paper_color")) +
-            f"Output directory: {run_dir}\n"
-            "The focusing tool saves initial/final camera images, the final pattern, "
-            "results.json, and an experiments.csv table. Do not duplicate these outputs.\n"
-            "Base all conclusions on recorded tool results, never proposals or invented "
-            "measurements."
-        )
-        if not saved_config:
-            state["dialogue"].insert(0, {"role": "system", "text": context})
-        run_config = dict(saved_config) if saved_config else {
-            "provider": "openai",
-            "api": "responses",
-            "reasoning_effort": "medium",
-            "python": sys.version,
-            "bench": bench_settings,
-            "max_tuning_cycles": cycle_limit,
-            "request": args.request,
-            "script_timeout_seconds": RUN_TIMEOUT_SECONDS,
-        }
-        run_config.pop("max_orchestrator_decisions", None)
-        run_config.pop("printer_backend", None)
-        run_config.update(
-            model=args.model, min_experiments=MIN_EXPERIMENTS,
+        workflow = prepare_workflow(
+            run_dir, state, request=args.request, model=args.model, specialist_model=specialist_model,
             initial_decisions=initial_decisions, extra_decisions=extra_decisions,
-            fake_printer=fake_printer, printer_name=printer_name, specialist_model=specialist_model,
-        )
-        (run_dir / "config.json").write_text(
-            json.dumps(run_config, indent=2, ensure_ascii=False), encoding="utf-8"
-        )
-        save_run(state, run_dir)
-
-        # Only variables the printer files read; FAKE_PRINTER_PROBLEM comes from the shell.
-        printer_env = {}
-        if fake_printer:
-            printer_env["PRINTER_MODE"] = "fake"
-        if printer_name:
-            printer_env["PRINTER_ALLOWED"] = printer_name
-        try:
-            from app.printing.tools import load_printer_tools
-
-            printer_tools = load_printer_tools(printer_env)
-        except Exception as error:
-            print(f"Could not start the printer MCP server: {error}", file=sys.stderr, flush=True)
-            raise
-
-        def chat_model(model):
-            return ChatOpenAI(
-                model=model, api_key=api_key, max_tokens=16384,
-                timeout=120, max_retries=2,
-                use_responses_api=True, output_version="responses/v1",
-                reasoning={"effort": "medium"},
-                store=False, include=["reasoning.encrypted_content"],
-            )
-
-        llm = chat_model(args.model)
-        coding_tool = create_coding_tool(run_dir)
-        focusing_tool = create_focusing_tool(run_dir, bench)
-        tuning_tools = create_tuning_tools(run_dir)
-        check_tuning_tools(printer_tools, tuning_tools)
-        workflow = build_graph(
-            llm, focusing_tool, coding_tool, printer_tools, create_information_tool(),
-            run_dir, extra_decisions, InMemorySaver(), tuning_tools=tuning_tools, max_cycles=cycle_limit,
-            **({"specialist_llm": chat_model(specialist_model)} if specialist_model else {}),
+            fake_printer=fake_printer, printer_name=printer_name, cycle_limit=cycle_limit,
+            saved_config=saved_config, api_key=api_key,
         )
         # The report-and-print self-loop needs more than the default 25 steps.
         config = {"configurable": {"thread_id": run_dir.name}, "recursion_limit": 200}

@@ -27,6 +27,23 @@ def start(api, **options):
     return api.start_session(request=options.pop("request", "Compare four experiments."), fake_printer=True, **options)
 
 
+def test_default_budget_fields_are_omitted_but_explicit_overrides_remain(api, monkeypatch):
+    bodies = []
+    original = api.http.request
+    def record(method, url, **kwargs):
+        if method == "POST" and url.endswith("/api/sessions"):
+            bodies.append(kwargs["json"])
+        return original(method, url, **kwargs)
+    monkeypatch.setattr(api.http, "request", record)
+    session_id = start(api)
+    assert "initial_decisions" not in bodies[-1] and "extra_decisions" not in bodies[-1]
+    payload = pending(api, session_id)
+    assert payload["decisions_used"] == 10 and payload["extra"] == 5
+    custom = start(api, initial_decisions=12, extra_decisions=6)
+    assert bodies[-1]["initial_decisions"] == 12 and bodies[-1]["extra_decisions"] == 6
+    assert pending(api, custom)["decisions_used"] == 12 and pending(api, custom)["extra"] == 6
+
+
 def pending(api, session_id):
     session = api.get_session(session_id)
     assert session["status"] == "waiting_for_human", session

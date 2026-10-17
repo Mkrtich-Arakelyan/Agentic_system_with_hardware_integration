@@ -77,11 +77,15 @@ class ApiClient:
     # ---------- endpoints ----------
 
     def start_session(self, *, request: str, model: str | None = None, specialist_model: str | None = None,
-                      printer: str | None = None, fake_printer: bool = False, paper_color: str | None = None,
+                      printer: str | None = None, fake_printer: bool = True, paper_color: str | None = None,
                       initial_decisions: int | None = None, extra_decisions: int | None = None) -> str:
         body = {"request": request, "model": model or None, "specialist_model": specialist_model or None,
-                "printer": printer or None, "fake_printer": bool(fake_printer), "paper_color": paper_color or None,
-                "initial_decisions": initial_decisions, "extra_decisions": extra_decisions}
+                "printer": printer or None, "fake_printer": bool(fake_printer), "paper_color": paper_color or None}
+        # Omission keeps the backend's defaults; programmatic callers may still override them.
+        if initial_decisions is not None:
+            body["initial_decisions"] = initial_decisions
+        if extra_decisions is not None:
+            body["extra_decisions"] = extra_decisions
         return self._call("POST", "/api/sessions", json=body)["session_id"]
 
     def list_sessions(self) -> list[dict]:
@@ -90,11 +94,14 @@ class ApiClient:
     def get_session(self, session_id: str) -> dict:
         return self._call("GET", f"/api/sessions/{quote(session_id, safe='')}")
 
-    def answer(self, session_id: str, answer) -> dict:
+    def answer(self, session_id: str, answer, interrupt_token: str | None = None) -> dict:
         """Answer the pending pause; a 409 (nothing pending) or 422 (invalid answer) raises ApiError."""
-        return self._call("POST", f"/api/sessions/{quote(session_id, safe='')}/answer", json={"answer": answer})
+        if interrupt_token is None:
+            interrupt_token = (self.get_session(session_id).get("pending") or {}).get("interrupt_token")
+        return self._call("POST", f"/api/sessions/{quote(session_id, safe='')}/answer",
+                          json={"answer": answer, "interrupt_token": interrupt_token})
 
-    def upload_scans(self, session_id: str, files: list[tuple[str, bytes, str | None]]) -> list[str]:
+    def upload_scans(self, session_id: str, files: list[tuple[str, bytes, str | None]], interrupt_token: str | None = None) -> list[str]:
         """Upload (filename, content, mime type) scans for the active round; return the saved paths."""
         if not files:
             raise ApiError("Choose at least one scan file to upload.")
@@ -102,7 +109,14 @@ class ApiClient:
         if bad:
             raise ApiError(f"Not a scan file ({', '.join(SCAN_FORMATS)}): {', '.join(bad)}")
         parts = [("files", (name, content, mime or "application/octet-stream")) for name, content, mime in files]
-        return self._call("POST", f"/api/sessions/{quote(session_id, safe='')}/scans", files=parts)["paths"]
+        if interrupt_token is None:
+            interrupt_token = (self.get_session(session_id).get("pending") or {}).get("interrupt_token")
+        return self._call("POST", f"/api/sessions/{quote(session_id, safe='')}/scans", files=parts,
+                          data={"interrupt_token": interrupt_token or ""})["paths"]
+
+    def resume(self, session_id: str, *, recover_stopped_tuning=False, report_revision=None):
+        return self._call("POST", f"/api/sessions/{quote(session_id, safe='')}/resume",
+                          json={"recover_stopped_tuning": recover_stopped_tuning, "report_revision": report_revision})
 
     def download_file(self, session_id: str, path: str) -> bytes:
         """A file of the run, by its path relative to run_dir."""
@@ -120,8 +134,8 @@ class ApiClient:
                     for part in str(path).replace("\\", "/").split("/")]
         return f"/api/sessions/{quote(session_id, safe='')}/files/" + "/".join(segments)
 
-    def printers(self) -> list[str]:
-        return list(self._call("GET", "/api/printers").get("printers", []))
+    def printers(self, real=False) -> list[str]:
+        return list(self._call("GET", "/api/printers" + ("?fake_printer=false" if real else "")).get("printers", []))
 
 
 # ---------- helpers for the UI (pure, no network) ----------

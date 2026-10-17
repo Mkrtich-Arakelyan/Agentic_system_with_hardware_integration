@@ -21,32 +21,43 @@ DEFAULT_REQUEST = (
     "answer the scientific question, requesting more runs if needed. "
     "Judge whether the comparison is fair, compare "
     "performance and computational cost, and suggest the next experiment. Then "
-    "produce a one-page report with one graph, its explanation and a verdict, and "
+    "produce a 2/3-page report with one graph, its explanation and a verdict, and "
     "print it on the office printer after my approval."
 )
 FAKE_PRINTER_OPTION = "Fake printer (Office_Printer)"
 POLL_SECONDS = 2
 STATUS_BADGES = {"running": ("🔄", "blue"), "waiting_for_human": ("✋", "orange"), "finished": ("✅", "green"),
                  "stopped": ("⏹️", "gray"), "failed": ("❌", "red")}
+STATUS_LABELS = {"running": "Running", "waiting_for_human": "Waiting for your input",
+                 "finished": "Finished", "stopped": "Stopped", "failed": "Failed"}
 ROLE_AVATARS = {"orchestrator": "🧭", "scientist": "🔬", "executor": "🛠️", "general": "📋",
                 "photo_quality_specialist": "📷", "human": "🙋", "user": "🙋", "system": "⚙️"}
 ROLE_NAMES = {"photo_quality_specialist": "photo quality specialist", "user": "human (request)"}
 CHOICE_LABELS = {"approve": "Approve", "stop": "Stop", "printed": "Printed", "not_printed": "Not printed",
                  "check": "Check again", "retry": "Retry", "regenerate": "Regenerate", "reprint": "Reprint",
                  "skip": "Skip printing", "correct": "Correct instructions", "scan": "Use scans",
-                 "printer": "Use printer"}
+                 "printer": "Use printer", "continue": "Continue", "finish": "Finish"}
 KIND_TITLES = {"budget": "Continue the run?", "print_approval": "Approve printing the report",
                "report_workflow_problem": "The report workflow stalled",
                "report_print_confirmation": "Did the report print?", "printer_problem": "Printer problem",
                "tuning_printer": "Which printer prints the trial sheets?",
                "trial_print_approval": "Approve printing this trial sheet",
                "tuning_scan": "Upload the scans", "tuning_print_confirmation": "Did the trial sheet print?",
-               "tuning_poll": "The trial is still printing", "tuning_problem": "Print-tuning problem"}
+               "tuning_poll": "The trial is still printing", "tuning_problem": "Print-tuning problem",
+               "tuning_cycle": "Tuning cycle complete"}
 
 st.set_page_config(page_title="Print tuning", page_icon="🖨️", layout="wide")
+# Also apply the project config when launched from a different working directory.
+st.set_option("client.toolbarMode", "minimal")
+# Streamlit has no public configuration for the walking/swimming running widget.
+# Target framework elements only; application status cards and controls stay visible.
+st.html("""<style>
+[data-testid="stStatusWidget"],
+[data-testid="stAppDeployButton"] { display: none !important; }
+</style>""")
 
 
-@st.cache_resource
+@st.cache_resource(show_spinner=False)
 def get_client() -> ApiClient:
     return ApiClient()
 
@@ -60,9 +71,9 @@ state.setdefault("uploads", {})            # (session, round, trial) -> uploaded
 
 
 @st.cache_data(ttl=30, show_spinner=False)
-def load_printers(base_url: str) -> tuple[list[str], str | None]:
+def load_printers(base_url: str, real=False) -> tuple[list[str], str | None]:
     try:
-        return get_client().printers(), None
+        return get_client().printers(real=real), None
     except ApiError as error:
         return [], str(error)
 
@@ -99,7 +110,7 @@ def queue_upload(uploader_key: str, upload_key: tuple):
     if not files:
         state.answer_error = "Choose at least one scan file first."
         return
-    state.outbox = {"type": "upload", "key": upload_key,
+    state.outbox = {"type": "upload", "key": upload_key, "for": state.get("shown_pending"),
                     "files": [(f.name, f.getvalue(), f.type) for f in files]}
     state.answer_error = None
 
@@ -112,18 +123,22 @@ def process_outbox(session_id: str, session: dict):
     job = state.outbox
     if not job:
         return
-    if job["type"] == "answer" and job.get("for") != pending_key(session.get("pending")):
+    if job.get("for") != pending_key(session.get("pending")):
         state.outbox = None
         state.answer_error = "The question changed before your answer was sent, so nothing was sent."
         st.rerun()
-    with st.spinner("Sending your answer..." if job["type"] == "answer" else "Uploading scans..."):
-        try:
-            if job["type"] == "answer":
-                client.answer(session_id, job["answer"])
-            else:
-                state.uploads[job["key"]] = client.upload_scans(session_id, job["files"])
-        except ApiError as error:
-            state.answer_error = str(error)
+    progress = st.empty()
+    progress.caption("Sending your answer..." if job["type"] == "answer" else "Uploading scans...")
+    try:
+        if job["type"] == "answer":
+            client.answer(session_id, job["answer"], (session.get("pending") or {}).get("interrupt_token"))
+        else:
+            state.uploads[job["key"]] = client.upload_scans(session_id, job["files"],
+                (session.get("pending") or {}).get("interrupt_token"))
+    except ApiError as error:
+        state.answer_error = str(error)
+    finally:
+        progress.empty()
     state.outbox = None
     st.rerun()
 
@@ -181,12 +196,15 @@ def pending_card(session: dict, busy: bool):
     payload = session["pending"]
     session_id, run_dir = session["session_id"], session.get("run_dir")
     kind = payload.get("kind", "unknown")
-    key = f"{session_id}-{len(session.get('dialogue') or [])}-{kind}"
+    key = f"{session_id}-{payload.get('interrupt_token', len(session.get('dialogue') or []))}-{kind}"
     choices = payload.get("choices") or []
     state.shown_pending = pending_key(payload)
     with st.container(border=True):
         st.markdown(f"### ✋ {KIND_TITLES.get(kind, kind.replace('_', ' ').capitalize())}")
         st.info(payload.get("question") or "The workflow is waiting for your answer.")
+        facts({"Cycle": payload.get("cycle_id"), "Step": payload.get("step_id")})
+        if payload.get("metric_summary"):
+            st.text(payload["metric_summary"])
         if payload.get("message"):
             st.warning(payload["message"])
 
@@ -231,7 +249,7 @@ def pending_card(session: dict, busy: bool):
             choice_buttons(choices, key, busy)
 
         elif kind == "tuning_printer":
-            printers, error = load_printers(client.base_url)
+            printers, error = load_printers(client.base_url, real=not session.get("fake_printer", True))
             if error:
                 st.warning(f"Could not load the printer list: {error}")
             options = printers + ["Other (type the name)"]
@@ -303,25 +321,22 @@ def sidebar():
         st.header("🖨️ Print tuning")
         st.caption(f"Backend: {client.base_url}")
         with st.expander("Start a new run", expanded=state.session_id is None):
-            printers, error = load_printers(client.base_url)
+            real_printers = st.checkbox("Enable real printer selection", value=False, key="new-run-real-printers")
+            printers, error = load_printers(client.base_url, real=real_printers)
             if error:
                 st.caption(f"Printer list unavailable: {error}")
             with st.form("new-run"):
-                request = st.text_area("Request", DEFAULT_REQUEST, height=180)
-                model = st.text_input("Model", placeholder="backend default")
-                specialist = st.text_input("Specialist model", placeholder="same as the model")
-                printer = st.selectbox("Printer", [FAKE_PRINTER_OPTION, *printers])
-                paper = st.text_input("Paper color", placeholder="plain white")
-                left, right = st.columns(2)
-                initial = left.number_input("Initial decisions", min_value=1, value=10, step=1)
-                extra = right.number_input("Extra decisions", min_value=1, value=5, step=1)
+                request = st.text_area("Request", DEFAULT_REQUEST, height=180, key="new-run-request")
+                model = st.text_input("Model", placeholder="backend default", key="new-run-model")
+                specialist = st.text_input("Specialist model", placeholder="same as the model", key="new-run-specialist")
+                printer = st.selectbox("Printer", [FAKE_PRINTER_OPTION, *(printers if real_printers else [])], key="new-run-printer")
+                paper = st.text_input("Paper color", placeholder="plain white", key="new-run-paper")
                 if st.form_submit_button("Start run", type="primary", width="stretch"):
                     fake = printer == FAKE_PRINTER_OPTION
                     try:
                         state.session_id = client.start_session(
                             request=request, model=model.strip() or None, specialist_model=specialist.strip() or None,
-                            printer=None if fake else printer, fake_printer=fake, paper_color=paper.strip() or None,
-                            initial_decisions=int(initial), extra_decisions=int(extra))
+                            printer=None if fake else printer, fake_printer=fake, paper_color=paper.strip() or None)
                         state.answer_error = None
                         st.rerun()
                     except ApiError as start_error:
@@ -357,7 +372,8 @@ def watch(session_id: str, shown: tuple):
     """
     try:
         latest = client.get_session(session_id)
-    except ApiError:
+    except ApiError as error:
+        st.error(str(error))
         return
     if signature(latest) != shown:
         st.rerun(scope="app")
@@ -377,12 +393,25 @@ def main():
         return
 
     status = session.get("status", "unknown")
-    icon, color = STATUS_BADGES.get(status, ("❔", "gray"))
+    _, color = STATUS_BADGES.get(status, ("❔", "gray"))
     st.title("Agentic print tuning")
-    st.markdown(f"**Session** `{session_id}` &nbsp; :{color}-background[{icon} {status.replace('_', ' ')}]"
+    st.markdown(f"**Session** `{session_id}` &nbsp; :{color}-background[{STATUS_LABELS.get(status, status)}]"
                 + (f" &nbsp; stop reason: `{session.get('stop_reason')}`"
                    if status in ("finished", "stopped", "failed") else ""))
     st.caption(f"Run folder: {session.get('run_dir')}")
+    if session.get("error"):
+        st.error(session["error"])
+    if status in ("stopped", "failed", "finished"):
+        with st.expander("Resume / recover / revise report"):
+            st.caption("Resume reconstructs the graph from saved evidence. In-flight model/numerical work may restart.")
+            recover = st.checkbox("Explicitly reopen human-stopped tuning (creates JSON backups)")
+            revision = st.text_area("Report revision instructions (optional)")
+            if st.button("Resume saved run", disabled=status == "finished" and not revision.strip()):
+                try:
+                    client.resume(session_id, recover_stopped_tuning=recover, report_revision=revision.strip() or None)
+                    st.rerun()
+                except ApiError as error:
+                    st.error(str(error))
 
     busy = state.outbox is not None
     if status == "waiting_for_human" and session.get("pending"):
@@ -390,8 +419,6 @@ def main():
     elif state.answer_error:          # the answer failed and the question has gone meanwhile
         st.error(state.answer_error)
         state.answer_error = None
-    if status == "running":
-        st.info(f"🔄 The agents are working. This page refreshes every {POLL_SECONDS} s.")
     if status in ("running", "waiting_for_human") and not busy:
         # Also while waiting: the question may be answered in another tab, or the backend may move on.
         watch(session_id, signature(session))

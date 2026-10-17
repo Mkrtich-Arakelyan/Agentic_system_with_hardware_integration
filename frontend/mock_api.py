@@ -34,7 +34,7 @@ import threading
 import time
 from uuid import uuid4
 
-from fastapi import FastAPI, File, HTTPException, UploadFile
+from fastapi import FastAPI, File, Form, HTTPException, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse, StreamingResponse
 from pydantic import BaseModel
@@ -54,7 +54,7 @@ class SessionRequest(BaseModel):
     model: str | None = None
     specialist_model: str | None = None
     printer: str | None = None
-    fake_printer: bool = False
+    fake_printer: bool = True
     paper_color: str | None = None
     initial_decisions: int | None = None
     extra_decisions: int | None = None
@@ -62,6 +62,7 @@ class SessionRequest(BaseModel):
 
 class AnswerRequest(BaseModel):
     answer: str | dict
+    interrupt_token: str | None = None
 
 
 # ---------- sample files (small, generated once per process) ----------
@@ -357,6 +358,7 @@ class MockRun:
                     self.queue.extendleft(reversed(more))
             elif kind == "pause":
                 self.pending, self.status = event[1], "waiting_for_human"
+                self.pending = {**self.pending, "interrupt_token": uuid4().hex}
                 return
             elif kind == "fail":
                 self.dialogue.append({"role": "system", "text": event[1]})
@@ -526,7 +528,7 @@ def create_app(runs_dir=None, step_seconds: float | None = None) -> FastAPI:
     def start(body: SessionRequest):
         if not body.request.strip():
             raise HTTPException(422, "request must not be blank")
-        if not body.fake_printer and body.printer and body.printer not in PRINTERS:
+        if body.printer and body.printer not in PRINTERS:
             raise HTTPException(422, f"unknown printer {body.printer}; choose one of {', '.join(PRINTERS)}")
         session_id = uuid4().hex
         run_dir = runs_root / (datetime.now().strftime("%Y%m%d_%H%M%S_") + session_id[:6])
@@ -556,6 +558,8 @@ def create_app(runs_dir=None, step_seconds: float | None = None) -> FastAPI:
             run = get(session_id)
             if run.status != "waiting_for_human" or run.pending is None:
                 raise HTTPException(409, f"nothing is waiting for an answer (session is {run.status})")
+            if body.interrupt_token != run.pending["interrupt_token"]:
+                raise HTTPException(409, "Stale or missing interrupt token")
             try:
                 validate_answer(run.pending, body.answer, run.run_dir)
             except ValueError as error:
@@ -564,9 +568,11 @@ def create_app(runs_dir=None, step_seconds: float | None = None) -> FastAPI:
         return {"ok": True}
 
     @app.post("/api/sessions/{session_id}/scans")
-    def scans(session_id: str, files: list[UploadFile] = File(...)):
+    def scans(session_id: str, files: list[UploadFile] = File(...), interrupt_token: str = Form(...)):
         with lock:
             run = get(session_id)
+            if not run.pending or run.pending.get("kind") != "tuning_scan" or interrupt_token != run.pending.get("interrupt_token"):
+                raise HTTPException(409, "Stale or missing interrupt token")
             if run.active_round is None or run.status in ("finished", "stopped", "failed"):
                 raise HTTPException(409, "no print-tuning round is active, so there is nowhere to save scans")
             folder = run.run_dir / "scans" / f"round_{run.active_round}"

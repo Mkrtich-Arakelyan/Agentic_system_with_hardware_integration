@@ -9,3 +9,6 @@ pypdf
 langchain-mcp-adapters
 Pillow  # scan_evaluation.py: reads PNG/JPG scans
 PyMuPDF  # scan_evaluation.py: renders PDF scans
+fastapi>=0.115,<1
+uvicorn>=0.30,<1
+python-multipart>=0.0.20,<1
