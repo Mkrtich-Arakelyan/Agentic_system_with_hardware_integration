@@ -1,0 +1,9 @@
+# Frontend (Streamlit UI) and its in-memory mock backend.
+streamlit>=1.50,<2      # width="stretch" on st.button/download_button/link_button/image; st.fragment(run_every=...) polling
+requests>=2.31,<3
+fastapi>=0.110
+uvicorn>=0.29
+python-multipart>=0.0.9  # multipart scan uploads in the mock
+matplotlib>=3.8          # sample PDFs and PNGs served by the mock
+httpx>=0.27              # FastAPI TestClient in frontend/tests
+pytest>=8,<10
